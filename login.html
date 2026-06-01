@@ -34,32 +34,87 @@
 
 <style>
   :root { color-scheme: dark; }
-  html, body { background: #0A1628; }
-  body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { background: #0A1628; margin:0; padding:0; min-height:100vh; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; overflow-x:hidden; }
   .font-display { font-family: 'Space Grotesk', sans-serif; }
   .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-  /* Fond ambiant global */
-  .grid-faint { background-image: linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px); background-size: 44px 44px; }
-  .glow-blue { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
-  .glow-blue::before { content:""; position:absolute; top:-15%; left:-10%; width:60%; height:80%;
-    background: radial-gradient(ellipse at center, rgba(59,130,246,.30), rgba(30,58,138,.10) 45%, transparent 75%); filter: blur(40px); }
-  .glow-blue::after { content:""; position:absolute; bottom:-20%; right:-15%; width:50%; height:60%;
-    background: radial-gradient(ellipse at center, rgba(56,189,248,.18), transparent 70%); filter: blur(40px); }
+  /* =========================================================
+     STAGE — conteneur qui préserve le ratio 1536/1024 du fond
+     officiel login-bg.png, posé centré et adapté à l'écran.
+     ========================================================= */
+  .stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #0A1628;
+  }
+  .stage::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: url('assets/img/login-bg.png') no-repeat center center;
+    background-size: cover;
+    z-index: 0;
+  }
+  /* Voile très léger pour donner du contraste à la card sans noyer le visuel */
+  .stage::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(120deg, rgba(10,22,40,0) 0%, rgba(10,22,40,0) 55%, rgba(10,22,40,.25) 100%);
+    z-index: 1; pointer-events: none;
+  }
 
-  .glass { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
-  .glass-strong { background: rgba(13,23,42,.78); border: 1px solid rgba(255,255,255,.10); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  /* =========================================================
+     LAYOUT — Desktop ≥ 1024px : positionnement absolu calé
+     sur le rectangle vide du fond (mesuré sur l'image 1536×1024).
+     Gauche : tagline + verbes sous le logo. Droite : card.
+     ========================================================= */
+  .left-pane, .right-pane { position: absolute; z-index: 3; }
+
+  /* Gauche : occupe la zone sous le logo (qui est en haut-gauche du fond).
+     Logo dans l'image : ~5%-25% width, ~3%-25% height.
+     Donc tagline commence vers 32% top. */
+  .left-pane {
+    left: 5%; top: 36%; width: 38%; max-width: 560px;
+  }
+  /* Droite : positionnée DANS le rectangle vide du fond
+     (mesuré ≈ left 46%, top 6%, width 30%, height 88%). */
+  .right-pane {
+    left: 47%; top: 7%; width: 30%; height: 86%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* En dessous de 1024px : layout vertical empilé, fond simplifié. */
+  @media (max-width: 1023.98px) {
+    .stage::before { background-size: cover; opacity: .4; }
+    .left-pane, .right-pane { position: static; width: auto; height: auto; max-width: none; }
+    .stage { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 20px; gap: 20px; }
+    .left-pane { text-align: center; }
+    .right-pane { width: 100%; max-width: 440px; }
+  }
+
+  /* =========================================================
+     COMPOSANTS — card glass, champs, boutons (charte AXION)
+     ========================================================= */
+  .glass-strong {
+    background: rgba(13,23,42,.78);
+    border: 1px solid rgba(255,255,255,.10);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    box-shadow: 0 40px 90px -30px rgba(59,130,246,.4);
+  }
   .text-grad { background: linear-gradient(120deg,#60A5FA,#38BDF8); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .text-gold { color:#C9A95C; }
-  .gold-rule { width:140px; height:1.5px; background: linear-gradient(90deg, transparent, #C9A95C, transparent); }
+  .gold-rule { width:140px; height:1.5px; background: linear-gradient(90deg, #C9A95C, transparent); }
 
   .btn-azure { background: linear-gradient(135deg,#3B82F6,#2563EB); color:#fff; box-shadow: 0 10px 30px -10px rgba(59,130,246,.6); transition: transform .25s, box-shadow .25s; }
   .btn-azure:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -12px rgba(59,130,246,.75); }
   .btn-azure:disabled { opacity:.55; cursor:not-allowed; transform:none; }
 
   input[type="email"], input[type="password"], input[type="text"] {
-    width:100%; background:#0A1628; border:1px solid rgba(255,255,255,.12); border-radius:10px;
-    color:#E2E8F0; padding:12px 14px 12px 42px; font-size:14px; font-family:inherit; outline:none; transition:border .15s, box-shadow .15s;
+    width:100%; background:rgba(10,22,40,.7); border:1px solid rgba(255,255,255,.12); border-radius:10px;
+    color:#E2E8F0; padding:12px 14px 12px 42px; font-size:14px; font-family:inherit; outline:none;
+    transition:border .15s, box-shadow .15s;
   }
   input:focus { border-color:#60A5FA; box-shadow:0 0 0 3px rgba(96,165,250,.15); }
   .field { position:relative; }
@@ -68,135 +123,137 @@
   .pwd-eye { position:absolute; right:6px; top:50%; transform:translateY(-50%); padding:6px 10px; background:none; border:none; color:#94A3B8; font-size:18px; cursor:pointer; line-height:1 }
   .pwd-eye:hover { color:#E2E8F0 }
 
+  .checkbox { width:16px; height:16px; appearance:none; background:rgba(10,22,40,.7); border:1px solid rgba(255,255,255,.18); border-radius:4px; cursor:pointer; position:relative; flex-shrink:0; transition: background .15s, border-color .15s; }
+  .checkbox:checked { background:#3B82F6; border-color:#3B82F6; }
+  .checkbox:checked::after { content:""; position:absolute; left:4px; top:1px; width:5px; height:9px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); }
+
+  .divider { display:flex; align-items:center; gap:12px; color:#64748B; font-size:11px; letter-spacing:.2em; }
+  .divider::before, .divider::after { content:""; flex:1; height:1px; background:linear-gradient(90deg, transparent, rgba(148,163,184,.25), transparent); }
+
   .msg { margin-top:14px; padding:11px 13px; border-radius:10px; font-size:13px; display:none }
   .msg.err { display:block; background:rgba(239,68,68,.12); color:#FCA5A5; border:1px solid rgba(239,68,68,.3) }
   .msg.ok  { display:block; background:rgba(34,197,94,.10); color:#86EFAC; border:1px solid rgba(34,197,94,.3) }
 
-  /* Hero left side */
-  .hero-bg {
-    position:absolute; inset:0; overflow:hidden;
-    background:
-      linear-gradient(180deg, rgba(10,22,40,.4) 0%, rgba(10,22,40,.85) 100%),
-      url('assets/img/logo-axion-hero.png') no-repeat center center / cover;
-  }
-  /* Variante : si tu préfères l'image hero seule sans dégradé fort, retire le linear-gradient */
+  /* =========================================================
+     ANIMATIONS — cascade d'apparition
+     ========================================================= */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+  @keyframes glowPulse { 0%,100% { box-shadow: 0 40px 90px -30px rgba(59,130,246,.4); } 50% { box-shadow: 0 40px 110px -25px rgba(59,130,246,.55); } }
+  .fade-1 { animation: fadeUp .8s cubic-bezier(.2,.7,.1,1) .1s both; }
+  .fade-2 { animation: fadeUp .8s cubic-bezier(.2,.7,.1,1) .3s both; }
+  .fade-3 { animation: fadeUp .8s cubic-bezier(.2,.7,.1,1) .5s both; }
+  .fade-4 { animation: fadeUp .8s cubic-bezier(.2,.7,.1,1) .7s both; }
+  .fade-5 { animation: fadeUp 1s cubic-bezier(.2,.7,.1,1) .4s both, glowPulse 5s ease-in-out 2s infinite; }
+  @media (prefers-reduced-motion: reduce) { [class^="fade-"] { animation: none !important; } }
+
+  /* Particules subtiles dans le rectangle (effet vivant) */
+  .sparkle { position:absolute; width:3px; height:3px; border-radius:50%; background:#60A5FA; opacity:.6; filter:blur(1px); animation: twinkle 3s ease-in-out infinite; pointer-events:none; }
+  @keyframes twinkle { 0%,100% { opacity:.2; transform:scale(.6); } 50% { opacity:1; transform:scale(1); } }
 
   a:focus-visible, button:focus-visible { outline:2px solid #60A5FA; outline-offset:3px; border-radius:4px; }
   ::selection { background:#2563EB; color:#fff; }
-  ::-webkit-scrollbar { width:10px; height:10px; } ::-webkit-scrollbar-thumb { background:#1A2233; border-radius:8px; }
-
-  /* Animation entrée card */
-  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
-  .fade-up { animation: fadeUp .8s cubic-bezier(.2,.7,.1,1) both; }
-  @media (prefers-reduced-motion: reduce) { .fade-up { animation: none; } }
 </style>
 </head>
 
 <body class="text-slate-200">
 
-<div class="min-h-screen lg:grid lg:grid-cols-2">
+<div class="stage">
 
-  <!-- ============ HÉRO GAUCHE (visible ≥ lg) ============ -->
-  <aside class="hidden lg:block relative overflow-hidden">
-    <div class="hero-bg"></div>
-    <div class="grid-faint absolute inset-0 opacity-30"></div>
-    <div class="glow-blue"></div>
+  <!-- =================== PANE GAUCHE (sous le logo du fond) =================== -->
+  <div class="left-pane">
+    <h1 class="font-display font-700 text-white leading-[1.1] tracking-tight text-3xl xl:text-4xl 2xl:text-5xl fade-1">
+      Pilotez. <span class="text-grad">Collaborez.</span><br/>
+      Construisez l'avenir.
+    </h1>
 
-    <div class="relative z-10 h-full flex flex-col justify-between p-12 xl:p-16">
-      <!-- Logo grand format -->
-      <div class="fade-up">
-        <img src="assets/img/logo-axion-dark.png" alt="AXION — Cadence Architectes" class="w-56 xl:w-64" />
+    <div class="gold-rule mt-5 fade-2"></div>
+
+    <p class="mt-5 text-slate2-300 text-sm xl:text-base leading-relaxed max-w-md fade-2">
+      Le portail intelligent qui connecte maîtres d'œuvre, entreprises et maîtres d'ouvrage
+      pour des projets maîtrisés, performants et durables.
+    </p>
+
+    <ul class="mt-7 grid grid-cols-2 gap-2 max-w-md text-xs xl:text-sm fade-3">
+      <li class="flex items-center gap-2 text-slate2-300"><span style="color:#60A5FA">●</span> <span><b class="text-white">Planifier</b> · vos projets</span></li>
+      <li class="flex items-center gap-2 text-slate2-300"><span style="color:#60A5FA">●</span> <span><b class="text-white">Collaborer</b> · en temps réel</span></li>
+      <li class="flex items-center gap-2 text-slate2-300"><span style="color:#60A5FA">●</span> <span><b class="text-white">Piloter</b> · vos chantiers</span></li>
+      <li class="flex items-center gap-2 text-slate2-300"><span style="color:#C9A95C">●</span> <span><b class="text-white">Sécuriser</b> · vos données</span></li>
+    </ul>
+
+    <p class="mt-8 text-[11px] text-slate2-500 fade-4">
+      Cadence Architectes Associés · Paris 12<sup>e</sup> ·
+      <span class="font-mono">agence@cadence-architectes.fr</span>
+    </p>
+  </div>
+
+  <!-- =================== PANE DROITE — CARD DE CONNEXION =================== -->
+  <div class="right-pane">
+    <div class="glass-strong rounded-2xl p-6 lg:p-7 xl:p-8 w-full max-w-[440px] fade-5 relative overflow-hidden">
+
+      <!-- Particules d'ambiance -->
+      <span class="sparkle" style="top:8%; left:88%; animation-delay:0s"></span>
+      <span class="sparkle" style="top:30%; left:6%; animation-delay:1.2s"></span>
+      <span class="sparkle" style="top:75%; left:92%; animation-delay:.6s; background:#C9A95C"></span>
+
+      <!-- Header de la card -->
+      <div class="flex items-center gap-3 relative z-10">
+        <img src="assets/img/logo-axion-icon.png" alt="" class="w-10 h-10 rounded-lg" />
+        <span class="font-display text-lg font-700 tracking-[0.22em] text-white">AXION</span>
       </div>
 
-      <!-- Tagline & accroche -->
-      <div class="fade-up" style="animation-delay:.15s">
-        <p class="font-display text-3xl xl:text-4xl font-700 leading-tight text-white">
-          Pilotez. <span class="text-grad">Collaborez.</span><br/>
-          Construisez l'avenir.
-        </p>
-        <div class="gold-rule mt-6 ml-0"></div>
-        <p class="mt-5 text-slate2-300 text-sm max-w-md leading-relaxed">
-          Le portail intelligent qui connecte maîtres d'œuvre, entreprises et maîtres d'ouvrage
-          pour des projets maîtrisés, performants et durables.
-        </p>
+      <p class="font-mono text-[10px] tracking-[0.3em] uppercase text-azure-400 mt-5 relative z-10">Connexion</p>
+      <h2 class="font-display text-2xl xl:text-[26px] font-700 text-white tracking-tight mt-1 relative z-10">
+        Accéder à votre <span class="text-grad">espace</span>
+      </h2>
+      <p class="mt-1 text-xs text-slate2-400 relative z-10">Pilotage de chantier · Cadence Architectes</p>
 
-        <ul class="mt-8 grid grid-cols-2 gap-3 max-w-md text-xs text-slate2-400">
-          <li class="glass rounded-lg px-3 py-2.5 flex items-center gap-2"><span class="text-azure-400">●</span> Planifier</li>
-          <li class="glass rounded-lg px-3 py-2.5 flex items-center gap-2"><span class="text-azure-400">●</span> Collaborer</li>
-          <li class="glass rounded-lg px-3 py-2.5 flex items-center gap-2"><span class="text-azure-400">●</span> Piloter</li>
-          <li class="glass rounded-lg px-3 py-2.5 flex items-center gap-2" style="color:#C9A95C">
-            <span style="color:#C9A95C">●</span> Construire
-          </li>
-        </ul>
-      </div>
+      <form id="loginForm" autocomplete="on" class="mt-6 space-y-4 relative z-10">
+        <div>
+          <label for="email" class="block text-xs font-medium text-slate2-400 mb-1.5 tracking-wide">Adresse e-mail</label>
+          <div class="field">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z M22 6l-10 7L2 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <input id="email" type="email" required autocomplete="username" placeholder="vous@entreprise.fr">
+          </div>
+        </div>
+        <div>
+          <label for="password" class="block text-xs font-medium text-slate2-400 mb-1.5 tracking-wide">Mot de passe</label>
+          <div class="field">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+            <button type="button" id="togglePwd" class="pwd-eye" aria-label="Afficher le mot de passe" title="Afficher / masquer le mot de passe">👁</button>
+          </div>
+        </div>
 
-      <!-- Footer aside -->
-      <div class="fade-up text-xs text-slate2-500" style="animation-delay:.3s">
-        <p>Cadence Architectes Associés · Paris 12<sup>e</sup></p>
-        <p class="font-mono mt-1">agence@cadence-architectes.fr</p>
+        <label class="flex items-center gap-2 text-xs text-slate2-300 cursor-pointer select-none">
+          <input id="remember" type="checkbox" class="checkbox" checked />
+          Se souvenir de moi
+        </label>
+
+        <button type="submit" id="submitBtn" class="btn-azure w-full rounded-xl px-5 py-3 text-sm font-semibold flex items-center justify-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4 M10 17l5-5-5-5 M15 12H3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Se connecter
+        </button>
+      </form>
+
+      <div id="msg" class="msg relative z-10"></div>
+
+      <div class="mt-5 divider relative z-10">OU</div>
+
+      <div class="mt-4 flex items-start gap-2.5 text-xs text-slate2-500 relative z-10">
+        <svg width="14" height="14" class="flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div>
+          <p>Accès réservé · Authentification sécurisée Supabase</p>
+          <a href="mailto:agence@cadence-architectes.fr" class="text-azure-400 hover:text-azure-300 transition-colors">Un problème de connexion ?</a>
+        </div>
       </div>
     </div>
-  </aside>
+  </div>
 
-  <!-- ============ FORMULAIRE DROITE ============ -->
-  <section class="relative flex items-center justify-center p-6 md:p-10 lg:p-12">
-    <div class="grid-faint absolute inset-0 opacity-20 pointer-events-none lg:hidden"></div>
-    <div class="glow-blue lg:hidden"></div>
-
-    <div class="relative z-10 w-full max-w-md fade-up">
-      <!-- Logo compact (mobile + dans la card) -->
-      <div class="flex justify-center lg:hidden mb-6">
-        <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-20 h-20 rounded-2xl" />
-      </div>
-
-      <div class="glass-strong rounded-2xl p-8 md:p-10" style="box-shadow:0 40px 90px -30px rgba(59,130,246,.4)">
-        <!-- Header card -->
-        <div class="flex items-center gap-3 mb-2">
-          <img src="assets/img/logo-axion-icon.png" alt="" class="w-9 h-9 rounded-lg hidden lg:block" />
-          <p class="font-mono text-[10px] tracking-[0.3em] uppercase text-azure-400">Connexion</p>
-        </div>
-        <h1 class="font-display text-2xl md:text-3xl font-700 text-white tracking-tight">
-          Accéder à votre <span class="text-grad">espace</span>
-        </h1>
-        <p class="mt-2 text-sm text-slate2-400">Pilotage de chantier · Cadence Architectes</p>
-
-        <form id="loginForm" autocomplete="on" class="mt-7 space-y-4">
-          <div>
-            <label for="email" class="block text-xs font-medium text-slate2-400 mb-2 tracking-wide">Adresse e-mail</label>
-            <div class="field">
-              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z M22 6l-10 7L2 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <input id="email" type="email" required autocomplete="username" placeholder="vous@entreprise.fr">
-            </div>
-          </div>
-          <div>
-            <label for="password" class="block text-xs font-medium text-slate2-400 mb-2 tracking-wide">Mot de passe</label>
-            <div class="field">
-              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••">
-              <button type="button" id="togglePwd" class="pwd-eye" aria-label="Afficher le mot de passe" title="Afficher / masquer le mot de passe">👁</button>
-            </div>
-          </div>
-          <button type="submit" id="submitBtn" class="btn-azure w-full rounded-xl px-5 py-3 text-sm font-semibold mt-2 flex items-center justify-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4 M10 17l5-5-5-5 M15 12H3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Se connecter
-          </button>
-        </form>
-
-        <div id="msg" class="msg"></div>
-
-        <div class="mt-6 pt-5 border-t border-white/5 flex items-center justify-center gap-2 text-xs text-slate2-500">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span>Accès réservé · Authentification sécurisée Supabase</span>
-        </div>
-        <p class="mt-2 text-center text-xs"><a href="mailto:agence@cadence-architectes.fr" class="text-slate2-500 hover:text-azure-400 transition-colors">Un problème de connexion ?</a></p>
-      </div>
-
-      <p class="mt-6 text-center text-xs text-slate2-500">
-        <a href="axion.html" class="hover:text-azure-400 transition-colors">← Retour à l'accueil</a>
-      </p>
-    </div>
-  </section>
-
+  <!-- Retour à l'accueil (en bas centre, discret) -->
+  <a href="axion.html" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 text-xs text-slate2-500 hover:text-azure-400 transition-colors flex items-center gap-2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5 M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Retour à l'accueil
+  </a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -206,8 +263,16 @@
   var form = document.getElementById('loginForm');
   var btn = document.getElementById('submitBtn');
   var msgEl = document.getElementById('msg');
+  var emailEl = document.getElementById('email');
+  var rememberEl = document.getElementById('remember');
 
   function showMsg(text, type){ msgEl.textContent = text; msgEl.className = 'msg ' + type; }
+
+  // « Se souvenir de moi » — rappelle l'email en localStorage
+  try {
+    var savedEmail = localStorage.getItem('axion_remember_email');
+    if (savedEmail) { emailEl.value = savedEmail; rememberEl.checked = true; }
+  } catch (e) {}
 
   // Afficher / masquer le mot de passe (œil)
   var pwdInput = document.getElementById('password');
@@ -238,12 +303,19 @@
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
-    var email = document.getElementById('email').value.trim();
+    var email = emailEl.value.trim();
     var password = document.getElementById('password').value;
     btn.disabled = true;
     var prevHTML = btn.innerHTML;
     btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px"></span> Connexion…';
     msgEl.className = 'msg';
+
+    // « Se souvenir de moi »
+    try {
+      if (rememberEl.checked) localStorage.setItem('axion_remember_email', email);
+      else localStorage.removeItem('axion_remember_email');
+    } catch (e) {}
+
     try {
       var res = await AxionAuth.signIn(email, password);
       showMsg('Connecté. Redirection…', 'ok');
