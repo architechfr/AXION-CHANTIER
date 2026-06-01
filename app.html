@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AXION — Espace de travail</title>
+<meta name="theme-color" content="#0c0e14">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --b0:#0c0e14;--b1:#131620;--b2:#1a1e2c;--b3:#232838;--bd:#2e3450;
+    --t:#e4e6f0;--t2:#8a90aa;--t3:#5c6280;--or:#f59e0b;--g:#22c55e;--bl:#3b82f6;--R:12px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:var(--b0);color:var(--t);min-height:100vh}
+  header{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:16px 24px;background:var(--b1);border-bottom:1px solid var(--bd);
+  }
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .logo{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--or),#d97706);
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0e14}
+  .brand b{font-size:18px;letter-spacing:1px}
+  .userbox{display:flex;align-items:center;gap:14px;font-size:13px;color:var(--t2)}
+  .pill{background:var(--b3);border:1px solid var(--bd);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--t)}
+  .pill.admin{color:var(--or);border-color:rgba(245,158,11,.4)}
+  .pill.user{color:var(--bl);border-color:rgba(59,130,246,.4)}
+  .logout{background:transparent;border:1px solid var(--bd);color:var(--t2);border-radius:8px;
+    padding:7px 12px;cursor:pointer;font-family:inherit;font-size:13px}
+  .logout:hover{color:var(--t);border-color:var(--t3)}
+  main{max-width:980px;margin:0 auto;padding:36px 24px}
+  h2{font-size:22px;margin-bottom:4px}
+  .lead{color:var(--t2);margin-bottom:28px;font-size:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+  .tile{background:var(--b1);border:1px solid var(--bd);border-radius:var(--R);padding:22px;
+    text-decoration:none;color:inherit;display:block;transition:border .15s,transform .15s}
+  .tile:hover{border-color:var(--or);transform:translateY(-2px)}
+  .tile .ic{font-size:28px;margin-bottom:10px}
+  .tile h3{font-size:16px;margin-bottom:6px}
+  .tile p{color:var(--t2);font-size:13px;line-height:1.5}
+  .tile.disabled{opacity:.45;pointer-events:none}
+  .section-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin:30px 0 12px}
+  #loadingScreen{position:fixed;inset:0;background:var(--b0);display:flex;align-items:center;justify-content:center;color:var(--t2);z-index:50}
+</style>
+</head>
+<body>
+  <div id="loadingScreen">Chargement de votre espace…</div>
+
+  <header style="visibility:hidden" id="appHeader">
+    <div class="brand"><div class="logo">A</div><b>AXION</b></div>
+    <div class="userbox">
+      <span id="userName"></span>
+      <span class="pill" id="rolePill"></span>
+      <button class="logout" id="logoutBtn">Déconnexion</button>
+    </div>
+  </header>
+
+  <main style="visibility:hidden" id="appMain">
+    <h2 id="welcome"></h2>
+    <div class="lead" id="lead"></div>
+
+    <div class="section-title">Modules</div>
+    <div class="grid">
+      <a class="tile" id="planningTile" href="#">
+        <div class="ic">📅</div>
+        <h3>Planning chantier</h3>
+        <p id="planningDesc">Ouvrir le planning Les Jardins de Lisa.</p>
+      </a>
+
+      <a class="tile" id="adminTile" href="#" style="display:none">
+        <div class="ic">👥</div>
+        <h3>Gestion des utilisateurs</h3>
+        <p>Entreprises, comptes et accès aux chantiers.</p>
+      </a>
+
+      <a class="tile" id="docsTile" href="#">
+        <div class="ic">📁</div>
+        <h3>Documents</h3>
+        <p id="docsDesc">Documents du chantier.</p>
+      </a>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/axion-auth.js"></script>
+  <script>
+    (async function () {
+      var session = await AxionAuth.currentSession();
+      if (!session) { window.location.href = 'axion.html'; return; }
+
+      var profile;
+      try { profile = await AxionAuth.fetchProfile(session.user.id); }
+      catch (e) { window.location.href = 'axion.html?error=role'; return; }
+
+      if (!profile || (profile.role !== 'admin' && profile.role !== 'user')) {
+        await AxionAuth.signOut();
+        window.location.href = 'axion.html?error=role';
+        return;
+      }
+
+      var isAdmin = profile.role === 'admin';
+      var canEdit = isAdmin;   // seul l'admin édite le planning (mode MOE)
+
+      // Renseigne l'entête
+      document.getElementById('userName').textContent = profile.full_name || profile.email;
+      var pill = document.getElementById('rolePill');
+      pill.textContent = isAdmin ? 'Administrateur' : 'Entreprise';
+      pill.classList.add(profile.role);
+
+      document.getElementById('welcome').textContent =
+        isAdmin ? 'Tableau de bord administrateur'
+        :         'Votre espace entreprise';
+      document.getElementById('lead').textContent =
+        isAdmin ? 'Accès complet : tous les chantiers, entreprises, documents et plannings.'
+        :         'Accès limité à vos chantiers, vos tâches et vos documents.';
+
+      // Module Planning — lien handoff SSO (tokens passés dans le hash).
+      // Tant que l'URL du planning protégé n'est pas renseignée (config), le
+      // module est marqué « en préparation » (le planning live n'est PAS lié ici).
+      var planningTile = document.getElementById('planningTile');
+      var planningUrl = window.AXION_SUPABASE && window.AXION_SUPABASE.planningUrl;
+      if (planningUrl) {
+        planningTile.href = AxionAuth.planningHandoffUrl(session, profile.role);
+        planningTile.target = '_blank';
+        document.getElementById('planningDesc').textContent = canEdit
+          ? 'Édition du planning de vos chantiers (mode MOE).'
+          : 'Consultation du planning de vos chantiers (lecture seule).';
+      } else {
+        planningTile.classList.add('disabled');
+        planningTile.removeAttribute('href');
+        document.getElementById('planningDesc').textContent =
+          'Module en préparation — disponible après déploiement du planning protégé.';
+      }
+
+      // Modules réservés admin
+      if (isAdmin) {
+        document.getElementById('adminTile').style.display = 'block';
+      }
+      document.getElementById('docsDesc').textContent = isAdmin
+        ? 'Tous les documents, communs et privés.'
+        : 'Documents communs du chantier + vos documents privés.';
+
+      // Chantiers autorisés (RLS) — admin voit tout, user voit les siens.
+      try {
+        var projRes = await AxionAuth.sb.from('projects').select('id,name,slug').order('name');
+        if (projRes.error) throw projRes.error;
+        var projects = projRes.data || [];
+
+        var main = document.getElementById('appMain');
+        var modulesTitle = main.querySelector('.section-title');
+
+        var chantiersTitle = document.createElement('div');
+        chantiersTitle.className = 'section-title';
+        chantiersTitle.textContent = 'Vos chantiers';
+
+        var chantiersWrap = document.createElement('div');
+        if (projects.length === 0) {
+          var empty = document.createElement('p');
+          empty.className = 'lead';
+          empty.textContent = 'Aucun chantier autorisé';
+          chantiersWrap.appendChild(empty);
+        } else {
+          var ul = document.createElement('ul');
+          projects.forEach(function (p) {
+            var li = document.createElement('li');
+            li.textContent = p.name;
+            ul.appendChild(li);
+          });
+          chantiersWrap.appendChild(ul);
+        }
+
+        main.insertBefore(chantiersTitle, modulesTitle);
+        main.insertBefore(chantiersWrap, modulesTitle);
+      } catch (e) {
+        console.warn('Chantiers RLS indisponibles', e);
+      }
+
+      // Déconnexion
+      document.getElementById('logoutBtn').addEventListener('click', async function () {
+        await AxionAuth.signOut();
+        window.location.href = 'axion.html';
+      });
+
+      // Révèle l'UI
+      document.getElementById('loadingScreen').style.display = 'none';
+      document.getElementById('appHeader').style.visibility = 'visible';
+      document.getElementById('appMain').style.visibility = 'visible';
+    })();
+  </script>
+</body>
+</html>
