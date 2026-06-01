@@ -1,141 +1,334 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="scroll-smooth">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AXION — Pilotage de chantier · Cadence Architectes</title>
-<meta name="theme-color" content="#0c0e14">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --b0:#0c0e14;--b1:#131620;--b2:#1a1e2c;--b3:#232838;--bd:#2e3450;
-    --t:#e4e6f0;--t2:#8a90aa;--t3:#5c6280;
-    --or:#f59e0b;--g:#22c55e;--r:#ef4444;--bl:#3b82f6;
-    --R:12px;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{
-    font-family:'DM Sans',sans-serif;background:radial-gradient(1200px 600px at 50% -10%,#1a2238,#0c0e14);
-    color:var(--t);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
-  }
-  .card{
-    width:100%;max-width:400px;background:var(--b1);border:1px solid var(--bd);
-    border-radius:var(--R);padding:36px 32px;box-shadow:0 24px 60px rgba(0,0,0,.45);
-  }
-  .brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
-  .brand .logo{
-    width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--or),#d97706);
-    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;color:#0c0e14;
-  }
-  .brand h1{font-size:24px;letter-spacing:1px;font-weight:700}
-  .sub{color:var(--t2);font-size:13px;margin-bottom:28px}
-  label{display:block;font-size:12px;color:var(--t2);margin:14px 0 6px;font-weight:500}
-  input{
-    width:100%;background:var(--b0);border:1px solid var(--bd);border-radius:8px;
-    color:var(--t);padding:12px 14px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;
-  }
-  input:focus{border-color:var(--or)}
-  button{
-    width:100%;margin-top:22px;background:var(--or);color:#0c0e14;border:none;border-radius:8px;
-    padding:13px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:filter .15s;
-  }
-  button:hover{filter:brightness(1.06)}
-  button:disabled{opacity:.6;cursor:not-allowed}
-  .pwd-wrap{position:relative}
-  .pwd-wrap input{padding-right:46px}
-  .pwd-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;margin:0;
-    padding:6px 8px;background:none;border:none;color:var(--t2);font-size:18px;cursor:pointer;line-height:1}
-  .pwd-eye:hover{filter:none;color:var(--t)}
-  .msg{margin-top:16px;padding:11px 13px;border-radius:8px;font-size:13px;display:none}
-  .msg.err{display:block;background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
-  .msg.ok{display:block;background:rgba(34,197,94,.12);color:#86efac;border:1px solid rgba(34,197,94,.3)}
-  .foot{margin-top:24px;text-align:center;color:var(--t3);font-size:11px;line-height:1.6}
-  .loading{display:none;text-align:center;color:var(--t2);font-size:13px;margin-top:18px}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AXION — Construire devient intelligent</title>
+  <meta name="description" content="AXION — la plateforme qui connecte maîtres d'œuvre, entreprises et maîtres d'ouvrage dans un pilotage de chantier nouvelle génération." />
+  <meta name="theme-color" content="#0A0E1A" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0E1A'/%3E%3Cpath d='M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z' fill='%2360A5FA'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui'],
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            ink:    { 900:'#070A12', 800:'#0A0E1A', 700:'#0D1320', 600:'#111827', 500:'#1A2233' },
+            azure:  { 300:'#93C5FD', 400:'#60A5FA', 500:'#3B82F6', 600:'#2563EB' },
+            cyan:    { 400:'#38BDF8' },
+            slate2: { 300:'#CBD5E1', 400:'#94A3B8', 500:'#64748B' },
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    :root { color-scheme: dark; }
+    html, body { background: #0A0E1A; }
+    body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; }
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Ambient glows */
+    .bg-stage { position: relative; overflow: hidden; }
+    .bg-stage::before { content:""; position:absolute; top:-20%; left:50%; transform:translateX(-50%); width:1100px; height:700px;
+      background: radial-gradient(ellipse at center, rgba(59,130,246,.22), rgba(56,189,248,.08) 40%, transparent 70%); filter: blur(20px); pointer-events:none; }
+    .grid-faint { background-image: linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px); background-size: 44px 44px; }
+
+    .glass { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+    .glass-strong { background: rgba(13,19,32,.72); border: 1px solid rgba(255,255,255,.10); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+    .card-hover { transition: transform .4s cubic-bezier(.2,.7,.1,1), border-color .4s, box-shadow .4s; }
+    .card-hover:hover { transform: translateY(-4px); border-color: rgba(96,165,250,.35); box-shadow: 0 24px 50px -24px rgba(59,130,246,.45); }
+
+    .btn-azure { background: linear-gradient(135deg,#3B82F6,#2563EB); color:#fff; box-shadow: 0 10px 30px -10px rgba(59,130,246,.6); transition: transform .25s, box-shadow .25s; }
+    .btn-azure:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -12px rgba(59,130,246,.7); }
+    .btn-outline { border:1px solid rgba(255,255,255,.18); color:#E2E8F0; transition: background .25s, border-color .25s; }
+    .btn-outline:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.32); }
+
+    .text-grad { background: linear-gradient(120deg,#60A5FA,#38BDF8); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .hairline { height:1px; background: linear-gradient(90deg, transparent, rgba(148,163,184,.25) 30%, rgba(148,163,184,.25) 70%, transparent); }
+
+    .reveal { opacity:0; transform: translateY(26px); transition: opacity .9s cubic-bezier(.2,.7,.1,1), transform .9s cubic-bezier(.2,.7,.1,1); }
+    .reveal.in { opacity:1; transform:none; }
+    .float { animation: float 7s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @media (prefers-reduced-motion: reduce){ *{animation:none!important; transition:none!important} .reveal{opacity:1;transform:none} }
+
+    .dot { width:7px; height:7px; border-radius:50%; }
+    a:focus-visible, button:focus-visible { outline:2px solid #60A5FA; outline-offset:3px; border-radius:4px; }
+    ::selection { background:#2563EB; color:#fff; }
+    ::-webkit-scrollbar { width:10px; height:10px; } ::-webkit-scrollbar-thumb { background:#1A2233; border-radius:8px; }
+  </style>
 </head>
-<body>
-  <div class="card">
-    <div class="brand">
-      <div class="logo">A</div>
-      <h1>AXION</h1>
-    </div>
-    <div class="sub">Plateforme de pilotage de chantier · Cadence Architectes</div>
 
-    <form id="loginForm" autocomplete="on">
-      <label for="email">Adresse e-mail</label>
-      <input id="email" type="email" required autocomplete="username" placeholder="vous@entreprise.fr">
-      <label for="password">Mot de passe</label>
-      <div class="pwd-wrap">
-        <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••">
-        <button type="button" id="togglePwd" class="pwd-eye" aria-label="Afficher le mot de passe" title="Afficher / masquer le mot de passe">👁</button>
+<body class="bg-ink-800 text-slate-200">
+
+<!-- ============ NAV ============ -->
+<header class="fixed top-4 left-4 right-4 z-50">
+  <nav class="glass-strong rounded-2xl max-w-6xl mx-auto px-5 md:px-6 py-3 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2.5 group">
+      <span class="w-9 h-9 rounded-xl grid place-items-center" style="background:linear-gradient(135deg,#1A2233,#0D1320);border:1px solid rgba(96,165,250,.3)">
+        <svg width="20" height="20" viewBox="0 0 64 64"><path d="M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z" fill="#60A5FA"/></svg>
+      </span>
+      <span class="font-display text-lg font-700 tracking-[0.22em] text-white">AXION</span>
+    </a>
+    <ul class="hidden lg:flex items-center gap-8 text-sm text-slate2-300">
+      <li><a href="#plateforme" class="hover:text-white transition-colors">Plateforme</a></li>
+      <li><a href="#fonctionnalites" class="hover:text-white transition-colors">Fonctionnalités</a></li>
+      <li><a href="#solutions" class="hover:text-white transition-colors">Solutions</a></li>
+      <li><a href="#a-propos" class="hover:text-white transition-colors">À propos</a></li>
+    </ul>
+    <a href="login.html" class="btn-outline rounded-xl px-4 py-2 text-sm font-medium">Se connecter</a>
+  </nav>
+</header>
+
+<!-- ============ HERO ============ -->
+<section id="top" class="bg-stage grid-faint pt-28 md:pt-36 pb-16 px-5 md:px-8">
+  <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+    <!-- Left copy -->
+    <div class="reveal">
+      <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-5">Plateforme nouvelle génération</p>
+      <h1 class="font-display text-5xl md:text-6xl font-700 leading-[1.02] tracking-tight text-white">
+        Construire<br/>devient <span class="text-grad">intelligent.</span>
+      </h1>
+      <p class="mt-6 text-slate2-300 text-lg leading-relaxed max-w-md">
+        La plateforme qui connecte maîtres d'œuvre, entreprises et maîtres d'ouvrage dans un pilotage de chantier nouvelle génération.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="#plateforme" class="btn-azure rounded-xl px-6 py-3.5 text-sm font-semibold flex items-center gap-2">
+          Découvrir la plateforme
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="login.html" class="btn-outline rounded-xl px-6 py-3.5 text-sm font-semibold">Accéder à mon espace</a>
       </div>
-      <button type="submit" id="submitBtn">Se connecter</button>
-    </form>
+      <div class="mt-8 flex items-center gap-6 text-xs text-slate2-500">
+        <span class="flex items-center gap-2"><span class="dot bg-green-400"></span> Temps réel</span>
+        <span class="flex items-center gap-2"><span class="dot bg-azure-400"></span> Multi-chantiers</span>
+        <span class="flex items-center gap-2"><span class="dot bg-cyan-400"></span> IA intégrée</span>
+      </div>
+    </div>
 
-    <div class="loading" id="loading">Connexion…</div>
-    <div class="msg" id="msg"></div>
-
-    <div class="foot">
-      Accès réservé. Authentification sécurisée Supabase.<br>
-      Un problème de connexion ? Contactez l'administrateur.
+    <!-- Right: recreated holographic dashboard -->
+    <div class="reveal float">
+      <div class="glass-strong rounded-2xl p-3 md:p-4 relative" style="box-shadow:0 40px 90px -30px rgba(59,130,246,.4)">
+        <!-- window bar -->
+        <div class="flex items-center gap-1.5 px-1 pb-3">
+          <span class="dot" style="background:#475569"></span><span class="dot" style="background:#475569"></span><span class="dot" style="background:#475569"></span>
+          <span class="ml-auto font-mono text-[10px] text-slate2-500">axion · tableau de bord</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2.5">
+          <!-- KPIs -->
+          <div class="glass rounded-xl p-3 col-span-1">
+            <p class="text-[9px] uppercase tracking-wider text-slate2-500 mb-2">Tableau de bord</p>
+            <div class="space-y-2">
+              <div><p class="font-display text-xl text-white leading-none">24</p><p class="text-[9px] text-slate2-400">Projets en cours</p></div>
+              <div><p class="font-display text-xl text-white leading-none">128</p><p class="text-[9px] text-slate2-400">Tâches actives</p></div>
+              <div><p class="font-display text-xl text-white leading-none">35</p><p class="text-[9px] text-slate2-400">Entreprises</p></div>
+              <div><p class="font-display text-xl leading-none" style="color:#F59E0B">7</p><p class="text-[9px] text-slate2-400">Alertes</p></div>
+            </div>
+          </div>
+          <!-- Planning + budget + avancement -->
+          <div class="col-span-2 space-y-2.5">
+            <div class="glass rounded-xl p-3">
+              <p class="text-[9px] uppercase tracking-wider text-slate2-500 mb-2">Planning</p>
+              <div class="space-y-1.5">
+                <div class="h-1.5 rounded-full" style="width:90%;background:linear-gradient(90deg,#3B82F6,#60A5FA)"></div>
+                <div class="h-1.5 rounded-full" style="width:65%;background:linear-gradient(90deg,#2563EB,#3B82F6);margin-left:12%"></div>
+                <div class="h-1.5 rounded-full" style="width:50%;background:linear-gradient(90deg,#38BDF8,#60A5FA);margin-left:30%"></div>
+                <div class="h-1.5 rounded-full" style="width:40%;background:rgba(148,163,184,.3);margin-left:48%"></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div class="glass rounded-xl p-3 flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full grid place-items-center" style="background:conic-gradient(#3B82F6 76%, rgba(148,163,184,.2) 0)">
+                  <div class="w-9 h-9 rounded-full bg-ink-700 grid place-items-center"><span class="text-[10px] font-semibold text-white">76%</span></div>
+                </div>
+                <div><p class="text-[9px] uppercase tracking-wider text-slate2-500">Budget</p><p class="text-[10px] text-slate2-300">2,4 / 3,2 M€</p></div>
+              </div>
+              <div class="glass rounded-xl p-3">
+                <p class="text-[9px] uppercase tracking-wider text-slate2-500">Avancement</p>
+                <p class="font-display text-2xl text-white leading-tight">72%</p>
+                <svg viewBox="0 0 80 24" class="w-full h-4 mt-1"><polyline points="0,20 12,16 24,18 36,10 48,12 60,6 72,4 80,2" fill="none" stroke="#38BDF8" stroke-width="2"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- bottom row: collaboration + documents -->
+        <div class="grid grid-cols-2 gap-2.5 mt-2.5">
+          <div class="glass rounded-xl p-3">
+            <p class="text-[9px] uppercase tracking-wider text-slate2-500 mb-2">Collaboration</p>
+            <ul class="space-y-1.5 text-[10px] text-slate2-300">
+              <li class="flex items-center justify-between">Architecte <span class="dot bg-green-400"></span></li>
+              <li class="flex items-center justify-between">Bureau d'études <span class="dot bg-green-400"></span></li>
+              <li class="flex items-center justify-between">Entreprise GO <span class="dot" style="background:#F59E0B"></span></li>
+              <li class="flex items-center justify-between">BET Fluides <span class="dot bg-green-400"></span></li>
+            </ul>
+          </div>
+          <div class="glass rounded-xl p-3">
+            <p class="text-[9px] uppercase tracking-wider text-slate2-500 mb-2">Documents</p>
+            <div class="grid grid-cols-2 gap-1.5 text-[10px] text-slate2-300">
+              <span class="glass rounded-lg py-1.5 text-center">Plans</span>
+              <span class="glass rounded-lg py-1.5 text-center" style="color:#38BDF8">BIM</span>
+              <span class="glass rounded-lg py-1.5 text-center">CCTP</span>
+              <span class="glass rounded-lg py-1.5 text-center">Rendus</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/axion-auth.js"></script>
-  <script>
-    var form = document.getElementById('loginForm');
-    var btn = document.getElementById('submitBtn');
-    var loading = document.getElementById('loading');
-    var msgEl = document.getElementById('msg');
+  <!-- Feature bar -->
+  <div class="max-w-6xl mx-auto mt-14 reveal">
+    <div class="glass rounded-2xl px-4 py-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
+      <div class="flex flex-col items-center gap-1.5"><span class="text-azure-400">●</span><p class="text-xs text-slate2-300">Pilotage temps réel</p></div>
+      <div class="flex flex-col items-center gap-1.5"><span class="text-azure-400">◧</span><p class="text-xs text-slate2-300">Maquette BIM</p></div>
+      <div class="flex flex-col items-center gap-1.5"><span class="text-azure-400">⬡</span><p class="text-xs text-slate2-300">Collaboration fluide</p></div>
+      <div class="flex flex-col items-center gap-1.5"><span class="text-azure-400">€</span><p class="text-xs text-slate2-300">Suivi financier</p></div>
+      <div class="flex flex-col items-center gap-1.5"><span class="text-azure-400">!</span><p class="text-xs text-slate2-300">Alertes intelligentes</p></div>
+      <div class="flex flex-col items-center gap-1.5"><span class="text-azure-400">✦</span><p class="text-xs text-slate2-300">IA & Prédictions</p></div>
+    </div>
+  </div>
+</section>
 
-    function showMsg(text, type){ msgEl.textContent = text; msgEl.className = 'msg ' + type; }
+<!-- ============ PLATEFORME / FONCTIONNALITÉS ============ -->
+<section id="plateforme" class="px-5 md:px-8 py-20">
+  <div class="max-w-6xl mx-auto">
+    <div id="fonctionnalites" class="max-w-2xl reveal">
+      <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-3">La plateforme</p>
+      <h2 class="font-display text-3xl md:text-4xl font-700 text-white tracking-tight">Un seul outil, tout le chantier.</h2>
+      <p class="mt-4 text-slate2-400 leading-relaxed">Du planning à la livraison, AXION centralise le pilotage et donne à chaque intervenant le bon accès, au bon moment.</p>
+    </div>
 
-    // Afficher / masquer le mot de passe (œil)
-    var pwdInput = document.getElementById('password');
-    var togglePwd = document.getElementById('togglePwd');
-    togglePwd.addEventListener('click', function () {
-      var show = pwdInput.type === 'password';
-      pwdInput.type = show ? 'text' : 'password';
-      togglePwd.textContent = show ? '🙈' : '👁';
-      togglePwd.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
-      pwdInput.focus();
-    });
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
+      <!-- card -->
+      <div class="glass card-hover rounded-2xl p-6 reveal">
+        <div class="w-11 h-11 rounded-xl grid place-items-center mb-4" style="background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.25)"><svg class="w-5 h-5 text-azure-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3 class="font-display text-lg text-white mb-1.5">Planning TCE en temps réel</h3>
+        <p class="text-sm text-slate2-400 leading-relaxed">Gantt par lots et par bâtiment, dépendances, propagation des retards et pointage terrain.</p>
+      </div>
+      <div class="glass card-hover rounded-2xl p-6 reveal">
+        <div class="w-11 h-11 rounded-xl grid place-items-center mb-4" style="background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.25)"><svg class="w-5 h-5 text-azure-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z M3.3 7L12 12l8.7-5M12 22V12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3 class="font-display text-lg text-white mb-1.5">Maquette BIM interactive</h3>
+        <p class="text-sm text-slate2-400 leading-relaxed">Visualisez le projet en 3D, reliez les documents aux éléments et naviguez par niveau.</p>
+      </div>
+      <div class="glass card-hover rounded-2xl p-6 reveal">
+        <div class="w-11 h-11 rounded-xl grid place-items-center mb-4" style="background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.25)"><svg class="w-5 h-5 text-azure-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3 class="font-display text-lg text-white mb-1.5">Collaboration multi-acteurs</h3>
+        <p class="text-sm text-slate2-400 leading-relaxed">MOE, entreprises et MOA sur le même espace, chacun avec ses droits et ses documents.</p>
+      </div>
+      <div class="glass card-hover rounded-2xl p-6 reveal">
+        <div class="w-11 h-11 rounded-xl grid place-items-center mb-4" style="background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.25)"><svg class="w-5 h-5 text-azure-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3 class="font-display text-lg text-white mb-1.5">Suivi financier</h3>
+        <p class="text-sm text-slate2-400 leading-relaxed">Budget consommé, situations, marchés et avenants — une vision claire de l'opération.</p>
+      </div>
+      <div class="glass card-hover rounded-2xl p-6 reveal">
+        <div class="w-11 h-11 rounded-xl grid place-items-center mb-4" style="background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.25)"><svg class="w-5 h-5 text-azure-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3 class="font-display text-lg text-white mb-1.5">Alertes intelligentes</h3>
+        <p class="text-sm text-slate2-400 leading-relaxed">Chaînes critiques bloquées, délais fournisseurs, dérives — l'outil prévient avant le retard.</p>
+      </div>
+      <div class="glass card-hover rounded-2xl p-6 reveal">
+        <div class="w-11 h-11 rounded-xl grid place-items-center mb-4" style="background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.25)"><svg class="w-5 h-5 text-azure-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17l-6.3 4.4L8 14 2 9.4h7.6z" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3 class="font-display text-lg text-white mb-1.5">IA & prédictions</h3>
+        <p class="text-sm text-slate2-400 leading-relaxed">Analyse des documents, briefing avant réunion et projection de la date de livraison.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-    // Message d'erreur éventuel passé en query (?error=role)
-    if (location.search.indexOf('error=role') >= 0) {
-      showMsg('Votre compte n\'a pas de rôle valide. Contactez l\'administrateur.', 'err');
+<!-- ============ SOLUTIONS PAR RÔLE ============ -->
+<section id="solutions" class="px-5 md:px-8 py-20 bg-stage">
+  <div class="max-w-6xl mx-auto">
+    <div class="max-w-2xl reveal">
+      <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-3">Solutions</p>
+      <h2 class="font-display text-3xl md:text-4xl font-700 text-white tracking-tight">Un accès pensé pour chaque rôle.</h2>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5 mt-12">
+      <div class="glass-strong card-hover rounded-2xl p-7 reveal">
+        <p class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400">Maîtres d'œuvre</p>
+        <h3 class="font-display text-xl text-white mt-2 mb-3">Piloter sans ressaisir</h3>
+        <ul class="space-y-2 text-sm text-slate2-400">
+          <li class="flex gap-2"><span class="text-azure-400">→</span> Planning maître et forecast côte à côte</li>
+          <li class="flex gap-2"><span class="text-azure-400">→</span> Diffusion documentaire ciblée</li>
+          <li class="flex gap-2"><span class="text-azure-400">→</span> Alertes sur chaînes critiques</li>
+        </ul>
+      </div>
+      <div class="glass-strong card-hover rounded-2xl p-7 reveal" style="border-color:rgba(96,165,250,.3)">
+        <p class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400">Entreprises</p>
+        <h3 class="font-display text-xl text-white mt-2 mb-3">Le bon plan, au bon moment</h3>
+        <ul class="space-y-2 text-sm text-slate2-400">
+          <li class="flex gap-2"><span class="text-azure-400">→</span> Accès chantier par login dédié</li>
+          <li class="flex gap-2"><span class="text-azure-400">→</span> Planning, notices, plans de vente</li>
+          <li class="flex gap-2"><span class="text-azure-400">→</span> Dépôt de plans EXE en un geste</li>
+        </ul>
+      </div>
+      <div class="glass-strong card-hover rounded-2xl p-7 reveal">
+        <p class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400">Maîtres d'ouvrage</p>
+        <h3 class="font-display text-xl text-white mt-2 mb-3">Une vision d'ensemble</h3>
+        <ul class="space-y-2 text-sm text-slate2-400">
+          <li class="flex gap-2"><span class="text-azure-400">→</span> Avancement et budget en un écran</li>
+          <li class="flex gap-2"><span class="text-azure-400">→</span> Jalons de livraison suivis</li>
+          <li class="flex gap-2"><span class="text-azure-400">→</span> Historique des décisions</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section id="a-propos" class="px-5 md:px-8 py-20">
+  <div class="max-w-4xl mx-auto glass-strong rounded-3xl p-10 md:p-14 text-center bg-stage reveal">
+    <h2 class="font-display text-3xl md:text-5xl font-700 text-white tracking-tight">Prêt à piloter autrement&nbsp;?</h2>
+    <p class="mt-4 text-slate2-300 max-w-xl mx-auto">AXION est en développement. Connectez-vous à l'espace chantiers ou demandez une démonstration.</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="login.html" class="btn-azure rounded-xl px-7 py-3.5 text-sm font-semibold">Accéder à l'espace chantiers</a>
+      <a href="mailto:agence@cadence-architectes.fr" class="btn-outline rounded-xl px-7 py-3.5 text-sm font-semibold">Demander une démo</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="px-5 md:px-8 py-10 border-t border-white/5">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate2-500">
+    <div class="flex items-center gap-2.5">
+      <span class="w-7 h-7 rounded-lg grid place-items-center" style="background:linear-gradient(135deg,#1A2233,#0D1320);border:1px solid rgba(96,165,250,.3)"><svg width="15" height="15" viewBox="0 0 64 64"><path d="M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z" fill="#60A5FA"/></svg></span>
+      <span class="font-display tracking-[0.22em] text-slate2-300">AXION</span>
+    </div>
+    <p>Une initiative Cadence Architectes Associés · Paris 12e</p>
+    <p class="font-mono text-xs">agence@cadence-architectes.fr</p>
+  </div>
+</footer>
+
+<script>
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // AXION — Si l'utilisateur est déjà connecté, le bouton « Se connecter » /
+  // « Accéder à mon espace » ouvre directement le dashboard (UX fluide).
+  // Lecture passive : on regarde simplement si une session Supabase existe
+  // dans le localStorage (clé sb-<ref>-auth-token). Aucun appel réseau ici.
+  try {
+    var SB_KEY = 'sb-phfdrgvdfhwtyycxpahq-auth-token';
+    if (localStorage.getItem(SB_KEY)) {
+      document.querySelectorAll('a[href="login.html"]').forEach(function (a) {
+        a.setAttribute('href', 'app.html');
+      });
     }
-
-    // Si déjà connecté → router directement vers le dashboard.
-    (async function () {
-      try {
-        var session = await AxionAuth.currentSession();
-        if (session) {
-          var profile = await AxionAuth.fetchProfile(session.user.id);
-          AxionAuth.routeByRole(profile);
-        }
-      } catch (e) { /* pas de session → on laisse le formulaire */ }
-    })();
-
-    form.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      var email = document.getElementById('email').value.trim();
-      var password = document.getElementById('password').value;
-      btn.disabled = true; loading.style.display = 'block'; msgEl.className = 'msg';
-      try {
-        var res = await AxionAuth.signIn(email, password);
-        showMsg('Connecté. Redirection…', 'ok');
-        AxionAuth.routeByRole(res.profile);
-      } catch (err) {
-        var m = (err && err.message) || 'Erreur de connexion';
-        if (/invalid login/i.test(m)) m = 'E-mail ou mot de passe incorrect.';
-        if (/profil|profile|row|single/i.test(m)) m = 'Aucun profil associé à ce compte. Contactez l\'administrateur.';
-        showMsg(m, 'err');
-        btn.disabled = false; loading.style.display = 'none';
-      }
-    });
-  </script>
+  } catch (e) {}
+</script>
 </body>
 </html>
