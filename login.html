@@ -77,7 +77,20 @@
      Logo dans l'image : ~5%-25% width, ~3%-25% height.
      Donc tagline commence vers 32% top. */
   .left-pane {
-    left: 5%; top: 36%; width: 38%; max-width: 560px;
+    left: 5%; top: 34%; width: 40%; max-width: 580px;
+  }
+  /* Voile très doux derrière le texte gauche pour la lisibilité,
+     sans box visible : blur radial qui s'estompe sur les bords. */
+  .left-pane::before {
+    content: ""; position: absolute;
+    left: -20px; top: -20px; right: -40px; bottom: -20px;
+    background: radial-gradient(ellipse at 35% 50%, rgba(10,22,40,.75) 0%, rgba(10,22,40,.55) 35%, rgba(10,22,40,0) 75%);
+    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+    z-index: -1; pointer-events: none; border-radius: 24px;
+  }
+  /* Découpe le texte du fond avec une ombre douce. */
+  .left-pane h1, .left-pane p, .left-pane li, .left-pane span, .left-pane b {
+    text-shadow: 0 2px 8px rgba(0,0,0,.6), 0 1px 2px rgba(0,0,0,.4);
   }
   /* Droite : positionnée DANS le rectangle vide du fond
      (mesuré ≈ left 46%, top 6%, width 30%, height 88%). */
@@ -127,6 +140,15 @@
   .checkbox:checked { background:#3B82F6; border-color:#3B82F6; }
   .checkbox:checked::after { content:""; position:absolute; left:4px; top:1px; width:5px; height:9px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); }
 
+  /* Chips de verbes : fond glass discret pour lisibilité sur wireframe */
+  .verb {
+    display:flex; align-items:center; gap:8px;
+    padding:8px 12px; border-radius:10px;
+    background: rgba(13,23,42,.6);
+    border: 1px solid rgba(96,165,250,.18);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  }
+
   .divider { display:flex; align-items:center; gap:12px; color:#64748B; font-size:11px; letter-spacing:.2em; }
   .divider::before, .divider::after { content:""; flex:1; height:1px; background:linear-gradient(90deg, transparent, rgba(148,163,184,.25), transparent); }
 
@@ -168,19 +190,19 @@
 
     <div class="gold-rule mt-5 fade-2"></div>
 
-    <p class="mt-5 text-slate2-300 text-sm xl:text-base leading-relaxed max-w-md fade-2">
+    <p class="mt-5 text-slate-100 text-sm xl:text-base leading-relaxed max-w-md fade-2" style="font-weight:400">
       Le portail intelligent qui connecte maîtres d'œuvre, entreprises et maîtres d'ouvrage
       pour des projets maîtrisés, performants et durables.
     </p>
 
     <ul class="mt-7 grid grid-cols-2 gap-2 max-w-md text-xs xl:text-sm fade-3">
-      <li class="flex items-center gap-2 text-slate2-300"><span style="color:#60A5FA">●</span> <span><b class="text-white">Planifier</b> · vos projets</span></li>
-      <li class="flex items-center gap-2 text-slate2-300"><span style="color:#60A5FA">●</span> <span><b class="text-white">Collaborer</b> · en temps réel</span></li>
-      <li class="flex items-center gap-2 text-slate2-300"><span style="color:#60A5FA">●</span> <span><b class="text-white">Piloter</b> · vos chantiers</span></li>
-      <li class="flex items-center gap-2 text-slate2-300"><span style="color:#C9A95C">●</span> <span><b class="text-white">Sécuriser</b> · vos données</span></li>
+      <li class="verb"><span style="color:#60A5FA">●</span> <span><b class="text-white">Planifier</b> <span class="text-slate-300">· vos projets</span></span></li>
+      <li class="verb"><span style="color:#60A5FA">●</span> <span><b class="text-white">Collaborer</b> <span class="text-slate-300">· en temps réel</span></span></li>
+      <li class="verb"><span style="color:#60A5FA">●</span> <span><b class="text-white">Piloter</b> <span class="text-slate-300">· vos chantiers</span></span></li>
+      <li class="verb"><span style="color:#C9A95C">●</span> <span><b class="text-white">Sécuriser</b> <span class="text-slate-300">· vos données</span></span></li>
     </ul>
 
-    <p class="mt-8 text-[11px] text-slate2-500 fade-4">
+    <p class="mt-8 text-[11px] text-slate-300 fade-4" style="text-shadow:0 2px 8px rgba(0,0,0,.7), 0 0 12px rgba(0,0,0,.5)">
       Cadence Architectes Associés · Paris 12<sup>e</sup> ·
       <span class="font-mono">agence@cadence-architectes.fr</span>
     </p>
@@ -250,7 +272,7 @@
   </div>
 
   <!-- Retour à l'accueil (en bas centre, discret) -->
-  <a href="axion.html" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 text-xs text-slate2-500 hover:text-azure-400 transition-colors flex items-center gap-2">
+  <a href="axion.html" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 text-xs text-slate-300 hover:text-azure-400 transition-colors flex items-center gap-2 px-4 py-2 rounded-full" style="background:rgba(13,23,42,.7); border:1px solid rgba(255,255,255,.08); backdrop-filter:blur(8px)">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5 M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
     Retour à l'accueil
   </a>
