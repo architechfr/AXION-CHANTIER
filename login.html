@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AXION — Connexion</title>
-<meta name="theme-color" content="#0A0E1A">
+<meta name="theme-color" content="#0A1628">
 
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0E1A'/%3E%3Cpath d='M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z' fill='%2360A5FA'/%3E%3C/svg%3E" />
+<link rel="icon" type="image/png" href="assets/img/logo-axion-icon.png" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,51 +15,56 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
-    theme: {
-      extend: {
-        fontFamily: {
-          display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui'],
-          sans: ['Inter', 'ui-sans-serif', 'system-ui'],
-          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
-        },
-        colors: {
-          ink:    { 900:'#070A12', 800:'#0A0E1A', 700:'#0D1320', 600:'#111827', 500:'#1A2233' },
-          azure:  { 300:'#93C5FD', 400:'#60A5FA', 500:'#3B82F6', 600:'#2563EB' },
-          cyan:   { 400:'#38BDF8' },
-          slate2: { 300:'#CBD5E1', 400:'#94A3B8', 500:'#64748B' },
-        },
+    theme: { extend: {
+      fontFamily: {
+        display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
-    },
+      colors: {
+        ink:    { 900:'#070A12', 800:'#0A1628', 700:'#0F2447', 600:'#111827', 500:'#1A2233' },
+        azure:  { 300:'#93C5FD', 400:'#60A5FA', 500:'#3B82F6', 600:'#2563EB' },
+        cyan:   { 400:'#38BDF8' },
+        gold:   { 400:'#D4A946', 500:'#C9A95C' },
+        slate2: { 300:'#CBD5E1', 400:'#94A3B8', 500:'#64748B' },
+      },
+    } },
   };
 </script>
 
 <style>
   :root { color-scheme: dark; }
-  html, body { background: #0A0E1A; }
-  body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  html, body { background: #0A1628; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; min-height: 100vh; }
   .font-display { font-family: 'Space Grotesk', sans-serif; }
   .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-  .bg-stage { position: fixed; inset:0; overflow:hidden; pointer-events:none; z-index:0 }
-  .bg-stage::before { content:""; position:absolute; top:-10%; left:50%; transform:translateX(-50%); width:1100px; height:700px;
-    background: radial-gradient(ellipse at center, rgba(59,130,246,.22), rgba(56,189,248,.08) 40%, transparent 70%); filter: blur(20px); }
-  .grid-faint { position:fixed; inset:0; background-image: linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px); background-size: 44px 44px; pointer-events:none; z-index:0 }
+  /* Fond ambiant global */
+  .grid-faint { background-image: linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px); background-size: 44px 44px; }
+  .glow-blue { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  .glow-blue::before { content:""; position:absolute; top:-15%; left:-10%; width:60%; height:80%;
+    background: radial-gradient(ellipse at center, rgba(59,130,246,.30), rgba(30,58,138,.10) 45%, transparent 75%); filter: blur(40px); }
+  .glow-blue::after { content:""; position:absolute; bottom:-20%; right:-15%; width:50%; height:60%;
+    background: radial-gradient(ellipse at center, rgba(56,189,248,.18), transparent 70%); filter: blur(40px); }
 
-  .glass-strong { background: rgba(13,19,32,.82); border: 1px solid rgba(255,255,255,.10); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  .glass { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  .glass-strong { background: rgba(13,23,42,.78); border: 1px solid rgba(255,255,255,.10); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
   .text-grad { background: linear-gradient(120deg,#60A5FA,#38BDF8); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .text-gold { color:#C9A95C; }
+  .gold-rule { width:140px; height:1.5px; background: linear-gradient(90deg, transparent, #C9A95C, transparent); }
 
-  .btn-azure { background: linear-gradient(135deg,#3B82F6,#2563EB); color:#fff; box-shadow: 0 10px 30px -10px rgba(59,130,246,.6); transition: transform .25s, box-shadow .25s; width:100%; }
-  .btn-azure:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -12px rgba(59,130,246,.7); }
+  .btn-azure { background: linear-gradient(135deg,#3B82F6,#2563EB); color:#fff; box-shadow: 0 10px 30px -10px rgba(59,130,246,.6); transition: transform .25s, box-shadow .25s; }
+  .btn-azure:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -12px rgba(59,130,246,.75); }
   .btn-azure:disabled { opacity:.55; cursor:not-allowed; transform:none; }
 
   input[type="email"], input[type="password"], input[type="text"] {
-    width:100%; background:#0A0E1A; border:1px solid rgba(255,255,255,.12); border-radius:10px;
-    color:#E2E8F0; padding:12px 14px; font-size:14px; font-family:inherit; outline:none; transition:border .15s, box-shadow .15s;
+    width:100%; background:#0A1628; border:1px solid rgba(255,255,255,.12); border-radius:10px;
+    color:#E2E8F0; padding:12px 14px 12px 42px; font-size:14px; font-family:inherit; outline:none; transition:border .15s, box-shadow .15s;
   }
   input:focus { border-color:#60A5FA; box-shadow:0 0 0 3px rgba(96,165,250,.15); }
+  .field { position:relative; }
+  .field-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:#94A3B8; pointer-events:none; }
 
-  .pwd-wrap { position:relative }
-  .pwd-wrap input { padding-right:46px }
   .pwd-eye { position:absolute; right:6px; top:50%; transform:translateY(-50%); padding:6px 10px; background:none; border:none; color:#94A3B8; font-size:18px; cursor:pointer; line-height:1 }
   .pwd-eye:hover { color:#E2E8F0 }
 
@@ -67,56 +72,131 @@
   .msg.err { display:block; background:rgba(239,68,68,.12); color:#FCA5A5; border:1px solid rgba(239,68,68,.3) }
   .msg.ok  { display:block; background:rgba(34,197,94,.10); color:#86EFAC; border:1px solid rgba(34,197,94,.3) }
 
+  /* Hero left side */
+  .hero-bg {
+    position:absolute; inset:0; overflow:hidden;
+    background:
+      linear-gradient(180deg, rgba(10,22,40,.4) 0%, rgba(10,22,40,.85) 100%),
+      url('assets/img/logo-axion-hero.png') no-repeat center center / cover;
+  }
+  /* Variante : si tu préfères l'image hero seule sans dégradé fort, retire le linear-gradient */
+
   a:focus-visible, button:focus-visible { outline:2px solid #60A5FA; outline-offset:3px; border-radius:4px; }
   ::selection { background:#2563EB; color:#fff; }
+  ::-webkit-scrollbar { width:10px; height:10px; } ::-webkit-scrollbar-thumb { background:#1A2233; border-radius:8px; }
+
+  /* Animation entrée card */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+  .fade-up { animation: fadeUp .8s cubic-bezier(.2,.7,.1,1) both; }
+  @media (prefers-reduced-motion: reduce) { .fade-up { animation: none; } }
 </style>
 </head>
 
 <body class="text-slate-200">
 
-<div class="bg-stage"></div>
-<div class="grid-faint"></div>
+<div class="min-h-screen lg:grid lg:grid-cols-2">
 
-<div class="relative z-10 w-full max-w-md">
-  <!-- Logo + retour landing -->
-  <div class="text-center mb-7">
-    <a href="axion.html" class="inline-flex items-center gap-2.5 group">
-      <span class="w-10 h-10 rounded-xl grid place-items-center" style="background:linear-gradient(135deg,#1A2233,#0D1320);border:1px solid rgba(96,165,250,.3)">
-        <svg width="22" height="22" viewBox="0 0 64 64"><path d="M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z" fill="#60A5FA"/></svg>
-      </span>
-      <span class="font-display text-xl font-700 tracking-[0.22em] text-white">AXION</span>
-    </a>
-  </div>
+  <!-- ============ HÉRO GAUCHE (visible ≥ lg) ============ -->
+  <aside class="hidden lg:block relative overflow-hidden">
+    <div class="hero-bg"></div>
+    <div class="grid-faint absolute inset-0 opacity-30"></div>
+    <div class="glow-blue"></div>
 
-  <div class="glass-strong rounded-2xl p-8 md:p-10" style="box-shadow:0 40px 90px -30px rgba(59,130,246,.4)">
-    <p class="font-mono text-[10px] tracking-[0.3em] uppercase text-azure-400 mb-2">Connexion</p>
-    <h1 class="font-display text-2xl md:text-3xl font-700 text-white tracking-tight">Accéder à votre <span class="text-grad">espace</span></h1>
-    <p class="mt-2 text-sm text-slate2-400">Pilotage de chantier · Cadence Architectes</p>
-
-    <form id="loginForm" autocomplete="on" class="mt-7 space-y-4">
-      <div>
-        <label for="email" class="block text-xs font-medium text-slate2-400 mb-2 tracking-wide">Adresse e-mail</label>
-        <input id="email" type="email" required autocomplete="username" placeholder="vous@entreprise.fr">
+    <div class="relative z-10 h-full flex flex-col justify-between p-12 xl:p-16">
+      <!-- Logo grand format -->
+      <div class="fade-up">
+        <img src="assets/img/logo-axion-dark.png" alt="AXION — Cadence Architectes" class="w-56 xl:w-64" />
       </div>
-      <div>
-        <label for="password" class="block text-xs font-medium text-slate2-400 mb-2 tracking-wide">Mot de passe</label>
-        <div class="pwd-wrap">
-          <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••">
-          <button type="button" id="togglePwd" class="pwd-eye" aria-label="Afficher le mot de passe" title="Afficher / masquer le mot de passe">👁</button>
-        </div>
+
+      <!-- Tagline & accroche -->
+      <div class="fade-up" style="animation-delay:.15s">
+        <p class="font-display text-3xl xl:text-4xl font-700 leading-tight text-white">
+          Pilotez. <span class="text-grad">Collaborez.</span><br/>
+          Construisez l'avenir.
+        </p>
+        <div class="gold-rule mt-6 ml-0"></div>
+        <p class="mt-5 text-slate2-300 text-sm max-w-md leading-relaxed">
+          Le portail intelligent qui connecte maîtres d'œuvre, entreprises et maîtres d'ouvrage
+          pour des projets maîtrisés, performants et durables.
+        </p>
+
+        <ul class="mt-8 grid grid-cols-2 gap-3 max-w-md text-xs text-slate2-400">
+          <li class="glass rounded-lg px-3 py-2.5 flex items-center gap-2"><span class="text-azure-400">●</span> Planifier</li>
+          <li class="glass rounded-lg px-3 py-2.5 flex items-center gap-2"><span class="text-azure-400">●</span> Collaborer</li>
+          <li class="glass rounded-lg px-3 py-2.5 flex items-center gap-2"><span class="text-azure-400">●</span> Piloter</li>
+          <li class="glass rounded-lg px-3 py-2.5 flex items-center gap-2" style="color:#C9A95C">
+            <span style="color:#C9A95C">●</span> Construire
+          </li>
+        </ul>
       </div>
-      <button type="submit" id="submitBtn" class="btn-azure rounded-xl px-5 py-3 text-sm font-semibold mt-2">Se connecter</button>
-    </form>
 
-    <div id="msg" class="msg"></div>
-
-    <div class="mt-6 pt-5 border-t border-white/5 text-center text-xs text-slate2-500 leading-relaxed">
-      Accès réservé · Authentification sécurisée Supabase<br/>
-      <a href="mailto:agence@cadence-architectes.fr" class="hover:text-azure-400 transition-colors">Un problème de connexion ?</a>
+      <!-- Footer aside -->
+      <div class="fade-up text-xs text-slate2-500" style="animation-delay:.3s">
+        <p>Cadence Architectes Associés · Paris 12<sup>e</sup></p>
+        <p class="font-mono mt-1">agence@cadence-architectes.fr</p>
+      </div>
     </div>
-  </div>
+  </aside>
 
-  <p class="mt-6 text-center text-xs text-slate2-500"><a href="axion.html" class="hover:text-azure-400 transition-colors">← Retour à l'accueil</a></p>
+  <!-- ============ FORMULAIRE DROITE ============ -->
+  <section class="relative flex items-center justify-center p-6 md:p-10 lg:p-12">
+    <div class="grid-faint absolute inset-0 opacity-20 pointer-events-none lg:hidden"></div>
+    <div class="glow-blue lg:hidden"></div>
+
+    <div class="relative z-10 w-full max-w-md fade-up">
+      <!-- Logo compact (mobile + dans la card) -->
+      <div class="flex justify-center lg:hidden mb-6">
+        <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-20 h-20 rounded-2xl" />
+      </div>
+
+      <div class="glass-strong rounded-2xl p-8 md:p-10" style="box-shadow:0 40px 90px -30px rgba(59,130,246,.4)">
+        <!-- Header card -->
+        <div class="flex items-center gap-3 mb-2">
+          <img src="assets/img/logo-axion-icon.png" alt="" class="w-9 h-9 rounded-lg hidden lg:block" />
+          <p class="font-mono text-[10px] tracking-[0.3em] uppercase text-azure-400">Connexion</p>
+        </div>
+        <h1 class="font-display text-2xl md:text-3xl font-700 text-white tracking-tight">
+          Accéder à votre <span class="text-grad">espace</span>
+        </h1>
+        <p class="mt-2 text-sm text-slate2-400">Pilotage de chantier · Cadence Architectes</p>
+
+        <form id="loginForm" autocomplete="on" class="mt-7 space-y-4">
+          <div>
+            <label for="email" class="block text-xs font-medium text-slate2-400 mb-2 tracking-wide">Adresse e-mail</label>
+            <div class="field">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z M22 6l-10 7L2 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <input id="email" type="email" required autocomplete="username" placeholder="vous@entreprise.fr">
+            </div>
+          </div>
+          <div>
+            <label for="password" class="block text-xs font-medium text-slate2-400 mb-2 tracking-wide">Mot de passe</label>
+            <div class="field">
+              <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+              <button type="button" id="togglePwd" class="pwd-eye" aria-label="Afficher le mot de passe" title="Afficher / masquer le mot de passe">👁</button>
+            </div>
+          </div>
+          <button type="submit" id="submitBtn" class="btn-azure w-full rounded-xl px-5 py-3 text-sm font-semibold mt-2 flex items-center justify-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4 M10 17l5-5-5-5 M15 12H3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Se connecter
+          </button>
+        </form>
+
+        <div id="msg" class="msg"></div>
+
+        <div class="mt-6 pt-5 border-t border-white/5 flex items-center justify-center gap-2 text-xs text-slate2-500">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Accès réservé · Authentification sécurisée Supabase</span>
+        </div>
+        <p class="mt-2 text-center text-xs"><a href="mailto:agence@cadence-architectes.fr" class="text-slate2-500 hover:text-azure-400 transition-colors">Un problème de connexion ?</a></p>
+      </div>
+
+      <p class="mt-6 text-center text-xs text-slate2-500">
+        <a href="axion.html" class="hover:text-azure-400 transition-colors">← Retour à l'accueil</a>
+      </p>
+    </div>
+  </section>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -161,8 +241,8 @@
     var email = document.getElementById('email').value.trim();
     var password = document.getElementById('password').value;
     btn.disabled = true;
-    var prevText = btn.textContent;
-    btn.textContent = 'Connexion…';
+    var prevHTML = btn.innerHTML;
+    btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px"></span> Connexion…';
     msgEl.className = 'msg';
     try {
       var res = await AxionAuth.signIn(email, password);
@@ -174,9 +254,10 @@
       else if (/profil|profile|row|single/i.test(m)) m = 'Aucun profil associé à ce compte. Contactez l\'administrateur.';
       showMsg(m, 'err');
       btn.disabled = false;
-      btn.textContent = prevText;
+      btn.innerHTML = prevHTML;
     }
   });
 </script>
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 </body>
 </html>

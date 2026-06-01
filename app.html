@@ -6,7 +6,7 @@
 <title>AXION — Espace de travail</title>
 <meta name="theme-color" content="#0A0E1A">
 
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0E1A'/%3E%3Cpath d='M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z' fill='%2360A5FA'/%3E%3C/svg%3E" />
+<link rel="icon" type="image/png" href="assets/img/logo-axion-icon.png" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -35,7 +35,7 @@
 
 <style>
   :root { color-scheme: dark; }
-  html, body { background: #0A0E1A; }
+  html, body { background: #0A1628; }
   body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; min-height: 100vh; }
   .font-display { font-family: 'Space Grotesk', sans-serif; }
   .font-mono { font-family: 'JetBrains Mono', monospace; }
@@ -66,7 +66,7 @@
   ::selection { background:#2563EB; color:#fff; }
   ::-webkit-scrollbar { width:10px; height:10px; } ::-webkit-scrollbar-thumb { background:#1A2233; border-radius:8px; }
 
-  #loadingScreen { position:fixed; inset:0; background:#0A0E1A; display:flex; align-items:center; justify-content:center; color:#94A3B8; z-index:50; font-family:'Inter',sans-serif }
+  #loadingScreen { position:fixed; inset:0; background:#0A1628; display:flex; align-items:center; justify-content:center; color:#94A3B8; z-index:50; font-family:'Inter',sans-serif }
   .spin { width:32px; height:32px; border:2px solid rgba(96,165,250,.2); border-top-color:#60A5FA; border-radius:50%; animation:spin .9s linear infinite; margin-right:14px }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
@@ -80,10 +80,8 @@
 <header id="appHeader" class="fixed top-4 left-4 right-4 z-50" style="visibility:hidden">
   <nav class="glass-strong rounded-2xl max-w-6xl mx-auto px-5 md:px-6 py-3 flex items-center justify-between">
     <a href="axion.html" class="flex items-center gap-2.5 group">
-      <span class="w-9 h-9 rounded-xl grid place-items-center" style="background:linear-gradient(135deg,#1A2233,#0D1320);border:1px solid rgba(96,165,250,.3)">
-        <svg width="20" height="20" viewBox="0 0 64 64"><path d="M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z" fill="#60A5FA"/></svg>
-      </span>
-      <span class="font-display text-lg font-700 tracking-[0.22em] text-white">AXION</span>
+      <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-9 h-9 rounded-xl" style="border:1px solid rgba(96,165,250,.2)" />
+      <span class="font-display text-lg font-700 tracking-[0.22em] text-white hidden sm:inline">AXION</span>
     </a>
     <div class="flex items-center gap-3 md:gap-4">
       <span class="hidden md:inline text-sm text-slate2-400" id="userName"></span>
@@ -174,10 +172,10 @@
   <footer class="px-5 md:px-8 mt-20 pt-10 border-t border-white/5">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate2-500">
       <div class="flex items-center gap-2.5">
-        <span class="w-7 h-7 rounded-lg grid place-items-center" style="background:linear-gradient(135deg,#1A2233,#0D1320);border:1px solid rgba(96,165,250,.3)"><svg width="15" height="15" viewBox="0 0 64 64"><path d="M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z" fill="#60A5FA"/></svg></span>
+        <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-7 h-7 rounded-lg" />
         <span class="font-display tracking-[0.22em] text-slate2-300">AXION</span>
       </div>
-      <p>Cadence Architectes Associés · Paris 12e</p>
+      <p>Cadence Architectes Associés · Paris 12<sup>e</sup></p>
       <p class="font-mono text-xs">agence@cadence-architectes.fr</p>
     </div>
   </footer>

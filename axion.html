@@ -7,7 +7,7 @@
   <meta name="description" content="AXION — la plateforme qui connecte maîtres d'œuvre, entreprises et maîtres d'ouvrage dans un pilotage de chantier nouvelle génération." />
   <meta name="theme-color" content="#0A0E1A" />
 
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0E1A'/%3E%3Cpath d='M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z' fill='%2360A5FA'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/png" href="assets/img/logo-axion-icon.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -36,7 +36,7 @@
 
   <style>
     :root { color-scheme: dark; }
-    html, body { background: #0A0E1A; }
+    html, body { background: #0A1628; }
     body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; }
     .font-display { font-family: 'Space Grotesk', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
@@ -79,10 +79,8 @@
 <header class="fixed top-4 left-4 right-4 z-50">
   <nav class="glass-strong rounded-2xl max-w-6xl mx-auto px-5 md:px-6 py-3 flex items-center justify-between">
     <a href="#top" class="flex items-center gap-2.5 group">
-      <span class="w-9 h-9 rounded-xl grid place-items-center" style="background:linear-gradient(135deg,#1A2233,#0D1320);border:1px solid rgba(96,165,250,.3)">
-        <svg width="20" height="20" viewBox="0 0 64 64"><path d="M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z" fill="#60A5FA"/></svg>
-      </span>
-      <span class="font-display text-lg font-700 tracking-[0.22em] text-white">AXION</span>
+      <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-9 h-9 rounded-xl" style="border:1px solid rgba(96,165,250,.2)" />
+      <span class="font-display text-lg font-700 tracking-[0.22em] text-white hidden sm:inline">AXION</span>
     </a>
     <ul class="hidden lg:flex items-center gap-8 text-sm text-slate2-300">
       <li><a href="#plateforme" class="hover:text-white transition-colors">Plateforme</a></li>
@@ -113,10 +111,11 @@
         </a>
         <a href="login.html" class="btn-outline rounded-xl px-6 py-3.5 text-sm font-semibold">Accéder à mon espace</a>
       </div>
-      <div class="mt-8 flex items-center gap-6 text-xs text-slate2-500">
-        <span class="flex items-center gap-2"><span class="dot bg-green-400"></span> Temps réel</span>
-        <span class="flex items-center gap-2"><span class="dot bg-azure-400"></span> Multi-chantiers</span>
-        <span class="flex items-center gap-2"><span class="dot bg-cyan-400"></span> IA intégrée</span>
+      <div class="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-mono tracking-[0.18em] uppercase" style="color:#C9A95C">
+        <span>Planifier</span><span class="text-slate2-500">·</span>
+        <span>Collaborer</span><span class="text-slate2-500">·</span>
+        <span>Piloter</span><span class="text-slate2-500">·</span>
+        <span>Construire</span>
       </div>
     </div>
 
@@ -303,10 +302,10 @@
 <footer class="px-5 md:px-8 py-10 border-t border-white/5">
   <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate2-500">
     <div class="flex items-center gap-2.5">
-      <span class="w-7 h-7 rounded-lg grid place-items-center" style="background:linear-gradient(135deg,#1A2233,#0D1320);border:1px solid rgba(96,165,250,.3)"><svg width="15" height="15" viewBox="0 0 64 64"><path d="M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z" fill="#60A5FA"/></svg></span>
+      <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-7 h-7 rounded-lg" />
       <span class="font-display tracking-[0.22em] text-slate2-300">AXION</span>
     </div>
-    <p>Une initiative Cadence Architectes Associés · Paris 12e</p>
+    <p>Cadence Architectes Associés · Paris 12<sup>e</sup></p>
     <p class="font-mono text-xs">agence@cadence-architectes.fr</p>
   </div>
 </footer>
