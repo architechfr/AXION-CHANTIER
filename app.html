@@ -1,192 +1,296 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="scroll-smooth">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AXION — Espace de travail</title>
-<meta name="theme-color" content="#0c0e14">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0A0E1A">
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0E1A'/%3E%3Cpath d='M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z' fill='%2360A5FA'/%3E%3C/svg%3E" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui'],
+          sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        },
+        colors: {
+          ink:    { 900:'#070A12', 800:'#0A0E1A', 700:'#0D1320', 600:'#111827', 500:'#1A2233' },
+          azure:  { 300:'#93C5FD', 400:'#60A5FA', 500:'#3B82F6', 600:'#2563EB' },
+          cyan:   { 400:'#38BDF8' },
+          slate2: { 300:'#CBD5E1', 400:'#94A3B8', 500:'#64748B' },
+        },
+      },
+    },
+  };
+</script>
+
 <style>
-  :root{
-    --b0:#0c0e14;--b1:#131620;--b2:#1a1e2c;--b3:#232838;--bd:#2e3450;
-    --t:#e4e6f0;--t2:#8a90aa;--t3:#5c6280;--or:#f59e0b;--g:#22c55e;--bl:#3b82f6;--R:12px;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'DM Sans',sans-serif;background:var(--b0);color:var(--t);min-height:100vh}
-  header{
-    display:flex;align-items:center;justify-content:space-between;gap:16px;
-    padding:16px 24px;background:var(--b1);border-bottom:1px solid var(--bd);
-  }
-  .brand{display:flex;align-items:center;gap:10px}
-  .brand .logo{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--or),#d97706);
-    display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0e14}
-  .brand b{font-size:18px;letter-spacing:1px}
-  .userbox{display:flex;align-items:center;gap:14px;font-size:13px;color:var(--t2)}
-  .pill{background:var(--b3);border:1px solid var(--bd);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--t)}
-  .pill.admin{color:var(--or);border-color:rgba(245,158,11,.4)}
-  .pill.user{color:var(--bl);border-color:rgba(59,130,246,.4)}
-  .logout{background:transparent;border:1px solid var(--bd);color:var(--t2);border-radius:8px;
-    padding:7px 12px;cursor:pointer;font-family:inherit;font-size:13px}
-  .logout:hover{color:var(--t);border-color:var(--t3)}
-  main{max-width:980px;margin:0 auto;padding:36px 24px}
-  h2{font-size:22px;margin-bottom:4px}
-  .lead{color:var(--t2);margin-bottom:28px;font-size:14px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
-  .tile{background:var(--b1);border:1px solid var(--bd);border-radius:var(--R);padding:22px;
-    text-decoration:none;color:inherit;display:block;transition:border .15s,transform .15s}
-  .tile:hover{border-color:var(--or);transform:translateY(-2px)}
-  .tile .ic{font-size:28px;margin-bottom:10px}
-  .tile h3{font-size:16px;margin-bottom:6px}
-  .tile p{color:var(--t2);font-size:13px;line-height:1.5}
-  .tile.disabled{opacity:.45;pointer-events:none}
-  .section-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin:30px 0 12px}
-  #loadingScreen{position:fixed;inset:0;background:var(--b0);display:flex;align-items:center;justify-content:center;color:var(--t2);z-index:50}
+  :root { color-scheme: dark; }
+  html, body { background: #0A0E1A; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  .font-display { font-family: 'Space Grotesk', sans-serif; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  .bg-stage { position: relative; overflow: hidden; }
+  .bg-stage::before { content:""; position:absolute; top:-20%; left:50%; transform:translateX(-50%); width:1100px; height:700px;
+    background: radial-gradient(ellipse at center, rgba(59,130,246,.22), rgba(56,189,248,.08) 40%, transparent 70%); filter: blur(20px); pointer-events:none; }
+  .grid-faint { background-image: linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px); background-size: 44px 44px; }
+
+  .glass { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  .glass-strong { background: rgba(13,19,32,.72); border: 1px solid rgba(255,255,255,.10); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  .card-hover { transition: transform .4s cubic-bezier(.2,.7,.1,1), border-color .4s, box-shadow .4s; }
+  .card-hover:hover { transform: translateY(-4px); border-color: rgba(96,165,250,.35); box-shadow: 0 24px 50px -24px rgba(59,130,246,.45); }
+  .card-hover.disabled { opacity: .5; pointer-events: none; }
+
+  .btn-azure { background: linear-gradient(135deg,#3B82F6,#2563EB); color:#fff; box-shadow: 0 10px 30px -10px rgba(59,130,246,.6); transition: transform .25s, box-shadow .25s; }
+  .btn-azure:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -12px rgba(59,130,246,.7); }
+  .btn-outline { border:1px solid rgba(255,255,255,.18); color:#E2E8F0; transition: background .25s, border-color .25s; background:transparent; }
+  .btn-outline:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.32); }
+
+  .text-grad { background: linear-gradient(120deg,#60A5FA,#38BDF8); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .dot { width:7px; height:7px; border-radius:50%; }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; font-size:12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); font-weight:500; }
+  .pill.admin { color:#FCD34D; border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.08) }
+  .pill.user  { color:#93C5FD; border-color:rgba(96,165,250,.35); background:rgba(59,130,246,.08) }
+
+  a:focus-visible, button:focus-visible { outline:2px solid #60A5FA; outline-offset:3px; border-radius:4px; }
+  ::selection { background:#2563EB; color:#fff; }
+  ::-webkit-scrollbar { width:10px; height:10px; } ::-webkit-scrollbar-thumb { background:#1A2233; border-radius:8px; }
+
+  #loadingScreen { position:fixed; inset:0; background:#0A0E1A; display:flex; align-items:center; justify-content:center; color:#94A3B8; z-index:50; font-family:'Inter',sans-serif }
+  .spin { width:32px; height:32px; border:2px solid rgba(96,165,250,.2); border-top-color:#60A5FA; border-radius:50%; animation:spin .9s linear infinite; margin-right:14px }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
-<body>
-  <div id="loadingScreen">Chargement de votre espace…</div>
 
-  <header style="visibility:hidden" id="appHeader">
-    <div class="brand"><div class="logo">A</div><b>AXION</b></div>
-    <div class="userbox">
-      <span id="userName"></span>
+<body class="bg-ink-800 text-slate-200">
+
+<div id="loadingScreen"><span class="spin"></span><span class="font-mono text-xs tracking-wider uppercase">Chargement de votre espace…</span></div>
+
+<!-- ============ NAV ============ -->
+<header id="appHeader" class="fixed top-4 left-4 right-4 z-50" style="visibility:hidden">
+  <nav class="glass-strong rounded-2xl max-w-6xl mx-auto px-5 md:px-6 py-3 flex items-center justify-between">
+    <a href="axion.html" class="flex items-center gap-2.5 group">
+      <span class="w-9 h-9 rounded-xl grid place-items-center" style="background:linear-gradient(135deg,#1A2233,#0D1320);border:1px solid rgba(96,165,250,.3)">
+        <svg width="20" height="20" viewBox="0 0 64 64"><path d="M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z" fill="#60A5FA"/></svg>
+      </span>
+      <span class="font-display text-lg font-700 tracking-[0.22em] text-white">AXION</span>
+    </a>
+    <div class="flex items-center gap-3 md:gap-4">
+      <span class="hidden md:inline text-sm text-slate2-400" id="userName"></span>
       <span class="pill" id="rolePill"></span>
-      <button class="logout" id="logoutBtn">Déconnexion</button>
+      <button id="logoutBtn" class="btn-outline rounded-xl px-3.5 py-2 text-xs font-medium">Déconnexion</button>
     </div>
-  </header>
+  </nav>
+</header>
 
-  <main style="visibility:hidden" id="appMain">
-    <h2 id="welcome"></h2>
-    <div class="lead" id="lead"></div>
-
-    <div class="section-title">Modules</div>
-    <div class="grid">
-      <a class="tile" id="planningTile" href="#">
-        <div class="ic">📅</div>
-        <h3>Planning chantier</h3>
-        <p id="planningDesc">Ouvrir le planning Les Jardins de Lisa.</p>
-      </a>
-
-      <a class="tile" id="adminTile" href="#" style="display:none">
-        <div class="ic">👥</div>
-        <h3>Gestion des utilisateurs</h3>
-        <p>Entreprises, comptes et accès aux chantiers.</p>
-      </a>
-
-      <a class="tile" id="docsTile" href="#">
-        <div class="ic">📁</div>
-        <h3>Documents</h3>
-        <p id="docsDesc">Documents du chantier.</p>
-      </a>
+<!-- ============ HERO ============ -->
+<main id="appMain" style="visibility:hidden" class="pt-28 md:pt-36 pb-20">
+  <section class="bg-stage grid-faint px-5 md:px-8 pb-4">
+    <div class="max-w-6xl mx-auto">
+      <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-4">Espace de travail</p>
+      <h1 class="font-display text-4xl md:text-5xl font-700 leading-[1.05] tracking-tight text-white" id="welcome"></h1>
+      <p class="mt-4 text-slate2-300 text-base md:text-lg leading-relaxed max-w-2xl" id="lead"></p>
     </div>
-  </main>
+  </section>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/axion-auth.js"></script>
-  <script>
-    (async function () {
-      var session = await AxionAuth.currentSession();
-      if (!session) { window.location.href = 'axion.html'; return; }
+  <!-- ============ CHANTIERS ============ -->
+  <section class="px-5 md:px-8 mt-14">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex items-end justify-between mb-5">
+        <div>
+          <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-2">Mes chantiers</p>
+          <h2 class="font-display text-2xl md:text-3xl font-700 text-white tracking-tight">Vos opérations en cours</h2>
+        </div>
+        <span class="font-mono text-xs text-slate2-500" id="projectsCount"></span>
+      </div>
+      <div id="projectsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+      <div id="projectsEmpty" class="glass rounded-2xl p-10 text-center hidden">
+        <p class="text-slate2-400">Aucun chantier autorisé pour votre compte.</p>
+        <p class="text-xs text-slate2-500 mt-2">Contactez l'administrateur pour être rattaché à une opération.</p>
+      </div>
+      <div id="projectsError" class="glass rounded-2xl p-6 text-center hidden">
+        <p class="text-red-300 text-sm">Erreur lors du chargement de vos chantiers.</p>
+      </div>
+    </div>
+  </section>
 
-      var profile;
-      try { profile = await AxionAuth.fetchProfile(session.user.id); }
-      catch (e) { window.location.href = 'axion.html?error=role'; return; }
+  <!-- ============ MODULES ============ -->
+  <section class="px-5 md:px-8 mt-16">
+    <div class="max-w-6xl mx-auto">
+      <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-2">Modules</p>
+      <h2 class="font-display text-2xl md:text-3xl font-700 text-white tracking-tight mb-8">Outils de pilotage</h2>
 
-      if (!profile || (profile.role !== 'admin' && profile.role !== 'user')) {
-        await AxionAuth.signOut();
-        window.location.href = 'axion.html?error=role';
-        return;
-      }
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Planning -->
+        <a id="planningTile" href="#" class="glass card-hover rounded-2xl p-7 block">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-11 h-11 rounded-xl grid place-items-center" style="background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.25)">
+              <svg class="w-5 h-5 text-azure-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <p class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400">Planning</p>
+          </div>
+          <h3 class="font-display text-lg text-white mb-1.5">Planning chantier</h3>
+          <p class="text-sm text-slate2-400 leading-relaxed" id="planningDesc">Ouvrir le planning de vos opérations.</p>
+        </a>
 
-      var isAdmin = profile.role === 'admin';
-      var canEdit = isAdmin;   // seul l'admin édite le planning (mode MOE)
+        <!-- Documents -->
+        <a id="docsTile" href="#" class="glass card-hover rounded-2xl p-7 block disabled">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-11 h-11 rounded-xl grid place-items-center" style="background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.25)">
+              <svg class="w-5 h-5 text-azure-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <p class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400">Documents</p>
+          </div>
+          <h3 class="font-display text-lg text-white mb-1.5">Documents</h3>
+          <p class="text-sm text-slate2-400 leading-relaxed" id="docsDesc">Module en préparation — accès aux plans, CCTP, rendus.</p>
+        </a>
 
-      // Renseigne l'entête
-      document.getElementById('userName').textContent = profile.full_name || profile.email;
-      var pill = document.getElementById('rolePill');
-      pill.textContent = isAdmin ? 'Administrateur' : 'Entreprise';
-      pill.classList.add(profile.role);
+        <!-- Admin (réservé) -->
+        <a id="adminTile" href="#" class="glass card-hover rounded-2xl p-7 block hidden">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-11 h-11 rounded-xl grid place-items-center" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25)">
+              <svg class="w-5 h-5" style="color:#F59E0B" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <p class="font-mono text-[10px] tracking-[0.25em] uppercase" style="color:#F59E0B">Administration</p>
+          </div>
+          <h3 class="font-display text-lg text-white mb-1.5">Gestion des utilisateurs</h3>
+          <p class="text-sm text-slate2-400 leading-relaxed">Entreprises, comptes et affectations aux chantiers.</p>
+        </a>
+      </div>
+    </div>
+  </section>
 
-      document.getElementById('welcome').textContent =
-        isAdmin ? 'Tableau de bord administrateur'
-        :         'Votre espace entreprise';
-      document.getElementById('lead').textContent =
-        isAdmin ? 'Accès complet : tous les chantiers, entreprises, documents et plannings.'
-        :         'Accès limité à vos chantiers, vos tâches et vos documents.';
+  <!-- ============ FOOTER ============ -->
+  <footer class="px-5 md:px-8 mt-20 pt-10 border-t border-white/5">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate2-500">
+      <div class="flex items-center gap-2.5">
+        <span class="w-7 h-7 rounded-lg grid place-items-center" style="background:linear-gradient(135deg,#1A2233,#0D1320);border:1px solid rgba(96,165,250,.3)"><svg width="15" height="15" viewBox="0 0 64 64"><path d="M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z" fill="#60A5FA"/></svg></span>
+        <span class="font-display tracking-[0.22em] text-slate2-300">AXION</span>
+      </div>
+      <p>Cadence Architectes Associés · Paris 12e</p>
+      <p class="font-mono text-xs">agence@cadence-architectes.fr</p>
+    </div>
+  </footer>
+</main>
 
-      // Module Planning — lien handoff SSO (tokens passés dans le hash).
-      // Tant que l'URL du planning protégé n'est pas renseignée (config), le
-      // module est marqué « en préparation » (le planning live n'est PAS lié ici).
-      var planningTile = document.getElementById('planningTile');
-      var planningUrl = window.AXION_SUPABASE && window.AXION_SUPABASE.planningUrl;
-      if (planningUrl) {
-        planningTile.href = AxionAuth.planningHandoffUrl(session, profile.role);
-        planningTile.target = '_blank';
-        document.getElementById('planningDesc').textContent = canEdit
-          ? 'Édition du planning de vos chantiers (mode MOE).'
-          : 'Consultation du planning de vos chantiers (lecture seule).';
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/axion-auth.js"></script>
+<script>
+  (async function () {
+    var session = await AxionAuth.currentSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+
+    var profile;
+    try { profile = await AxionAuth.fetchProfile(session.user.id); }
+    catch (e) { window.location.href = 'login.html?error=role'; return; }
+
+    if (!profile || (profile.role !== 'admin' && profile.role !== 'user')) {
+      await AxionAuth.signOut();
+      window.location.href = 'login.html?error=role';
+      return;
+    }
+
+    var isAdmin = profile.role === 'admin';
+    var canEdit = isAdmin;   // seul l'admin édite le planning (mode MOE)
+
+    // En-tête
+    document.getElementById('userName').textContent = profile.full_name || profile.email;
+    var pill = document.getElementById('rolePill');
+    pill.textContent = isAdmin ? 'Administrateur' : 'Entreprise';
+    pill.classList.add(profile.role);
+
+    // Hero
+    document.getElementById('welcome').innerHTML = isAdmin
+      ? 'Tableau de bord <span class="text-grad">administrateur</span>'
+      : 'Votre espace <span class="text-grad">chantier</span>';
+    document.getElementById('lead').textContent = isAdmin
+      ? 'Accès complet : tous les chantiers, entreprises, documents et plannings.'
+      : 'Vos chantiers, vos plannings et vos documents — accès limité par vos droits.';
+
+    // Module Planning
+    var planningTile = document.getElementById('planningTile');
+    var planningUrl = window.AXION_SUPABASE && window.AXION_SUPABASE.planningUrl;
+    if (planningUrl) {
+      planningTile.href = AxionAuth.planningHandoffUrl(session, profile.role);
+      planningTile.target = '_blank';
+      document.getElementById('planningDesc').textContent = canEdit
+        ? 'Édition du planning de vos chantiers (mode MOE).'
+        : 'Consultation du planning de vos chantiers (lecture seule).';
+    } else {
+      planningTile.classList.add('disabled');
+      planningTile.removeAttribute('href');
+      document.getElementById('planningDesc').textContent =
+        'Module en préparation — disponible après déploiement du planning protégé.';
+    }
+
+    // Admin tile
+    if (isAdmin) document.getElementById('adminTile').classList.remove('hidden');
+
+    // Chantiers autorisés (RLS) — admin voit tout, user voit les siens
+    var grid = document.getElementById('projectsGrid');
+    var emptyBox = document.getElementById('projectsEmpty');
+    var errorBox = document.getElementById('projectsError');
+    var counter = document.getElementById('projectsCount');
+    try {
+      var projRes = await AxionAuth.sb.from('projects').select('id,name,slug').order('name');
+      if (projRes.error) throw projRes.error;
+      var projects = projRes.data || [];
+      counter.textContent = projects.length + ' chantier' + (projects.length > 1 ? 's' : '');
+      if (projects.length === 0) {
+        emptyBox.classList.remove('hidden');
       } else {
-        planningTile.classList.add('disabled');
-        planningTile.removeAttribute('href');
-        document.getElementById('planningDesc').textContent =
-          'Module en préparation — disponible après déploiement du planning protégé.';
+        projects.forEach(function (p, i) {
+          var a = document.createElement('a');
+          a.href = '#';
+          a.className = 'glass card-hover rounded-2xl p-6 block';
+          a.innerHTML =
+            '<div class="flex items-center justify-between mb-4">' +
+              '<span class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400">Chantier ' + String(i+1).padStart(2,'0') + '</span>' +
+              '<span class="dot bg-green-400"></span>' +
+            '</div>' +
+            '<h3 class="font-display text-xl text-white mb-2">' + escapeHtml(p.name || 'Sans nom') + '</h3>' +
+            (p.slug ? '<p class="font-mono text-[11px] text-slate2-500">' + escapeHtml(p.slug) + '</p>' : '') +
+            '<div class="mt-5 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-slate2-500">' +
+              '<span>Planning · Documents</span>' +
+              '<span class="text-azure-400">→</span>' +
+            '</div>';
+          grid.appendChild(a);
+        });
       }
+    } catch (e) {
+      console.warn('[app] erreur chargement projets', e);
+      errorBox.classList.remove('hidden');
+      counter.textContent = '';
+    }
 
-      // Modules réservés admin
-      if (isAdmin) {
-        document.getElementById('adminTile').style.display = 'block';
-      }
-      document.getElementById('docsDesc').textContent = isAdmin
-        ? 'Tous les documents, communs et privés.'
-        : 'Documents communs du chantier + vos documents privés.';
+    // Déconnexion
+    document.getElementById('logoutBtn').addEventListener('click', async function () {
+      await AxionAuth.signOut();
+      window.location.href = 'login.html';
+    });
 
-      // Chantiers autorisés (RLS) — admin voit tout, user voit les siens.
-      try {
-        var projRes = await AxionAuth.sb.from('projects').select('id,name,slug').order('name');
-        if (projRes.error) throw projRes.error;
-        var projects = projRes.data || [];
+    // Révèle l'UI
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('appHeader').style.visibility = 'visible';
+    document.getElementById('appMain').style.visibility = 'visible';
+  })();
 
-        var main = document.getElementById('appMain');
-        var modulesTitle = main.querySelector('.section-title');
-
-        var chantiersTitle = document.createElement('div');
-        chantiersTitle.className = 'section-title';
-        chantiersTitle.textContent = 'Vos chantiers';
-
-        var chantiersWrap = document.createElement('div');
-        if (projects.length === 0) {
-          var empty = document.createElement('p');
-          empty.className = 'lead';
-          empty.textContent = 'Aucun chantier autorisé';
-          chantiersWrap.appendChild(empty);
-        } else {
-          var ul = document.createElement('ul');
-          projects.forEach(function (p) {
-            var li = document.createElement('li');
-            li.textContent = p.name;
-            ul.appendChild(li);
-          });
-          chantiersWrap.appendChild(ul);
-        }
-
-        main.insertBefore(chantiersTitle, modulesTitle);
-        main.insertBefore(chantiersWrap, modulesTitle);
-      } catch (e) {
-        console.warn('Chantiers RLS indisponibles', e);
-      }
-
-      // Déconnexion
-      document.getElementById('logoutBtn').addEventListener('click', async function () {
-        await AxionAuth.signOut();
-        window.location.href = 'axion.html';
-      });
-
-      // Révèle l'UI
-      document.getElementById('loadingScreen').style.display = 'none';
-      document.getElementById('appHeader').style.visibility = 'visible';
-      document.getElementById('appMain').style.visibility = 'visible';
-    })();
-  </script>
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+    });
+  }
+</script>
 </body>
 </html>

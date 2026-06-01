@@ -1,141 +1,182 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="scroll-smooth">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AXION — Pilotage de chantier · Cadence Architectes</title>
-<meta name="theme-color" content="#0c0e14">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>AXION — Connexion</title>
+<meta name="theme-color" content="#0A0E1A">
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0E1A'/%3E%3Cpath d='M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z' fill='%2360A5FA'/%3E%3C/svg%3E" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui'],
+          sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        },
+        colors: {
+          ink:    { 900:'#070A12', 800:'#0A0E1A', 700:'#0D1320', 600:'#111827', 500:'#1A2233' },
+          azure:  { 300:'#93C5FD', 400:'#60A5FA', 500:'#3B82F6', 600:'#2563EB' },
+          cyan:   { 400:'#38BDF8' },
+          slate2: { 300:'#CBD5E1', 400:'#94A3B8', 500:'#64748B' },
+        },
+      },
+    },
+  };
+</script>
+
 <style>
-  :root{
-    --b0:#0c0e14;--b1:#131620;--b2:#1a1e2c;--b3:#232838;--bd:#2e3450;
-    --t:#e4e6f0;--t2:#8a90aa;--t3:#5c6280;
-    --or:#f59e0b;--g:#22c55e;--r:#ef4444;--bl:#3b82f6;
-    --R:12px;
+  :root { color-scheme: dark; }
+  html, body { background: #0A0E1A; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .font-display { font-family: 'Space Grotesk', sans-serif; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  .bg-stage { position: fixed; inset:0; overflow:hidden; pointer-events:none; z-index:0 }
+  .bg-stage::before { content:""; position:absolute; top:-10%; left:50%; transform:translateX(-50%); width:1100px; height:700px;
+    background: radial-gradient(ellipse at center, rgba(59,130,246,.22), rgba(56,189,248,.08) 40%, transparent 70%); filter: blur(20px); }
+  .grid-faint { position:fixed; inset:0; background-image: linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px); background-size: 44px 44px; pointer-events:none; z-index:0 }
+
+  .glass-strong { background: rgba(13,19,32,.82); border: 1px solid rgba(255,255,255,.10); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  .text-grad { background: linear-gradient(120deg,#60A5FA,#38BDF8); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+  .btn-azure { background: linear-gradient(135deg,#3B82F6,#2563EB); color:#fff; box-shadow: 0 10px 30px -10px rgba(59,130,246,.6); transition: transform .25s, box-shadow .25s; width:100%; }
+  .btn-azure:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -12px rgba(59,130,246,.7); }
+  .btn-azure:disabled { opacity:.55; cursor:not-allowed; transform:none; }
+
+  input[type="email"], input[type="password"], input[type="text"] {
+    width:100%; background:#0A0E1A; border:1px solid rgba(255,255,255,.12); border-radius:10px;
+    color:#E2E8F0; padding:12px 14px; font-size:14px; font-family:inherit; outline:none; transition:border .15s, box-shadow .15s;
   }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{
-    font-family:'DM Sans',sans-serif;background:radial-gradient(1200px 600px at 50% -10%,#1a2238,#0c0e14);
-    color:var(--t);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
-  }
-  .card{
-    width:100%;max-width:400px;background:var(--b1);border:1px solid var(--bd);
-    border-radius:var(--R);padding:36px 32px;box-shadow:0 24px 60px rgba(0,0,0,.45);
-  }
-  .brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
-  .brand .logo{
-    width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--or),#d97706);
-    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;color:#0c0e14;
-  }
-  .brand h1{font-size:24px;letter-spacing:1px;font-weight:700}
-  .sub{color:var(--t2);font-size:13px;margin-bottom:28px}
-  label{display:block;font-size:12px;color:var(--t2);margin:14px 0 6px;font-weight:500}
-  input{
-    width:100%;background:var(--b0);border:1px solid var(--bd);border-radius:8px;
-    color:var(--t);padding:12px 14px;font-size:15px;font-family:inherit;outline:none;transition:border .15s;
-  }
-  input:focus{border-color:var(--or)}
-  button{
-    width:100%;margin-top:22px;background:var(--or);color:#0c0e14;border:none;border-radius:8px;
-    padding:13px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:filter .15s;
-  }
-  button:hover{filter:brightness(1.06)}
-  button:disabled{opacity:.6;cursor:not-allowed}
-  .pwd-wrap{position:relative}
-  .pwd-wrap input{padding-right:46px}
-  .pwd-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;margin:0;
-    padding:6px 8px;background:none;border:none;color:var(--t2);font-size:18px;cursor:pointer;line-height:1}
-  .pwd-eye:hover{filter:none;color:var(--t)}
-  .msg{margin-top:16px;padding:11px 13px;border-radius:8px;font-size:13px;display:none}
-  .msg.err{display:block;background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
-  .msg.ok{display:block;background:rgba(34,197,94,.12);color:#86efac;border:1px solid rgba(34,197,94,.3)}
-  .foot{margin-top:24px;text-align:center;color:var(--t3);font-size:11px;line-height:1.6}
-  .loading{display:none;text-align:center;color:var(--t2);font-size:13px;margin-top:18px}
+  input:focus { border-color:#60A5FA; box-shadow:0 0 0 3px rgba(96,165,250,.15); }
+
+  .pwd-wrap { position:relative }
+  .pwd-wrap input { padding-right:46px }
+  .pwd-eye { position:absolute; right:6px; top:50%; transform:translateY(-50%); padding:6px 10px; background:none; border:none; color:#94A3B8; font-size:18px; cursor:pointer; line-height:1 }
+  .pwd-eye:hover { color:#E2E8F0 }
+
+  .msg { margin-top:14px; padding:11px 13px; border-radius:10px; font-size:13px; display:none }
+  .msg.err { display:block; background:rgba(239,68,68,.12); color:#FCA5A5; border:1px solid rgba(239,68,68,.3) }
+  .msg.ok  { display:block; background:rgba(34,197,94,.10); color:#86EFAC; border:1px solid rgba(34,197,94,.3) }
+
+  a:focus-visible, button:focus-visible { outline:2px solid #60A5FA; outline-offset:3px; border-radius:4px; }
+  ::selection { background:#2563EB; color:#fff; }
 </style>
 </head>
-<body>
-  <div class="card">
-    <div class="brand">
-      <div class="logo">A</div>
-      <h1>AXION</h1>
-    </div>
-    <div class="sub">Plateforme de pilotage de chantier · Cadence Architectes</div>
 
-    <form id="loginForm" autocomplete="on">
-      <label for="email">Adresse e-mail</label>
-      <input id="email" type="email" required autocomplete="username" placeholder="vous@entreprise.fr">
-      <label for="password">Mot de passe</label>
-      <div class="pwd-wrap">
-        <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••">
-        <button type="button" id="togglePwd" class="pwd-eye" aria-label="Afficher le mot de passe" title="Afficher / masquer le mot de passe">👁</button>
+<body class="text-slate-200">
+
+<div class="bg-stage"></div>
+<div class="grid-faint"></div>
+
+<div class="relative z-10 w-full max-w-md">
+  <!-- Logo + retour landing -->
+  <div class="text-center mb-7">
+    <a href="axion.html" class="inline-flex items-center gap-2.5 group">
+      <span class="w-10 h-10 rounded-xl grid place-items-center" style="background:linear-gradient(135deg,#1A2233,#0D1320);border:1px solid rgba(96,165,250,.3)">
+        <svg width="22" height="22" viewBox="0 0 64 64"><path d="M32 14 L48 50 L40 50 L32 31 L24 50 L16 50 Z" fill="#60A5FA"/></svg>
+      </span>
+      <span class="font-display text-xl font-700 tracking-[0.22em] text-white">AXION</span>
+    </a>
+  </div>
+
+  <div class="glass-strong rounded-2xl p-8 md:p-10" style="box-shadow:0 40px 90px -30px rgba(59,130,246,.4)">
+    <p class="font-mono text-[10px] tracking-[0.3em] uppercase text-azure-400 mb-2">Connexion</p>
+    <h1 class="font-display text-2xl md:text-3xl font-700 text-white tracking-tight">Accéder à votre <span class="text-grad">espace</span></h1>
+    <p class="mt-2 text-sm text-slate2-400">Pilotage de chantier · Cadence Architectes</p>
+
+    <form id="loginForm" autocomplete="on" class="mt-7 space-y-4">
+      <div>
+        <label for="email" class="block text-xs font-medium text-slate2-400 mb-2 tracking-wide">Adresse e-mail</label>
+        <input id="email" type="email" required autocomplete="username" placeholder="vous@entreprise.fr">
       </div>
-      <button type="submit" id="submitBtn">Se connecter</button>
+      <div>
+        <label for="password" class="block text-xs font-medium text-slate2-400 mb-2 tracking-wide">Mot de passe</label>
+        <div class="pwd-wrap">
+          <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+          <button type="button" id="togglePwd" class="pwd-eye" aria-label="Afficher le mot de passe" title="Afficher / masquer le mot de passe">👁</button>
+        </div>
+      </div>
+      <button type="submit" id="submitBtn" class="btn-azure rounded-xl px-5 py-3 text-sm font-semibold mt-2">Se connecter</button>
     </form>
 
-    <div class="loading" id="loading">Connexion…</div>
-    <div class="msg" id="msg"></div>
+    <div id="msg" class="msg"></div>
 
-    <div class="foot">
-      Accès réservé. Authentification sécurisée Supabase.<br>
-      Un problème de connexion ? Contactez l'administrateur.
+    <div class="mt-6 pt-5 border-t border-white/5 text-center text-xs text-slate2-500 leading-relaxed">
+      Accès réservé · Authentification sécurisée Supabase<br/>
+      <a href="mailto:agence@cadence-architectes.fr" class="hover:text-azure-400 transition-colors">Un problème de connexion ?</a>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/supabase-config.js"></script>
-  <script src="assets/js/axion-auth.js"></script>
-  <script>
-    var form = document.getElementById('loginForm');
-    var btn = document.getElementById('submitBtn');
-    var loading = document.getElementById('loading');
-    var msgEl = document.getElementById('msg');
+  <p class="mt-6 text-center text-xs text-slate2-500"><a href="axion.html" class="hover:text-azure-400 transition-colors">← Retour à l'accueil</a></p>
+</div>
 
-    function showMsg(text, type){ msgEl.textContent = text; msgEl.className = 'msg ' + type; }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/axion-auth.js"></script>
+<script>
+  var form = document.getElementById('loginForm');
+  var btn = document.getElementById('submitBtn');
+  var msgEl = document.getElementById('msg');
 
-    // Afficher / masquer le mot de passe (œil)
-    var pwdInput = document.getElementById('password');
-    var togglePwd = document.getElementById('togglePwd');
-    togglePwd.addEventListener('click', function () {
-      var show = pwdInput.type === 'password';
-      pwdInput.type = show ? 'text' : 'password';
-      togglePwd.textContent = show ? '🙈' : '👁';
-      togglePwd.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
-      pwdInput.focus();
-    });
+  function showMsg(text, type){ msgEl.textContent = text; msgEl.className = 'msg ' + type; }
 
-    // Message d'erreur éventuel passé en query (?error=role)
-    if (location.search.indexOf('error=role') >= 0) {
-      showMsg('Votre compte n\'a pas de rôle valide. Contactez l\'administrateur.', 'err');
-    }
+  // Afficher / masquer le mot de passe (œil)
+  var pwdInput = document.getElementById('password');
+  var togglePwd = document.getElementById('togglePwd');
+  togglePwd.addEventListener('click', function () {
+    var show = pwdInput.type === 'password';
+    pwdInput.type = show ? 'text' : 'password';
+    togglePwd.textContent = show ? '🙈' : '👁';
+    togglePwd.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+    pwdInput.focus();
+  });
 
-    // Si déjà connecté → router directement vers le dashboard.
-    (async function () {
-      try {
-        var session = await AxionAuth.currentSession();
-        if (session) {
-          var profile = await AxionAuth.fetchProfile(session.user.id);
-          AxionAuth.routeByRole(profile);
-        }
-      } catch (e) { /* pas de session → on laisse le formulaire */ }
-    })();
+  // Message d'erreur éventuel passé en query (?error=role)
+  if (location.search.indexOf('error=role') >= 0) {
+    showMsg('Votre compte n\'a pas de rôle valide. Contactez l\'administrateur.', 'err');
+  }
 
-    form.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      var email = document.getElementById('email').value.trim();
-      var password = document.getElementById('password').value;
-      btn.disabled = true; loading.style.display = 'block'; msgEl.className = 'msg';
-      try {
-        var res = await AxionAuth.signIn(email, password);
-        showMsg('Connecté. Redirection…', 'ok');
-        AxionAuth.routeByRole(res.profile);
-      } catch (err) {
-        var m = (err && err.message) || 'Erreur de connexion';
-        if (/invalid login/i.test(m)) m = 'E-mail ou mot de passe incorrect.';
-        if (/profil|profile|row|single/i.test(m)) m = 'Aucun profil associé à ce compte. Contactez l\'administrateur.';
-        showMsg(m, 'err');
-        btn.disabled = false; loading.style.display = 'none';
+  // Si déjà connecté → router directement vers le dashboard.
+  (async function () {
+    try {
+      var session = await AxionAuth.currentSession();
+      if (session) {
+        var profile = await AxionAuth.fetchProfile(session.user.id);
+        AxionAuth.routeByRole(profile);
       }
-    });
-  </script>
+    } catch (e) { /* pas de session → on laisse le formulaire */ }
+  })();
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var email = document.getElementById('email').value.trim();
+    var password = document.getElementById('password').value;
+    btn.disabled = true;
+    var prevText = btn.textContent;
+    btn.textContent = 'Connexion…';
+    msgEl.className = 'msg';
+    try {
+      var res = await AxionAuth.signIn(email, password);
+      showMsg('Connecté. Redirection…', 'ok');
+      AxionAuth.routeByRole(res.profile);
+    } catch (err) {
+      var m = (err && err.message) || 'Erreur de connexion';
+      if (/invalid login/i.test(m)) m = 'E-mail ou mot de passe incorrect.';
+      else if (/profil|profile|row|single/i.test(m)) m = 'Aucun profil associé à ce compte. Contactez l\'administrateur.';
+      showMsg(m, 'err');
+      btn.disabled = false;
+      btn.textContent = prevText;
+    }
+  });
+</script>
 </body>
 </html>
