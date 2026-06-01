@@ -250,7 +250,7 @@
       } else {
         projects.forEach(function (p, i) {
           var a = document.createElement('a');
-          a.href = '#';
+          a.href = 'chantier.html?id=' + encodeURIComponent(p.id);
           a.className = 'glass card-hover rounded-2xl p-6 block';
           a.innerHTML =
             '<div class="flex items-center justify-between mb-4">' +
