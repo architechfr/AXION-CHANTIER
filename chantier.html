@@ -607,7 +607,7 @@ async function loadDocuments(projectId) {
         var url = d.url || '#';
         var cat = d.category || 'Document';
         var t = docType(d);   // { key, icon }
-        var meta = [];
+        var meta = ['Consultation · Téléchargement'];
         if (d.code) meta.push(d.code);
         if (d.updated_at) meta.push(new Date(d.updated_at).toLocaleDateString('fr-FR'));
         html +=
