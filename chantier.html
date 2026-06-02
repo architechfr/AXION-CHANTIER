@@ -168,7 +168,16 @@
   .doc-meta { flex: 1; min-width: 0; }
   .doc-meta .nm { font-weight: 600; font-size: 14px; color: var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .doc-meta .sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; font-family:"JetBrains Mono"; }
-  .doc-cat { font-size:11px; padding:3px 9px; border-radius:999px; background: var(--glass); border:1px solid var(--border); color:var(--text-dim); }
+  .doc-cat { font-size:11px; padding:3px 9px; border-radius:999px; background: var(--glass); border:1px solid var(--border); color:var(--text-dim); font-weight:600; letter-spacing:.04em; }
+  .doc-cat.cat-pdf { color:#FCA5A5; background:rgba(248,113,113,.10); border-color:rgba(248,113,113,.30); }
+  .doc-cat.cat-dwg { color:#C4B5FD; background:rgba(167,139,250,.12); border-color:rgba(167,139,250,.30); }
+  .doc-cat.cat-cctp { color:#FCD34D; background:rgba(245,158,11,.10); border-color:rgba(245,158,11,.30); }
+  .doc-cat.cat-cr { color:#86EFAC; background:rgba(52,211,153,.10); border-color:rgba(52,211,153,.30); }
+  /* Icône du doc colorée selon le type */
+  .doc-ic.ic-pdf { color:#FCA5A5; background:rgba(248,113,113,.10); border-color:rgba(248,113,113,.28); }
+  .doc-ic.ic-dwg { color:#C4B5FD; background:rgba(167,139,250,.10); border-color:rgba(167,139,250,.28); }
+  .doc-ic.ic-cctp { color:#FCD34D; background:rgba(245,158,11,.10); border-color:rgba(245,158,11,.28); }
+  .doc-ic.ic-cr { color:#86EFAC; background:rgba(52,211,153,.10); border-color:rgba(52,211,153,.28); }
   .doc-action { color: var(--text-faint); flex-shrink: 0; }
   .doc-row:hover .doc-action { color: var(--azure-soft); }
 
@@ -555,22 +564,43 @@ async function loadDocuments(projectId) {
       list.forEach(function (d) {
         var url = d.url || '#';
         var cat = d.category || 'Document';
+        var t = docType(d);   // { key, icon }
         var meta = [];
         if (d.code) meta.push(d.code);
         if (d.updated_at) meta.push(new Date(d.updated_at).toLocaleDateString('fr-FR'));
         html +=
           '<a class="doc-row" href="' + escapeAttr(url) + '" target="_blank" rel="noopener">' +
-            '<div class="doc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>' +
+            '<div class="doc-ic ic-' + t.key + '">' + t.icon + '</div>' +
             '<div class="doc-meta">' +
               '<div class="nm">' + escapeHtml(d.name || 'Document') + '</div>' +
               (meta.length ? '<div class="sub">' + meta.map(escapeHtml).join(' · ') + '</div>' : '') +
             '</div>' +
-            '<span class="doc-cat">' + escapeHtml(cat) + '</span>' +
+            '<span class="doc-cat cat-' + t.key + '">' + escapeHtml(cat) + '</span>' +
             '<div class="doc-action"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg></div>' +
           '</a>';
       });
       html += '</div>';
       mount.innerHTML = html;
+    }
+
+    // Détecte le type d'un document (PDF/DWG/CCTP/CR/autre) à partir de
+    // sa catégorie, son titre ou son URL → renvoie une classe + une icône SVG.
+    function docType(d) {
+      var hay = ((d.category || '') + ' ' + (d.name || '') + ' ' + (d.url || '')).toUpperCase();
+      var key = 'doc';
+      if (/\bPDF\b|\.PDF\b/.test(hay))     key = 'pdf';
+      else if (/\bDWG\b|\.DWG\b|CAO|AUTOCAD/.test(hay)) key = 'dwg';
+      else if (/CCTP|MARCHE/.test(hay))    key = 'cctp';
+      else if (/\bCR\b|COMPTE.?RENDU/.test(hay)) key = 'cr';
+
+      var icons = {
+        pdf:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><text x="7" y="18" font-size="6" font-weight="700" fill="currentColor" stroke="none">PDF</text></svg>',
+        dwg:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 3v18"/><text x="11" y="17" font-size="5.5" font-weight="700" fill="currentColor" stroke="none">DWG</text></svg>',
+        cctp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg>',
+        cr:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+        doc:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
+      };
+      return { key: key, icon: icons[key] };
     }
   } catch (e) {
     console.warn('[chantier] documents:', e.message);
