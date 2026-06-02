@@ -296,10 +296,13 @@
     <main>
       <!-- Comptes-rendus (actif par défaut) -->
       <section class="tab-pane active" id="pane-cr">
-        <div class="placeholder">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></div>
-          <h3>Comptes-rendus de chantier</h3>
-          <p>Comptes-rendus hebdomadaires, OS, photos, observations. <br/>Module en préparation — sera connecté à la table <code>documents</code> (catégorie « cr »).</p>
+        <div class="doc-filters" id="crFilters"></div>
+        <div id="crMount">
+          <div class="placeholder">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></div>
+            <h3>Comptes-rendus de chantier</h3>
+            <p>Comptes-rendus hebdomadaires, OS, photos, observations.<br/>Aucun document pour l'instant.</p>
+          </div>
         </div>
       </section>
 
@@ -330,19 +333,25 @@
 
       <!-- Notice notaire -->
       <section class="tab-pane" id="pane-notice">
-        <div class="placeholder">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-          <h3>Notice notaire</h3>
-          <p>Document officiel du programme, consultable par les acteurs concernés. <br/>Module en préparation.</p>
+        <div class="doc-filters" id="noticeFilters"></div>
+        <div id="noticeMount">
+          <div class="placeholder">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+            <h3>Notice notaire</h3>
+            <p>Document officiel du programme, consultable par les acteurs concernés.<br/>Aucun document pour l'instant.</p>
+          </div>
         </div>
       </section>
 
       <!-- Plan de vente -->
       <section class="tab-pane" id="pane-vente">
-        <div class="placeholder">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 7a6 6 0 1 0 0 10M5 10h7M5 14h6"/></svg></div>
-          <h3>Plan de vente</h3>
-          <p>Suivi de la commercialisation des lots. <br/>Module en préparation.</p>
+        <div class="doc-filters" id="venteFilters"></div>
+        <div id="venteMount">
+          <div class="placeholder">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 7a6 6 0 1 0 0 10M5 10h7M5 14h6"/></svg></div>
+            <h3>Plan de vente</h3>
+            <p>Suivi de la commercialisation des lots.<br/>Aucun document pour l'instant.</p>
+          </div>
         </div>
       </section>
 
@@ -521,45 +530,78 @@
 })();
 
 // ─── Documents ─────────────────────────────────────────────────────
+// Mapping catégorie BDD → onglet de destination.
+// 'PDF' et 'DWG' vont dans l'onglet Plans & EXE ; 'CR' → Comptes-rendus ;
+// 'Notice' → Notice notaire ; 'Vente' → Plan de vente. Le reste tombe
+// par défaut dans Plans & EXE pour éviter qu'un doc soit invisible.
+var DOC_TAB_MAP = {
+  'PDF':    { mount: 'docMount',    filters: 'docFilters',    badge: 'badgePlans' },
+  'DWG':    { mount: 'docMount',    filters: 'docFilters',    badge: 'badgePlans' },
+  'CR':     { mount: 'crMount',     filters: 'crFilters',     badge: null },
+  'Notice': { mount: 'noticeMount', filters: 'noticeFilters', badge: null },
+  'Vente':  { mount: 'venteMount',  filters: 'venteFilters',  badge: null },
+};
+
 async function loadDocuments(projectId) {
-  var mount = document.getElementById('docMount');
-  var filtersEl = document.getElementById('docFilters');
-  var badge = document.getElementById('badgePlans');
   try {
     var res = await AxionAuth.sb.from('documents').select('*').eq('project_id', projectId).order('title', { ascending: true });
     if (res.error) throw res.error;
-    var docs = res.data || [];
-    badge.textContent = docs.length;
-
-    if (!docs.length) return; // garde le placeholder
+    var allDocs = res.data || [];
 
     // Normaliser les noms de champs : la table utilise title/file_path,
     // notre code parle name/url — on harmonise ici (compat avec les deux).
-    docs = docs.map(function (d) {
+    allDocs = allDocs.map(function (d) {
       return Object.assign({}, d, {
         name: d.name || d.title || 'Document',
         url:  d.url  || d.file_path || '#',
       });
     });
 
-    // Catégories uniques
-    var cats = Array.from(new Set(docs.map(function (d) { return d.category || 'Autres'; })));
-    cats.unshift('Tous');
-    filtersEl.innerHTML = '';
-    cats.forEach(function (c, i) {
-      var chip = document.createElement('button');
-      chip.className = 'doc-chip' + (i === 0 ? ' active' : '');
-      chip.textContent = c + (i === 0 ? ' (' + docs.length + ')' : '');
-      chip.addEventListener('click', function () {
-        filtersEl.querySelectorAll('.doc-chip').forEach(function (e2) { e2.classList.remove('active'); });
-        chip.classList.add('active');
-        render(c === 'Tous' ? docs : docs.filter(function (d) { return (d.category || 'Autres') === c; }));
-      });
-      filtersEl.appendChild(chip);
+    // Group par onglet de destination
+    var byTab = {};
+    allDocs.forEach(function (d) {
+      var cat = d.category || 'PDF';
+      var dest = DOC_TAB_MAP[cat] || DOC_TAB_MAP['PDF'];
+      if (!byTab[dest.mount]) byTab[dest.mount] = { docs: [], dest: dest };
+      byTab[dest.mount].docs.push(d);
     });
-    render(docs);
 
-    function render(list) {
+    // Mise à jour du badge Plans & EXE (PDF + DWG)
+    var plansCount = ((byTab['docMount'] || {}).docs || []).length;
+    document.getElementById('badgePlans').textContent = plansCount;
+
+    // Pour chaque onglet, rendre la liste + filtres
+    Object.keys(byTab).forEach(function (mountId) {
+      var group = byTab[mountId];
+      var docs = group.docs;
+      if (!docs.length) return;
+
+      var mountEl = document.getElementById(mountId);
+      var filtersEl = document.getElementById(group.dest.filters);
+
+      // Catégories pour les chips de filtre (uniquement si plus d'une catégorie)
+      var cats = Array.from(new Set(docs.map(function (d) { return d.category || 'Autres'; })));
+      if (cats.length > 1) {
+        cats.unshift('Tous');
+        filtersEl.innerHTML = '';
+        cats.forEach(function (c, i) {
+          var chip = document.createElement('button');
+          chip.className = 'doc-chip' + (i === 0 ? ' active' : '');
+          chip.textContent = c + (i === 0 ? ' (' + docs.length + ')' : '');
+          chip.addEventListener('click', function () {
+            filtersEl.querySelectorAll('.doc-chip').forEach(function (e2) { e2.classList.remove('active'); });
+            chip.classList.add('active');
+            render(mountEl, c === 'Tous' ? docs : docs.filter(function (d) { return (d.category || 'Autres') === c; }));
+          });
+          filtersEl.appendChild(chip);
+        });
+      } else {
+        filtersEl.innerHTML = '';
+      }
+      render(mountEl, docs);
+    });
+
+    function render(mount, list) {
       var html = '<div class="doc-list">';
       list.forEach(function (d) {
         var url = d.url || '#';
@@ -604,8 +646,10 @@ async function loadDocuments(projectId) {
     }
   } catch (e) {
     console.warn('[chantier] documents:', e.message);
-    badge.textContent = '0';
-    mount.innerHTML = '<div class="alert">Erreur lors du chargement des documents.</div>';
+    var badgeEl = document.getElementById('badgePlans');
+    if (badgeEl) badgeEl.textContent = '0';
+    var docMount = document.getElementById('docMount');
+    if (docMount) docMount.innerHTML = '<div class="alert">Erreur lors du chargement des documents.</div>';
   }
 }
 
