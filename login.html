@@ -246,10 +246,15 @@
           </div>
         </div>
 
-        <label class="flex items-center gap-2 text-xs text-slate2-300 cursor-pointer select-none">
-          <input id="remember" type="checkbox" class="checkbox" checked />
-          Se souvenir de moi
-        </label>
+        <div class="flex items-center justify-between gap-3">
+          <label class="flex items-center gap-2 text-xs text-slate2-300 cursor-pointer select-none">
+            <input id="remember" type="checkbox" class="checkbox" checked />
+            Se souvenir de moi
+          </label>
+          <button type="button" id="forgotBtn" class="text-xs text-azure-400 hover:text-azure-300 transition-colors" style="background:none;border:none;padding:0;cursor:pointer">
+            Mot de passe oublié ?
+          </button>
+        </div>
 
         <button type="submit" id="submitBtn" class="btn-azure w-full rounded-xl px-5 py-3 text-sm font-semibold flex items-center justify-center gap-2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4 M10 17l5-5-5-5 M15 12H3" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -289,6 +294,30 @@
   var rememberEl = document.getElementById('remember');
 
   function showMsg(text, type){ msgEl.textContent = text; msgEl.className = 'msg ' + type; }
+
+  // « Mot de passe oublié ? » — envoie un mail de reset Supabase.
+  // Si l'email est déjà saisi dans le formulaire, on l'utilise ; sinon on
+  // demande à l'utilisateur de le saisir d'abord.
+  document.getElementById('forgotBtn').addEventListener('click', async function () {
+    var email = emailEl.value.trim();
+    if (!email) {
+      showMsg('Saisissez d\'abord votre adresse e-mail dans le champ ci-dessus, puis cliquez à nouveau sur « Mot de passe oublié ? ».', 'err');
+      emailEl.focus();
+      return;
+    }
+    var ok = confirm('Envoyer un lien de réinitialisation à ' + email + ' ?');
+    if (!ok) return;
+    msgEl.className = 'msg';
+    try {
+      var res = await AxionAuth.sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset.html'
+      });
+      if (res.error) throw res.error;
+      showMsg('E-mail envoyé. Ouvrez votre boîte de réception et cliquez sur le lien pour choisir un nouveau mot de passe. (Pensez aux spams.)', 'ok');
+    } catch (err) {
+      showMsg('Impossible d\'envoyer l\'e-mail : ' + ((err && err.message) || 'erreur inconnue') + '.', 'err');
+    }
+  });
 
   // « Se souvenir de moi » — rappelle l'email en localStorage
   try {

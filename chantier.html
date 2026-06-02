@@ -70,7 +70,8 @@
   .appbar .brand img { width: 36px; height: 36px; border-radius: 10px; }
   .appbar .brand .word { font-family:"Space Grotesk"; font-weight: 700; letter-spacing: .22em; font-size: 17px; }
   .appbar .spacer { flex: 1; }
-  .user-chip { display: flex; align-items: center; gap: 10px; padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--glass); border: 1px solid var(--border); }
+  .user-chip { display: flex; align-items: center; gap: 10px; padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--glass); border: 1px solid var(--border); transition: background .15s, border-color .15s; }
+  .user-chip:hover { background: var(--glass-2); border-color: var(--border-2); }
   .user-chip .av { width: 32px; height: 32px; border-radius: 999px; background: var(--azure); color: #fff; display: grid; place-items: center; font-family:"Space Grotesk"; font-weight: 700; font-size: 12px; }
   .user-chip .nm { font-size: 13px; font-weight: 600; line-height: 1.1; }
   .user-chip .rl { font-size: 11px; color: var(--text-faint); }
@@ -246,7 +247,7 @@
     <a href="app.html" class="icon-btn" title="Retour au tableau de bord" aria-label="Tableau de bord">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
     </a>
-    <div class="user-chip">
+    <a class="user-chip" href="compte.html" title="Mon compte" style="cursor:pointer;text-decoration:none;color:inherit">
       <div class="av" id="userInitials">·</div>
       <div>
         <div class="nm" id="userName">·</div>
