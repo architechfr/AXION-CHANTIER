@@ -517,12 +517,21 @@ async function loadDocuments(projectId) {
   var filtersEl = document.getElementById('docFilters');
   var badge = document.getElementById('badgePlans');
   try {
-    var res = await AxionAuth.sb.from('documents').select('*').eq('project_id', projectId).order('name', { ascending: true });
+    var res = await AxionAuth.sb.from('documents').select('*').eq('project_id', projectId).order('title', { ascending: true });
     if (res.error) throw res.error;
     var docs = res.data || [];
     badge.textContent = docs.length;
 
     if (!docs.length) return; // garde le placeholder
+
+    // Normaliser les noms de champs : la table utilise title/file_path,
+    // notre code parle name/url — on harmonise ici (compat avec les deux).
+    docs = docs.map(function (d) {
+      return Object.assign({}, d, {
+        name: d.name || d.title || 'Document',
+        url:  d.url  || d.file_path || '#',
+      });
+    });
 
     // Catégories uniques
     var cats = Array.from(new Set(docs.map(function (d) { return d.category || 'Autres'; })));
