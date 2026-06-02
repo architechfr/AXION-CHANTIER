@@ -181,6 +181,35 @@
   .doc-action { color: var(--text-faint); flex-shrink: 0; }
   .doc-row:hover .doc-action { color: var(--azure-soft); }
 
+  /* ── Sidebar : Intervenants ──────────────────────────────────── */
+  .person { display: flex; align-items: center; gap: 11px; padding: 9px 0; }
+  .person + .person { border-top: 1px solid var(--border); }
+  .person .av {
+    width: 36px; height: 36px; border-radius: 999px; display: grid; place-items: center;
+    font-family:"Space Grotesk"; font-weight: 700; font-size: 12px; color: #fff;
+    flex-shrink: 0; letter-spacing: .02em;
+  }
+  .person .av.role-moe  { background: var(--azure); }
+  .person .av.role-moa  { background: var(--green); }
+  .person .av.role-ent  { background: var(--amber); }
+  .person .av.role-bet  { background: var(--violet); }
+  .person .av.role-eg   { background: #EC4899; }   /* gros œuvre rose */
+  .person .av.role-def  { background: var(--text-faint); }
+  .person .nm { font-size: 13.5px; font-weight: 600; line-height: 1.25; }
+  .person .rl { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
+  .person .meta { flex: 1; min-width: 0; }
+
+  /* ── Sidebar : Activité récente ──────────────────────────────── */
+  .activity { display: flex; flex-direction: column; gap: 14px; }
+  .activity .it { display: flex; gap: 11px; }
+  .activity .d  { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; background: var(--azure); }
+  .activity .it.act-doc   .d { background: var(--azure-soft); }
+  .activity .it.act-login .d { background: var(--green); }
+  .activity .it.act-team  .d { background: var(--amber); }
+  .activity .tx { font-size: 12.5px; line-height: 1.45; color: var(--text-dim); }
+  .activity .tx b { color: var(--text); font-weight: 600; }
+  .activity .wh { display: block; font-family:"JetBrains Mono"; font-size: 10.5px; color: var(--text-faint); margin-top: 3px; letter-spacing: .02em; }
+
   /* Filtres docs */
   .doc-filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
   .doc-chip { padding:6px 12px; border-radius:999px; background:var(--glass); border:1px solid var(--border); color:var(--text-dim); font-size:12px; cursor:pointer; transition:all .15s; }
@@ -377,9 +406,16 @@
       </div>
 
       <div class="card">
+        <h5>Intervenants <span class="mono" id="peopleCount" style="color:var(--text-faint)">—</span></h5>
+        <div id="peopleMount">
+          <p class="text-xs" style="color:var(--text-faint)">Chargement…</p>
+        </div>
+      </div>
+
+      <div class="card">
         <h5>Activité récente</h5>
-        <div class="kv" id="activityMount">
-          <p class="text-xs" style="color:var(--text-faint)">Aucune activité récente.</p>
+        <div id="activityMount">
+          <p class="text-xs" style="color:var(--text-faint)">Chargement…</p>
         </div>
       </div>
     </aside>
@@ -509,10 +545,14 @@
   // 6) Documents → onglet Plans
   await loadDocuments(projectId);
 
-  // 7) Membres (project_companies)
+  // 7) Membres (onglet Membres + sidebar Intervenants)
   await loadMembres(projectId);
+  await loadIntervenants(projectId);
 
-  // 8) Tabs
+  // 8) Activité récente (timeline combinée : docs + connexions + entreprises)
+  await loadActivity(projectId);
+
+  // 9) Tabs
   document.getElementById('tabsNav').addEventListener('click', function (e) {
     var btn = e.target.closest('.tab'); if (!btn) return;
     document.querySelectorAll('.tab').forEach(function (t) {
@@ -675,6 +715,144 @@ async function loadMembres(projectId) {
     console.warn('[chantier] membres:', e.message);
     mount.innerHTML = '<p class="text-xs" style="color:var(--text-faint)">Impossible de charger la liste des entreprises.</p>';
   }
+}
+
+// ─── Sidebar : Intervenants (entreprises affectées) ───────────────
+// Style avatar coloré par rôle/métier détecté à partir du champ trade.
+async function loadIntervenants(projectId) {
+  var mount = document.getElementById('peopleMount');
+  var counter = document.getElementById('peopleCount');
+  try {
+    var res = await AxionAuth.sb
+      .from('project_companies')
+      .select('companies(id,name,trade)')
+      .eq('project_id', projectId);
+    if (res.error) throw res.error;
+    var rows = (res.data || []).map(function (r) { return r.companies; }).filter(Boolean);
+    counter.textContent = rows.length;
+    if (!rows.length) {
+      mount.innerHTML = '<p class="text-xs" style="color:var(--text-faint)">Aucune entreprise affectée.</p>';
+      return;
+    }
+    mount.innerHTML = rows.map(function (c) {
+      var roleKey = detectRoleKey(c.trade || '');
+      return '<div class="person">' +
+        '<div class="av role-' + roleKey + '">' + initials(c.name) + '</div>' +
+        '<div class="meta"><div class="nm">' + escapeHtml(c.name) + '</div>' +
+          (c.trade ? '<div class="rl">' + escapeHtml(c.trade) + '</div>' : '') +
+        '</div></div>';
+    }).join('');
+  } catch (e) {
+    console.warn('[chantier] intervenants:', e.message);
+    mount.innerHTML = '<p class="text-xs" style="color:var(--text-faint)">Impossible de charger.</p>';
+    counter.textContent = '—';
+  }
+}
+
+// ─── Sidebar : Activité récente (timeline combinée) ───────────────
+// Combine : nouveaux documents (created_at), affectations d'entreprises
+// (project_companies), connexions récentes (auth.users.last_sign_in_at,
+// uniquement visible en admin via RLS). Limité aux 8 plus récents.
+async function loadActivity(projectId) {
+  var mount = document.getElementById('activityMount');
+  try {
+    var events = [];
+
+    // 1. Documents ajoutés
+    var docRes = await AxionAuth.sb
+      .from('documents')
+      .select('title, category, created_at')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    (docRes.data || []).forEach(function (d) {
+      events.push({
+        type: 'doc',
+        date: d.created_at,
+        html: '<b>' + escapeHtml(d.title || 'Document') + '</b> ajouté' +
+              (d.category ? ' <span style="color:var(--text-faint)">· ' + escapeHtml(d.category) + '</span>' : ''),
+      });
+    });
+
+    // 2. Entreprises rattachées
+    var pcRes = await AxionAuth.sb
+      .from('project_companies')
+      .select('created_at, companies(name)')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    (pcRes.data || []).forEach(function (r) {
+      if (!r.companies) return;
+      events.push({
+        type: 'team',
+        date: r.created_at,
+        html: '<b>' + escapeHtml(r.companies.name) + '</b> rattachée au chantier',
+      });
+    });
+
+    // 3. Connexions récentes (admin uniquement, sinon RLS bloque silencieusement)
+    try {
+      var sessRes = await AxionAuth.sb
+        .from('user_profiles')
+        .select('full_name, email, company_id, companies(name)')
+        .order('updated_at', { ascending: false })
+        .limit(20);
+      // Pas d'info de last_sign_in_at en RLS standard — on se base sur updated_at
+      // du profil (qui change lors d'un signIn si on tracke). Pour l'instant on
+      // saute l'événement connexion (manque de signal fiable côté table publique).
+      // Si tu veux du concret : créer une table 'audit_log' et y INSERT à la connexion.
+    } catch (e) {}
+
+    // Tri & limite à 8
+    events = events.filter(function (e) { return e.date; })
+                   .sort(function (a, b) { return new Date(b.date) - new Date(a.date); })
+                   .slice(0, 8);
+
+    if (!events.length) {
+      mount.innerHTML = '<p class="text-xs" style="color:var(--text-faint)">Aucune activité récente.</p>';
+      return;
+    }
+
+    mount.innerHTML = '<div class="activity">' + events.map(function (ev) {
+      return '<div class="it act-' + ev.type + '">' +
+               '<div class="d"></div>' +
+               '<div class="tx">' + ev.html +
+                 '<span class="wh">' + relativeDate(ev.date) + '</span>' +
+               '</div>' +
+             '</div>';
+    }).join('') + '</div>';
+  } catch (e) {
+    console.warn('[chantier] activity:', e.message);
+    mount.innerHTML = '<p class="text-xs" style="color:var(--text-faint)">Aucune activité récente.</p>';
+  }
+}
+
+// ─── Helpers (avatars, dates relatives, etc.) ─────────────────────
+function initials(name) {
+  if (!name) return '·';
+  var parts = String(name).trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+function detectRoleKey(trade) {
+  var t = String(trade).toLowerCase();
+  if (/ma[iî]tr.*d.?\s*œuvre|architect|moe|conception/i.test(t)) return 'moe';
+  if (/ma[iî]tr.*d.?ouvrage|moa|promoteur|france pierre/i.test(t)) return 'moa';
+  if (/bet|bureau d.?[ée]tudes|fluides|structur|thermiqu|acoustiqu/i.test(t)) return 'bet';
+  if (/gros\s?œuvre|go\b|ma[çc]on/i.test(t)) return 'eg';
+  if (/entreprise|second.?œuvre/i.test(t)) return 'ent';
+  return 'def';
+}
+function relativeDate(iso) {
+  if (!iso) return '';
+  var d = new Date(iso); if (isNaN(d.getTime())) return '';
+  // Utilise un "now" passé dans args éventuel ou la date courante
+  var now = new Date(); var diff = (now - d) / 1000;
+  if (diff < 60) return 'à l\'instant';
+  if (diff < 3600) return 'il y a ' + Math.floor(diff / 60) + ' min';
+  if (diff < 86400) return 'il y a ' + Math.floor(diff / 3600) + ' h';
+  if (diff < 86400 * 7) return 'il y a ' + Math.floor(diff / 86400) + ' j';
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
 }
 
 // ─── Utils ─────────────────────────────────────────────────────────
