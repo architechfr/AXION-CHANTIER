@@ -474,14 +474,26 @@ function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=docum
 
   // Documents (+ ventilation par catégorie/projet)
   try {
-    var dc = await AxionAuth.sb.from('documents').select('project_id,category,title,created_at');
+    // Tri par created_at DESC : le 1er document trouvé pour chaque famille
+    // est le plus récent → on ne met à jour lastCR/lastPlan qu'à la 1ère
+    // occurrence (sinon on écrasait avec des dates plus anciennes).
+    var dc = await AxionAuth.sb.from('documents')
+      .select('project_id,category,title,created_at')
+      .order('created_at', { ascending: false });
     if (!dc.error && dc.data) {
       counts.documents = dc.data.length;
       dc.data.forEach(function(d){
         if (byProject[d.project_id]) byProject[d.project_id].documents++;
         var cat = (d.category||'').toUpperCase();
-        if (cat.indexOf('CR')>-1 || cat.indexOf('COMPTE')>-1) { counts.cr++; if(byProject[d.project_id]){byProject[d.project_id].cr++; byProject[d.project_id].lastCR = d.updated_at||d.created_at;} }
-        if (cat.indexOf('PDF')>-1 || cat.indexOf('DWG')>-1 || cat.indexOf('PLAN')>-1 || cat.indexOf('EXE')>-1) counts.plans++;
+        var bp  = byProject[d.project_id];
+        if (cat.indexOf('CR')>-1 || cat.indexOf('COMPTE')>-1) {
+          counts.cr++;
+          if (bp) { bp.cr++; if (!bp.lastCR) bp.lastCR = d.created_at; }
+        }
+        if (cat.indexOf('PDF')>-1 || cat.indexOf('DWG')>-1 || cat.indexOf('PLAN')>-1 || cat.indexOf('EXE')>-1) {
+          counts.plans++;
+          if (bp && !bp.lastPlan) bp.lastPlan = d.created_at;
+        }
       });
     }
   } catch(e){ /* silencieux */ }
