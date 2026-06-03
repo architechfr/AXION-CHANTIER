@@ -132,6 +132,7 @@
       <div class="glass rounded-2xl p-4 md:p-5 text-sm text-slate2-400">
         <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-azure-400 mb-2">Note</p>
         La <strong class="text-slate2-200">création</strong> de nouveaux comptes (envoi d'invitation) nécessite le système d'invitation — prochaine étape. Ici on gère les comptes existants : rôle, nom et chantiers. Le rôle <span class="pill admin" style="padding:1px 8px">admin</span> donne accès à tout ; <span class="pill moe" style="padding:1px 8px">moe</span>/<span class="pill moa" style="padding:1px 8px">moa</span>/<span class="pill entreprise" style="padding:1px 8px">entreprise</span>/<span class="pill economiste" style="padding:1px 8px">économiste</span> ne voient que leurs chantiers rattachés.
+        <br><br>Le <strong class="text-slate2-200">Statut</strong> (Associé · Architecte · Collaborateur · Stagiaire) est la fonction interne Cadence, distincte du rôle d'accès. Pour l'activer, ajoutez une fois la colonne en base : <code class="font-mono text-azure-300">alter table public.user_profiles add column if not exists statut text;</code>
       </div>
     </section>
 
@@ -155,6 +156,10 @@
 var ROLES = ['admin','moe','moa','entreprise','economiste'];
 var ROLE_LABEL = { admin:'Administrateur', moe:'Maître d’œuvre', moa:'Maître d’ouvrage', entreprise:'Entreprise', economiste:'Économiste' };
 var LOCAL_ROLES = ['pilote','contributeur','observateur'];
+/* Statut interne Cadence (dimension distincte du rôle d'accès) — pour les comptes MOE/admin/économiste */
+var STATUTS = ['associe','architecte','collaborateur','stagiaire'];
+var STATUT_LABEL = { associe:'Associé', architecte:'Architecte', collaborateur:'Collaborateur', stagiaire:'Stagiaire' };
+function isInternalRole(r){ return r==='admin'||r==='moe'||r==='economiste'; }
 
 function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=document.getElementById('scrim'); var open=(force===undefined)?!s.classList.contains('open'):force; s.classList.toggle('open',open); sc.classList.toggle('show',open); }
 function normRole(r){ if(ROLES.indexOf(r)>=0) return r; if(r==='user'||r==='partner'||r==='viewer') return 'entreprise'; return r||null; }
@@ -183,6 +188,8 @@ function render(){
   STATE.users.forEach(function(u){
     var role=normRole(u.role); var co=companyName(u.company_id);
     var mem=membersOf(u.id);
+    var internal=isInternalRole(role); var statut=u.statut||'';
+    var statutOpts='<option value="">— Statut —</option>'+STATUTS.map(function(s){return '<option value="'+s+'"'+(s===statut?' selected':'')+'>'+STATUT_LABEL[s]+'</option>';}).join('');
     var el=document.createElement('div'); el.className='urow glass rounded-2xl p-4 md:p-5'; el.dataset.uid=u.id;
     var roleOpts=ROLES.map(function(r){return '<option value="'+r+'"'+(r===role?' selected':'')+'>'+ROLE_LABEL[r]+'</option>';}).join('');
     var projOpts=STATE.projects.map(function(p){return '<option value="'+p.id+'">'+escapeHtml(p.name||p.slug||'Chantier')+'</option>';}).join('');
@@ -201,12 +208,15 @@ function render(){
             '<span class="nameDisplay font-display text-white text-base">'+escapeHtml(u.full_name||'(sans nom)')+'</span>'+
             '<button class="editName btn-outline rounded-lg px-2 py-1 text-[11px]" title="Renommer">Renommer</button>'+
             '<span class="pill '+role+'">'+escapeHtml(ROLE_LABEL[role]||role)+'</span>'+
+            (internal&&statut?'<span class="chip">'+escapeHtml(STATUT_LABEL[statut])+'</span>':'')+
           '</div>'+
           '<div class="text-xs text-slate2-500 mt-1">'+escapeHtml(u.email||'')+(co?' · '+escapeHtml(co):'')+'</div>'+
         '</div>'+
-        '<div class="shrink-0">'+
-          '<label class="font-mono text-[10px] tracking-[0.15em] uppercase text-slate2-500 block mb-1">Rôle</label>'+
-          '<select class="roleSel field" data-uid="'+u.id+'">'+roleOpts+'</select>'+
+        '<div class="shrink-0 flex gap-2">'+
+          '<div><label class="font-mono text-[10px] tracking-[0.15em] uppercase text-slate2-500 block mb-1">Rôle</label>'+
+            '<select class="roleSel field" data-uid="'+u.id+'">'+roleOpts+'</select></div>'+
+          (internal?'<div><label class="font-mono text-[10px] tracking-[0.15em] uppercase text-slate2-500 block mb-1">Statut</label>'+
+            '<select class="statutSel field" data-uid="'+u.id+'">'+statutOpts+'</select></div>':'')+
         '</div>'+
       '</div>'+
       '<div class="mt-4 pt-3 border-t border-white/5">'+
@@ -241,6 +251,16 @@ function bindActions(){
       if(r.error){ toast('Échec : '+r.error.message, false); return; }
       var u=STATE.users.filter(function(x){return x.id===uid;})[0]; if(u) u.role=role;
       render(); toast('Rôle mis à jour → '+ROLE_LABEL[role]);
+    });
+  });
+  /* Statut interne Cadence */
+  document.querySelectorAll('.statutSel').forEach(function(sel){
+    sel.addEventListener('change', async function(){
+      var uid=sel.dataset.uid, statut=sel.value||null;
+      var r=await AxionAuth.sb.from('user_profiles').update({statut:statut}).eq('id',uid);
+      if(r.error){ toast('Ajoutez d’abord la colonne « statut » (voir note bas de page). '+r.error.message, false); return; }
+      var u=STATE.users.filter(function(x){return x.id===uid;})[0]; if(u) u.statut=statut;
+      render(); toast('Statut mis à jour');
     });
   });
   /* Renommer */
@@ -290,10 +310,10 @@ function bindActions(){
 function demoData(){
   return {
     users:[
-      { id:'u1', email:'f.clarisse@cadence-architectes.fr', full_name:'Florent Clarisse', role:'admin', company_id:null },
-      { id:'u2', email:'c.havet@cadence-architectes.fr', full_name:'C. Havet', role:'moe', company_id:null },
-      { id:'u3', email:'o.penarette@cadence-architectes.fr', full_name:'O. Penarette', role:'moe', company_id:null },
-      { id:'u4', email:'contact@france-pierre.fr', full_name:'France Pierre (MOA)', role:'moa', company_id:'c1' }
+      { id:'u1', email:'f.clarisse@cadence-architectes.fr', full_name:'Florent Clarisse', role:'admin', company_id:null, statut:'associe' },
+      { id:'u2', email:'c.havet@cadence-architectes.fr', full_name:'C. Havet', role:'moe', company_id:null, statut:'architecte' },
+      { id:'u3', email:'o.penarette@cadence-architectes.fr', full_name:'O. Penarette', role:'moe', company_id:null, statut:'collaborateur' },
+      { id:'u4', email:'contact@france-pierre.fr', full_name:'France Pierre 2 (MOA)', role:'moa', company_id:'c1' }
     ],
     companies:{ c1:'France Pierre' },
     projects:[ {id:'p1',name:'Les Jardins de Lisa',slug:'jardins-lisa'}, {id:'p2',name:'Domaine des Gueules Cassées',slug:'gueules-cassees'} ],
@@ -326,7 +346,7 @@ function demoData(){
   document.getElementById('logoutBtn').addEventListener('click', async function(){ await AxionAuth.signOut(); window.location.href='login.html'; });
 
   /* Chargement données (admin → RLS autorise tout) */
-  try { var up=await AxionAuth.sb.from('user_profiles').select('id,email,full_name,role,company_id'); if(!up.error) STATE.users=up.data||[]; }
+  try { var up=await AxionAuth.sb.from('user_profiles').select('*'); if(!up.error) STATE.users=up.data||[]; }
   catch(e){ console.warn(e); }
   try { var co=await AxionAuth.sb.from('companies').select('id,name'); if(!co.error)(co.data||[]).forEach(function(c){STATE.companies[c.id]=c.name;}); }catch(e){}
   try { var pr=await AxionAuth.sb.from('projects').select('id,name,slug').order('name'); if(!pr.error) STATE.projects=pr.data||[]; }catch(e){}
