@@ -115,10 +115,13 @@
         <h1 class="font-display text-3xl md:text-4xl font-700 text-white leading-tight" id="pageTitle">Documents</h1>
         <p class="text-slate2-400 mt-2 text-sm md:text-base">Plans EXE, comptes-rendus, notices, plans de vente — tous vos documents, par chantier et par type. <span id="demoBadge" class="hidden pill ml-1" style="color:#F59E0B;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)"><span class="dot" style="background:#F59E0B"></span>Démo</span></p>
       </div>
-      <button id="addBtn" class="btn-azure rounded-xl px-5 py-3 text-sm font-medium hidden">+ Ajouter un document</button>
+      <div class="flex items-center gap-2 hidden" id="addButtons">
+        <button id="bulkBtn" class="btn-outline rounded-xl px-4 py-3 text-sm font-medium">Importer en lot</button>
+        <button id="addBtn" class="btn-azure rounded-xl px-5 py-3 text-sm font-medium">+ Ajouter un document</button>
+      </div>
     </section>
 
-    <!-- Formulaire d'ajout -->
+    <!-- Ajout unitaire -->
     <section id="addPanel" class="hidden mb-6">
       <div class="glass-strong rounded-2xl p-5">
         <div class="grid md:grid-cols-2 gap-3">
@@ -130,6 +133,46 @@
         <div class="flex items-center gap-2 mt-3">
           <button id="fSave" class="btn-azure rounded-xl px-5 py-2.5 text-sm font-medium">Enregistrer</button>
           <button id="fCancel" class="btn-outline rounded-xl px-4 py-2.5 text-sm">Annuler</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Import en lot -->
+    <section id="bulkPanel" class="hidden mb-6">
+      <div class="glass-strong rounded-2xl p-5">
+        <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <h3 class="font-display text-white text-base">Import en lot — collez vos liens SharePoint</h3>
+          <button id="bulkCancel" class="btn-outline rounded-xl px-4 py-2 text-xs">Annuler</button>
+        </div>
+        <p class="text-xs text-slate2-500 mb-3">Un lien par ligne. Vous pouvez préfixer par un titre : <code class="font-mono text-azure-300">Titre du document | https://…</code> (séparateur <code>|</code>, tabulation ou «&nbsp;-&nbsp;»). AXION devine le titre depuis le nom de fichier, la catégorie depuis le chemin (« /CR/ », « /EXE/ »…) et le chantier depuis l'URL.</p>
+        <textarea id="bulkInput" rows="6" class="field w-full font-mono text-xs" placeholder="https://cadencearchitectes-my.sharepoint.com/.../CR/PDF/Les Jardins de Lisa - CR 22-05-2026.pdf
+https://cadencearchitectes-my.sharepoint.com/.../CR/PDF/Les Jardins de Lisa - CR 13-05-2026.pdf
+…"></textarea>
+        <div class="flex items-center gap-2 mt-3 flex-wrap">
+          <button id="bulkDetect" class="btn-outline rounded-xl px-4 py-2 text-sm">Détecter</button>
+          <select id="bulkProjectDefault" class="field text-sm"><option value="">Chantier par défaut (si non détecté) —</option></select>
+          <select id="bulkCatDefault" class="field text-sm">
+            <option value="">Catégorie par défaut —</option>
+            <option value="Plans EXE">Plans EXE</option>
+            <option value="Compte-rendu">Compte-rendu (CR)</option>
+            <option value="Notice notaire">Notice notaire</option>
+            <option value="Plans de vente">Plans de vente</option>
+            <option value="DCE">DCE / Marchés</option>
+          </select>
+        </div>
+
+        <div id="bulkPreview" class="mt-5 hidden">
+          <div class="flex items-center justify-between mb-2">
+            <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500"><span id="bulkCount">0</span> document(s) détecté(s) — vérifiez et importez</p>
+            <div class="flex items-center gap-2">
+              <button id="bulkSelectAll" class="btn-outline rounded-lg px-3 py-1 text-[11px]">Tout sélectionner</button>
+              <button id="bulkSelectNone" class="btn-outline rounded-lg px-3 py-1 text-[11px]">Aucun</button>
+            </div>
+          </div>
+          <div id="bulkRows" class="space-y-2 max-h-[460px] overflow-y-auto pr-1"></div>
+          <div class="flex items-center justify-end gap-2 mt-4">
+            <button id="bulkImport" class="btn-azure rounded-xl px-5 py-2.5 text-sm font-medium">Importer la sélection</button>
+          </div>
         </div>
       </div>
     </section>
@@ -236,6 +279,124 @@ function render(){
   });
 }
 
+/* ============================================================================
+   IMPORT EN LOT — parse N lignes (URL ou « Titre | URL »), détecte titre,
+   catégorie (chemin) et chantier (URL/path), affiche un tableau éditable,
+   importe la sélection en bulk insert.
+   ========================================================================== */
+function parseLine(line){
+  /* 3 formats supportés :
+     • « Titre | URL »  ou  « Titre \t URL »   → séparateur explicite
+     • « https://… »                            → ligne entière = URL (toléère espaces)
+     • « Titre »                                → URL manquante (signalé) */
+  var url='', title='';
+  var sep = line.match(/^(.+?)\s*[|\t]\s*(https?:\/\/.+)$/);
+  if(sep){ title = sep[1].trim(); url = sep[2].trim(); }
+  else if(/^https?:\/\//i.test(line)){ url = line.trim(); }
+  else { title = line.trim(); }
+  var det = url ? detectFromUrl(url) : {name:'',cat:'',pid:''};
+  return { title: title || det.name || '', url: url, cat: det.cat || '', pid: det.pid || '', _hasUrl: !!url };
+}
+function detectFromUrl(url){
+  var name='', cat='', pid='';
+  try {
+    var u = new URL(url);
+    var path = decodeURIComponent(u.pathname);
+    var segs = path.split('/').filter(Boolean);
+    var last = segs[segs.length-1] || '';
+    /* nom de fichier : retire extension, remplace _ et %20 par espaces */
+    name = last.replace(/\.(pdf|docx?|xlsx?|dwg|pptx?)$/i,'').replace(/[_]+/g,' ').replace(/\s+/g,' ').trim();
+    /* URLs de partage SharePoint (/:b:/g/personal/...) : dernier segment = token opaque */
+    if(/^E[A-Za-z0-9_-]{18,}$/.test(last)) name = '';
+    /* catégorie depuis segments de chemin (priorité aux dossiers parents) */
+    var pathU = path.toUpperCase();
+    if(/\bDCE\b|MARCH[ÉE]|N[ÉE]GO/.test(pathU)) cat='DCE';
+    else if(/VENTE/.test(pathU)) cat='Plans de vente';
+    else if(/NOTICE|NOTAIRE/.test(pathU)) cat='Notice notaire';
+    else if(/\bCR\b|COMPTE[\s-]?RENDU|R[ÉE]UNION/.test(pathU)) cat='Compte-rendu';
+    else if(/PLAN|\bEXE\b|DWG/.test(pathU)) cat='Plans EXE';
+    /* chantier : (1) slug tolérant aux séparateurs (-/_/espace) (2) mots
+       significatifs du nom (>=4 lettres, hors stop-words). 2 hits suffisent.
+       Diacritiques normalisés des deux côtés — « Gueules-cassees » dans l'URL
+       matche bien « Cassées » du nom. */
+    var STOP = ['LES','LA','LE','DES','DE','DU','AUX','SUR','POUR','AVEC'];
+    var deAccent = function(s){ return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,''); };
+    var pathU = deAccent(path).toUpperCase();
+    for(var i=0; i<STATE.projList.length; i++){
+      var p = STATE.projList[i];
+      var slugRe = deAccent(p.slug||'').toUpperCase().replace(/[^A-Z0-9]+/g,'[\\-_\\s]?');
+      if(slugRe && new RegExp(slugRe).test(pathU)) { pid=p.id; break; }
+      var words = (deAccent(p.name||'').toUpperCase().match(/[A-Z]{4,}/g) || []).filter(function(w){return STOP.indexOf(w)<0;});
+      if(words.length){
+        var hits = words.filter(function(w){ return pathU.indexOf(w)>=0; }).length;
+        if(hits >= Math.min(words.length, 2)) { pid=p.id; break; }
+      }
+    }
+  } catch(e){ /* pas une URL valide */ }
+  return { name: name, cat: cat, pid: pid };
+}
+
+var BULK = []; /* tableau courant de détection */
+function setupBulkImport(){
+  /* peupler les <select> par défaut */
+  var def = document.getElementById('bulkProjectDefault');
+  STATE.projList.forEach(function(p){ var o=document.createElement('option'); o.value=p.id; o.textContent=p.name||p.slug; def.appendChild(o); });
+
+  document.getElementById('bulkDetect').addEventListener('click', function(){
+    var txt = document.getElementById('bulkInput').value || '';
+    var lines = txt.split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
+    BULK = lines.map(parseLine).filter(function(r){return r.url || r.title;});
+    renderBulkRows();
+  });
+  document.getElementById('bulkSelectAll').addEventListener('click', function(){ BULK.forEach(function(r){r._on=true;}); renderBulkRows(); });
+  document.getElementById('bulkSelectNone').addEventListener('click', function(){ BULK.forEach(function(r){r._on=false;}); renderBulkRows(); });
+  document.getElementById('bulkImport').addEventListener('click', importBulk);
+}
+
+function renderBulkRows(){
+  var prev = document.getElementById('bulkPreview');
+  var rowsEl = document.getElementById('bulkRows');
+  document.getElementById('bulkCount').textContent = BULK.length;
+  if(!BULK.length){ prev.classList.add('hidden'); return; }
+  prev.classList.remove('hidden');
+  var projOpts = '<option value="">— Chantier —</option>'+STATE.projList.map(function(p){return '<option value="'+p.id+'">'+escapeHtml(p.name||p.slug)+'</option>';}).join('');
+  rowsEl.innerHTML = BULK.map(function(r, i){
+    if(r._on===undefined) r._on = !!r.url; /* coché par défaut si URL présente */
+    var status = r.url ? '' : '<span class="text-[10px] text-red-300 ml-2">URL manquante</span>';
+    return '<div class="glass rounded-xl p-3 flex items-center gap-2 flex-wrap" data-i="'+i+'">'+
+      '<input type="checkbox" class="bRow" data-i="'+i+'"'+(r._on?' checked':'')+' style="width:16px;height:16px;accent-color:#60A5FA" />'+
+      '<input class="bTitle field flex-1 min-w-[180px]" data-i="'+i+'" value="'+escapeHtml(r.title)+'" placeholder="Titre" />'+
+      '<input class="bCat field" data-i="'+i+'" value="'+escapeHtml(r.cat)+'" placeholder="Catégorie" style="width:140px" />'+
+      '<select class="bProj field" data-i="'+i+'" style="width:180px">'+projOpts.replace('value="'+r.pid+'"','value="'+r.pid+'" selected')+'</select>'+
+      '<a class="text-[11px] text-slate2-500 hover:text-azure-300 truncate max-w-[220px]" href="'+escapeHtml(r.url||'#')+'" target="_blank" rel="noopener" title="'+escapeHtml(r.url)+'">'+escapeHtml(r.url||'(pas de lien)')+'</a>'+
+      status+
+    '</div>';
+  }).join('');
+  /* bind edits */
+  rowsEl.querySelectorAll('.bRow').forEach(function(c){ c.addEventListener('change',function(){ BULK[+c.dataset.i]._on = c.checked; }); });
+  rowsEl.querySelectorAll('.bTitle').forEach(function(c){ c.addEventListener('input',function(){ BULK[+c.dataset.i].title = c.value; }); });
+  rowsEl.querySelectorAll('.bCat').forEach(function(c){ c.addEventListener('input',function(){ BULK[+c.dataset.i].cat = c.value; }); });
+  rowsEl.querySelectorAll('.bProj').forEach(function(c){ c.addEventListener('change',function(){ BULK[+c.dataset.i].pid = c.value; }); });
+}
+
+async function importBulk(){
+  var defProj = document.getElementById('bulkProjectDefault').value || null;
+  var defCat  = document.getElementById('bulkCatDefault').value || null;
+  var selected = BULK.filter(function(r){ return r._on && r.url && r.title; });
+  if(!selected.length){ toast('Sélectionnez au moins une ligne avec titre + URL.', false); return; }
+  var rows = selected.map(function(r){
+    return { project_id: r.pid || defProj, title: r.title.trim(), file_path: r.url.trim(), category: (r.cat||defCat||'Autres').trim() };
+  });
+  /* bulk insert */
+  var r = await AxionAuth.sb.from('documents').insert(rows).select();
+  if(r.error){ toast('Échec : '+r.error.message, false); return; }
+  var added = r.data || rows;
+  STATE.docs = added.concat(STATE.docs);
+  document.getElementById('bulkPanel').classList.add('hidden');
+  document.getElementById('bulkInput').value=''; BULK=[]; renderBulkRows();
+  render(); toast(added.length+' document'+(added.length>1?'s':'')+' importé'+(added.length>1?'s':''));
+}
+
 function demoDocs(){
   return { docs:[
     {id:'d1',project_id:'p1',title:'Plan EXE — Bât A · R+2 ind. C',category:'Plans EXE',file_path:'#',updated_at:'2026-05-20'},
@@ -270,6 +431,10 @@ function demoDocs(){
     document.getElementById('rolePill').textContent='Administrateur'; document.getElementById('rolePill').classList.add('admin');
     document.getElementById('avatar').textContent='AP'; document.getElementById('avatar').style.background='linear-gradient(135deg,#FCD34D,#F59E0B)';
     document.getElementById('demoBadge').classList.remove('hidden');
+    document.getElementById('addButtons').classList.remove('hidden');
+    setupBulkImport();
+    document.getElementById('bulkBtn').addEventListener('click',function(){ document.getElementById('bulkPanel').classList.toggle('hidden'); });
+    document.getElementById('bulkCancel').addEventListener('click',function(){ document.getElementById('bulkPanel').classList.add('hidden'); });
     setupFilters(); render(); reveal(); return;
   }
 
@@ -293,9 +458,15 @@ function demoDocs(){
 
   /* Ajout (admin/moe/economiste) */
   if(STATE.canEdit){
-    var addBtn=document.getElementById('addBtn'); addBtn.classList.remove('hidden');
+    document.getElementById('addButtons').classList.remove('hidden');
+    var addBtn=document.getElementById('addBtn');
     var panel=document.getElementById('addPanel');
-    addBtn.addEventListener('click',function(){ panel.classList.toggle('hidden'); });
+    var bulkBtn=document.getElementById('bulkBtn');
+    var bulkPanel=document.getElementById('bulkPanel');
+    addBtn.addEventListener('click',function(){ panel.classList.toggle('hidden'); bulkPanel.classList.add('hidden'); });
+    bulkBtn.addEventListener('click',function(){ bulkPanel.classList.toggle('hidden'); panel.classList.add('hidden'); });
+    document.getElementById('bulkCancel').addEventListener('click',function(){ bulkPanel.classList.add('hidden'); });
+    setupBulkImport();
     document.getElementById('fCancel').addEventListener('click',function(){ panel.classList.add('hidden'); });
     document.getElementById('fSave').addEventListener('click', async function(){
       var title=document.getElementById('fTitle').value.trim();
