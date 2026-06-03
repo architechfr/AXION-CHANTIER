@@ -4,7 +4,7 @@
 --  Pré-requis : projet avec slug='jardins-lisa'.
 -- =============================================================================
 
-WITH proj AS (SELECT id FROM public.projects WHERE slug = 'jardins-lisa' LIMIT 1),
+WITH proj AS (SELECT id FROM public.projects WHERE slug = 'jardins-de-lisa' LIMIT 1),
 src AS (
   SELECT proj.id AS project_id, t.title, t.url, t.dt::timestamptz AS dt
   FROM proj, (VALUES
