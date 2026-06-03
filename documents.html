@@ -272,67 +272,99 @@ function render(){
     return;
   }
 
-  /* Regroupement par famille avec pattern « Le plus récent en avant + Archives ».
-     Tri intra-famille : date décroissante (created_at/updated_at). Le premier
-     document de chaque famille est rendu en grande carte ; les autres en
-     archives (grille compacte, cachée par défaut si ≥ 4). */
-  var groups={};
-  docs.forEach(function(d){ var f=famOf(d); (groups[f.label]=groups[f.label]||{color:f.color,t2:f.t2,key:f.key,items:[]}).items.push(d); });
+  /* Pattern de groupage en 2 niveaux :
+     CHANTIER (section avec titre + total)
+       → FAMILLE (CR / Plans / Notice / etc.)
+         → « Le plus récent » en grande carte + Archives N pliables
+     Quand un filtre famille est actif, on n'affiche que cette famille
+     dans chaque chantier. Quand un filtre chantier est actif, on n'a
+     qu'une section chantier. */
   list.innerHTML='';
-  Object.keys(groups).forEach(function(label){
-    var g=groups[label];
-    /* Tri par date décroissante — sans date au dernier rang */
-    g.items.sort(function(a,b){ var da=docDate(a), db=docDate(b); if(!da&&!db) return 0; if(!da) return 1; if(!db) return -1; return new Date(db)-new Date(da); });
-    var latest = g.items[0];
-    var archives = g.items.slice(1);
-    var pname = STATE.projects[latest.project_id]||'';
-    var ago = timeAgo(docDate(latest));
 
-    var head = '<div class="flex items-center gap-2 mb-3 flex-wrap">'+
-      '<span class="dot" style="width:9px;height:9px;background:'+g.color+'"></span>'+
-      '<h2 class="font-display text-lg font-600 text-white">'+escapeHtml(label)+'</h2>'+
-      '<span class="font-mono text-[11px] text-slate2-500">'+g.items.length+'</span>'+
-      (g.t2?'<span class="pill ml-1" style="color:#F59E0B;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)">Confidentiel</span>':'')+
-    '</div>';
+  /* Helper : rend les familles d'un set de docs dans un container */
+  function renderFamiliesIn(container, projDocs) {
+    var groups = {};
+    projDocs.forEach(function(d){ var f=famOf(d); (groups[f.label]=groups[f.label]||{color:f.color,t2:f.t2,key:f.key,items:[]}).items.push(d); });
+    Object.keys(groups).forEach(function(label){
+      var g=groups[label];
+      g.items.sort(function(a,b){ var da=docDate(a), db=docDate(b); if(!da&&!db) return 0; if(!da) return 1; if(!db) return -1; return new Date(db)-new Date(da); });
+      var latest = g.items[0];
+      var archives = g.items.slice(1);
+      var ago = timeAgo(docDate(latest));
 
-    /* Grande carte du plus récent */
-    var hero = '<a href="'+escapeHtml(docUrl(latest))+'" target="_blank" rel="noopener" class="glass card-hover rounded-2xl p-5 flex items-center gap-4 block mb-3" style="border-color:'+g.color+'33;background:linear-gradient(135deg,'+g.color+'10,rgba(255,255,255,.03))">'+
-      '<div class="w-14 h-14 rounded-2xl grid place-items-center shrink-0" style="background:'+g.color+'24;border:1px solid '+g.color+'55"><svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="'+g.color+'" stroke-width="1.6"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'+
-      '<div class="flex-1 min-w-0">'+
-        '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
-          '<span class="pill" style="color:'+g.color+';border-color:'+g.color+'55;background:'+g.color+'12">Le plus récent</span>'+
-          (ago?'<span class="text-[11px] text-slate2-400">'+ago+'</span>':'')+
-        '</div>'+
-        '<div class="font-display text-white text-base md:text-lg leading-snug">'+escapeHtml(docName(latest))+'</div>'+
-        '<div class="text-xs text-slate2-500 mt-1">'+(pname?escapeHtml(pname)+' · ':'')+(latest.category?escapeHtml(latest.category)+' · ':'')+fmtDateLong(docDate(latest))+'</div>'+
-      '</div>'+
-      '<svg class="w-5 h-5 text-slate2-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 17L17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
-
-    /* Archives : grille compacte, repliée si > 3 */
-    var archHtml = '';
-    if(archives.length){
-      var cards = archives.map(function(d){
-        var p = STATE.projects[d.project_id]||'';
-        return '<a href="'+escapeHtml(docUrl(d))+'" target="_blank" rel="noopener" class="glass card-hover rounded-xl px-3 py-2.5 flex items-center gap-2.5 block">'+
-          '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="'+g.color+'" stroke-width="1.6"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
-          '<div class="flex-1 min-w-0"><div class="text-[13px] text-slate2-200 truncate">'+escapeHtml(docName(d))+'</div>'+
-            '<div class="text-[10px] text-slate2-500 truncate">'+(p?escapeHtml(p)+' · ':'')+fmtDate(docDate(d))+'</div></div>'+
-        '</a>';
-      }).join('');
-      var collapsed = archives.length > 3;
-      var arcId = 'arc_'+g.key+'_'+Math.random().toString(36).slice(2,7);
-      archHtml = '<div class="mt-1">'+
-        '<button data-arc="'+arcId+'" class="archToggle font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500 hover:text-azure-300 mb-2 flex items-center gap-2">'+
-          '<svg class="w-3 h-3 transition-transform" style="'+(collapsed?'':'transform:rotate(90deg)')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>'+
-          'Archives · '+archives.length+
-        '</button>'+
-        '<div id="'+arcId+'" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2"'+(collapsed?' style="display:none"':'')+'>'+cards+'</div>'+
+      var head = '<div class="flex items-center gap-2 mb-3 mt-5 flex-wrap">'+
+        '<span class="dot" style="width:9px;height:9px;background:'+g.color+'"></span>'+
+        '<h3 class="font-display text-base font-600 text-white">'+escapeHtml(label)+'</h3>'+
+        '<span class="font-mono text-[11px] text-slate2-500">'+g.items.length+'</span>'+
+        (g.t2?'<span class="pill ml-1" style="color:#F59E0B;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)">Confidentiel</span>':'')+
       '</div>';
-    }
 
-    var sec=document.createElement('div');
-    sec.innerHTML = head + hero + archHtml;
-    list.appendChild(sec);
+      /* Grande carte du plus récent — pas besoin du nom de chantier ici, il est dans la section */
+      var hero = '<a href="'+escapeHtml(docUrl(latest))+'" target="_blank" rel="noopener" class="glass card-hover rounded-2xl p-5 flex items-center gap-4 block mb-3" style="border-color:'+g.color+'33;background:linear-gradient(135deg,'+g.color+'10,rgba(255,255,255,.03))">'+
+        '<div class="w-14 h-14 rounded-2xl grid place-items-center shrink-0" style="background:'+g.color+'24;border:1px solid '+g.color+'55"><svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="'+g.color+'" stroke-width="1.6"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'+
+        '<div class="flex-1 min-w-0">'+
+          '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
+            '<span class="pill" style="color:'+g.color+';border-color:'+g.color+'55;background:'+g.color+'12">Le plus récent</span>'+
+            (ago?'<span class="text-[11px] text-slate2-400">'+ago+'</span>':'')+
+          '</div>'+
+          '<div class="font-display text-white text-base md:text-lg leading-snug">'+escapeHtml(docName(latest))+'</div>'+
+          '<div class="text-xs text-slate2-500 mt-1">'+(latest.category?escapeHtml(latest.category)+' · ':'')+fmtDateLong(docDate(latest))+'</div>'+
+        '</div>'+
+        '<svg class="w-5 h-5 text-slate2-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 17L17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
+
+      var archHtml = '';
+      if(archives.length){
+        var cards = archives.map(function(d){
+          return '<a href="'+escapeHtml(docUrl(d))+'" target="_blank" rel="noopener" class="glass card-hover rounded-xl px-3 py-2.5 flex items-center gap-2.5 block">'+
+            '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="'+g.color+'" stroke-width="1.6"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+            '<div class="flex-1 min-w-0"><div class="text-[13px] text-slate2-200 truncate">'+escapeHtml(docName(d))+'</div>'+
+              '<div class="text-[10px] text-slate2-500 truncate">'+fmtDate(docDate(d))+'</div></div>'+
+          '</a>';
+        }).join('');
+        var collapsed = archives.length > 3;
+        var arcId = 'arc_'+g.key+'_'+Math.random().toString(36).slice(2,7);
+        archHtml = '<div class="mt-1">'+
+          '<button data-arc="'+arcId+'" class="archToggle font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500 hover:text-azure-300 mb-2 flex items-center gap-2">'+
+            '<svg class="w-3 h-3 transition-transform" style="'+(collapsed?'':'transform:rotate(90deg)')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>'+
+            'Archives · '+archives.length+
+          '</button>'+
+          '<div id="'+arcId+'" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2"'+(collapsed?' style="display:none"':'')+'>'+cards+'</div>'+
+        '</div>';
+      }
+
+      var famSec = document.createElement('div');
+      famSec.innerHTML = head + hero + archHtml;
+      container.appendChild(famSec);
+    });
+  }
+
+  /* Niveau 1 : groupage par chantier, ordre stable selon STATE.projList */
+  var byProject = {};
+  docs.forEach(function(d){
+    var pid = d.project_id || '__none__';
+    if (!byProject[pid]) byProject[pid] = { name: STATE.projects[pid] || 'Sans chantier', docs: [] };
+    byProject[pid].docs.push(d);
+  });
+  var projOrder = STATE.projList.filter(function(p){ return byProject[p.id]; }).map(function(p){return p.id;});
+  if (byProject['__none__']) projOrder.push('__none__');
+
+  projOrder.forEach(function(pid){
+    var bucket = byProject[pid];
+    var projDocs = bucket.docs;
+
+    var projSec = document.createElement('div');
+    projSec.className = 'mb-10';
+
+    /* Titre de section chantier */
+    var titleHtml = '<div class="flex items-center gap-3 mb-2 pb-3 flex-wrap" style="border-bottom:1px solid rgba(255,255,255,.08)">'+
+      '<svg class="w-5 h-5 text-azure-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 21V7l9-4 9 4v14M9 21V11h6v10" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+      '<h2 class="font-display text-xl font-700 text-white">'+escapeHtml(bucket.name)+'</h2>'+
+      '<span class="pill" style="background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.3);color:#93C5FD">'+projDocs.length+' document'+(projDocs.length>1?'s':'')+'</span>'+
+    '</div>';
+    projSec.innerHTML = titleHtml;
+
+    renderFamiliesIn(projSec, projDocs);
+    list.appendChild(projSec);
   });
   /* Toggle archives */
   list.querySelectorAll('.archToggle').forEach(function(b){
