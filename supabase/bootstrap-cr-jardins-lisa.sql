@@ -65,8 +65,8 @@ src AS (
   ,('CR n°48 — 1er juin 2026', 'https://cadencearchitectes-my.sharepoint.com/personal/f_clarisse_cadence-architectes_fr/Documents/FRANCE-PIERRE/Jardins%20de%20Lisa%20-HF/CR/PDF/Les%20Jardins%20de%20Lisa%20-%20OZOIR%20LA%20FERRIERE%20CR48.pdf', '2026-06-01 09:40+02')
   ) AS t(title, url, dt)
 )
-INSERT INTO public.documents (project_id, title, file_path, category, created_at, updated_at)
-SELECT src.project_id, src.title, src.url, 'Compte-rendu', src.dt, src.dt
+INSERT INTO public.documents (project_id, title, file_path, category, created_at)
+SELECT src.project_id, src.title, src.url, 'Compte-rendu', src.dt
 FROM src
 WHERE NOT EXISTS (
   SELECT 1 FROM public.documents d
