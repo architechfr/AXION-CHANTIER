@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AXION — Utilisateurs</title>
+<meta name="theme-color" content="#0A0E1A">
+<link rel="icon" type="image/png" href="assets/img/logo-axion-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    fontFamily: { display:['"Space Grotesk"','ui-sans-serif','system-ui'], sans:['Inter','ui-sans-serif','system-ui'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    colors: { ink:{900:'#070A12',800:'#0A0E1A',700:'#0D1320',600:'#111827',500:'#1A2233'}, azure:{300:'#93C5FD',400:'#60A5FA',500:'#3B82F6',600:'#2563EB'}, cyan:{400:'#38BDF8'}, slate2:{300:'#CBD5E1',400:'#94A3B8',500:'#64748B'} },
+  } } };
+</script>
+<style>
+  :root { color-scheme: dark; --sb-w: 256px; }
+  html, body { background: #0A1628; }
+  body { font-family:'Inter',system-ui,sans-serif; color:#E2E8F0; -webkit-font-smoothing:antialiased; min-height:100vh; }
+  .font-display { font-family:'Space Grotesk',sans-serif; }
+  .font-mono { font-family:'JetBrains Mono',monospace; }
+  .grid-faint { background-image: linear-gradient(rgba(148,163,184,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.05) 1px,transparent 1px); background-size:46px 46px; }
+  .glass { background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.08); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
+  .glass-strong { background:rgba(13,19,32,.72); border:1px solid rgba(255,255,255,.10); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .card-hover { transition:transform .4s cubic-bezier(.2,.7,.1,1),border-color .4s,box-shadow .4s; }
+  .btn-azure { background:linear-gradient(135deg,#3B82F6,#2563EB); color:#fff; box-shadow:0 10px 30px -10px rgba(59,130,246,.6); transition:transform .25s,box-shadow .25s; }
+  .btn-azure:hover { transform:translateY(-2px); }
+  .btn-outline { border:1px solid rgba(255,255,255,.18); color:#E2E8F0; transition:background .25s,border-color .25s; background:transparent; }
+  .btn-outline:hover { background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.32); }
+  .text-grad { background:linear-gradient(120deg,#60A5FA,#38BDF8); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .dot { width:7px; height:7px; border-radius:50%; }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; font-size:12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); font-weight:500; }
+  .pill.admin{color:#FCD34D;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)}
+  .pill.moe{color:#93C5FD;border-color:rgba(96,165,250,.35);background:rgba(59,130,246,.08)}
+  .pill.moa{color:#5EEAD4;border-color:rgba(45,212,191,.35);background:rgba(45,212,191,.08)}
+  .pill.entreprise{color:#C4B5FD;border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.08)}
+  .pill.economiste{color:#FDBA74;border-color:rgba(251,146,60,.35);background:rgba(251,146,60,.08)}
+  a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #60A5FA;outline-offset:2px;border-radius:6px;}
+  ::selection{background:#2563EB;color:#fff;}
+  ::-webkit-scrollbar{width:10px;height:10px;}::-webkit-scrollbar-thumb{background:#1A2233;border-radius:8px;}
+  #sidebar{width:var(--sb-w);transition:transform .35s cubic-bezier(.2,.7,.1,1);}
+  .nav-link{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;font-size:14px;font-weight:500;color:#94A3B8;transition:.18s;position:relative;}
+  .nav-link svg{width:18px;height:18px;flex:0 0 18px;}
+  .nav-link:hover{color:#E2E8F0;background:rgba(255,255,255,.04);}
+  .nav-link.on{color:#fff;background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(37,99,235,.10));border:1px solid rgba(96,165,250,.25);}
+  .nav-link.on::before{content:"";position:absolute;left:-1px;top:9px;bottom:9px;width:3px;border-radius:3px;background:linear-gradient(#60A5FA,#38BDF8);}
+  .urow{transition:border-color .2s,background .2s;}
+  .urow:hover{border-color:rgba(96,165,250,.2);}
+  .field{background:#0A1628;border:1px solid rgba(255,255,255,.12);color:#E2E8F0;border-radius:10px;padding:7px 10px;font-size:13px;}
+  .field:focus{outline:none;border-color:#60A5FA;box-shadow:0 0 0 3px rgba(96,165,250,.15);}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:4px 8px 4px 10px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);}
+  .chip button{color:#94A3B8;line-height:1;font-size:14px;}
+  .chip button:hover{color:#EF4444;}
+  #loadingScreen{position:fixed;inset:0;background:#0A1628;display:flex;align-items:center;justify-content:center;color:#94A3B8;z-index:60;}
+  .spin{width:32px;height:32px;border:2px solid rgba(96,165,250,.2);border-top-color:#60A5FA;border-radius:50%;animation:spin .9s linear infinite;margin-right:14px}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;transition:.3s;z-index:70;pointer-events:none;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  @media (max-width:1023px){ #sidebar{position:fixed;z-index:55;top:0;bottom:0;left:0;transform:translateX(-100%);} #sidebar.open{transform:translateX(0);} #content{margin-left:0!important;} }
+  #scrim{position:fixed;inset:0;background:rgba(5,8,18,.6);z-index:54;opacity:0;pointer-events:none;transition:opacity .3s;}#scrim.show{opacity:1;pointer-events:auto;}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body class="bg-ink-800 text-slate-200">
+
+<div id="loadingScreen"><span class="spin"></span><span class="font-mono text-xs tracking-wider uppercase">Chargement des utilisateurs…</span></div>
+<div id="scrim" onclick="toggleSidebar(false)"></div>
+<div id="toast"><div class="glass-strong rounded-xl px-4 py-3 text-sm font-medium"></div></div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="fixed top-0 left-0 h-screen flex flex-col glass-strong" style="visibility:hidden;border-radius:0;border-right:1px solid rgba(255,255,255,.08)">
+  <div class="px-5 py-5 flex items-center gap-2.5 border-b border-white/5">
+    <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-9 h-9 rounded-xl" style="border:1px solid rgba(96,165,250,.2)" onerror="this.style.display='none'" />
+    <span class="font-display text-lg font-700 tracking-[0.22em] text-white">AXION</span>
+  </div>
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+    <a href="app.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12l9-9 9 9M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Tableau de bord</span></a>
+    <a href="app.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 21h18M5 21V7l8-4 8 4v14" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Chantiers</span></a>
+    <a href="moe-coherence.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3v18h18M7 14l3-4 4 3 5-7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Cohérence planning</span></a>
+    <a href="utilisateurs.html" class="nav-link on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Utilisateurs</span></a>
+  </nav>
+  <div class="px-4 py-4 border-t border-white/5">
+    <div class="glass rounded-xl px-3.5 py-3">
+      <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500">Espace</p>
+      <div class="flex items-center justify-between mt-1">
+        <span class="font-display text-sm tracking-[0.18em] text-slate2-200">ADMIN</span>
+        <span class="inline-flex items-center gap-1.5 text-[11px] text-green-300"><span class="dot bg-green-400"></span>En ligne</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- CONTENU -->
+<div id="content" class="lg:ml-[256px] min-h-screen grid-faint" style="visibility:hidden">
+  <header class="sticky top-0 z-40 glass-strong" style="border-radius:0;border-bottom:1px solid rgba(255,255,255,.07)">
+    <div class="px-5 md:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="lg:hidden btn-outline rounded-xl w-10 h-10 grid place-items-center" aria-label="Menu"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg></button>
+        <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400">Administration · Utilisateurs</p>
+      </div>
+      <div class="flex items-center gap-3 md:gap-4">
+        <a href="compte.html" id="userName" class="hidden md:inline text-sm text-slate2-300 hover:text-white transition-colors" style="text-decoration:none"></a>
+        <span class="pill admin" id="rolePill">Administrateur</span>
+        <div id="avatar" class="w-10 h-10 rounded-full grid place-items-center font-display font-600 text-sm text-ink-900" style="background:linear-gradient(135deg,#FCD34D,#F59E0B)"></div>
+        <button id="logoutBtn" class="btn-outline rounded-xl px-3.5 py-2 text-xs font-medium hidden md:inline">Déconnexion</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="px-5 md:px-8 py-7 max-w-[1200px] mx-auto w-full">
+    <section class="mb-6">
+      <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-2">Administration</p>
+      <h1 class="font-display text-3xl md:text-4xl font-700 text-white leading-tight">Gestion des <span class="text-grad">utilisateurs</span></h1>
+      <p class="text-slate2-400 mt-2 text-sm md:text-base">Rôles, identités et rattachement aux chantiers. Les modifications sont enregistrées immédiatement.</p>
+      <span id="demoBadge" class="hidden pill mt-3" style="color:#F59E0B;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)"><span class="dot" style="background:#F59E0B"></span>Aperçu démonstration (lecture seule)</span>
+    </section>
+
+    <section id="kpiRow" class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6"></section>
+
+    <section>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-display text-lg font-600 text-white">Comptes</h2>
+        <span id="usersCount" class="font-mono text-[11px] tracking-[0.2em] uppercase text-slate2-500"></span>
+      </div>
+      <div id="usersList" class="space-y-3"></div>
+    </section>
+
+    <section class="my-8">
+      <div class="glass rounded-2xl p-4 md:p-5 text-sm text-slate2-400">
+        <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-azure-400 mb-2">Note</p>
+        La <strong class="text-slate2-200">création</strong> de nouveaux comptes (envoi d'invitation) nécessite le système d'invitation — prochaine étape. Ici on gère les comptes existants : rôle, nom et chantiers. Le rôle <span class="pill admin" style="padding:1px 8px">admin</span> donne accès à tout ; <span class="pill moe" style="padding:1px 8px">moe</span>/<span class="pill moa" style="padding:1px 8px">moa</span>/<span class="pill entreprise" style="padding:1px 8px">entreprise</span>/<span class="pill economiste" style="padding:1px 8px">économiste</span> ne voient que leurs chantiers rattachés.
+      </div>
+    </section>
+
+    <footer class="border-t border-white/5 pt-6 pb-10 text-center">
+      <p class="font-mono text-[11px] tracking-[0.25em] uppercase text-slate2-500">Cadence Architectes Associés · Paris 12e</p>
+      <p class="text-xs text-slate2-500 mt-2">agence@cadence-architectes.fr</p>
+    </footer>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/axion-auth.js"></script>
+<script>
+/* ============================================================================
+   AXION — Administration des utilisateurs (admin uniquement)
+   • Liste user_profiles + companies + projects + project_members
+   • Édite role + full_name (user_profiles) · rattache aux chantiers (project_members)
+   • Garde-fou : on ne se retire pas à soi-même le rôle admin (anti-lockout)
+   ========================================================================== */
+var ROLES = ['admin','moe','moa','entreprise','economiste'];
+var ROLE_LABEL = { admin:'Administrateur', moe:'Maître d’œuvre', moa:'Maître d’ouvrage', entreprise:'Entreprise', economiste:'Économiste' };
+var LOCAL_ROLES = ['pilote','contributeur','observateur'];
+
+function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=document.getElementById('scrim'); var open=(force===undefined)?!s.classList.contains('open'):force; s.classList.toggle('open',open); sc.classList.toggle('show',open); }
+function normRole(r){ if(ROLES.indexOf(r)>=0) return r; if(r==='user'||r==='partner'||r==='viewer') return 'entreprise'; return r||null; }
+function initials(n){ var p=(n||'').trim().split(/\s+/); return (((p[0]||'')[0]||'')+((p[1]||'')[0]||''))||'?'; }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function toast(msg, ok){ var t=document.getElementById('toast'); t.firstElementChild.textContent=msg; t.firstElementChild.style.color = ok===false ? '#FCA5A5' : '#86EFAC'; t.classList.add('show'); clearTimeout(window.__tt); window.__tt=setTimeout(function(){t.classList.remove('show');},2600); }
+
+var STATE = { me:null, users:[], companies:{}, projects:[], members:[], demo:false };
+
+function companyName(id){ return id && STATE.companies[id] ? STATE.companies[id] : null; }
+function membersOf(uid){ return STATE.members.filter(function(m){return m.user_id===uid;}); }
+
+function render(){
+  /* KPI par rôle */
+  var counts={}; ROLES.forEach(function(r){counts[r]=0;});
+  STATE.users.forEach(function(u){ var r=normRole(u.role); if(counts[r]!=null) counts[r]++; });
+  var kr=document.getElementById('kpiRow'); kr.innerHTML='';
+  [['Comptes',STATE.users.length,'#60A5FA']].concat(ROLES.map(function(r){return [ROLE_LABEL[r],counts[r],null];})).forEach(function(k){
+    var el=document.createElement('div'); el.className='glass rounded-2xl p-3.5';
+    el.innerHTML='<div class="font-display text-2xl font-700 text-white leading-none">'+k[1]+'</div><div class="text-[11px] text-slate2-400 mt-1.5">'+escapeHtml(k[0])+'</div>';
+    kr.appendChild(el);
+  });
+
+  document.getElementById('usersCount').textContent = STATE.users.length+' compte'+(STATE.users.length>1?'s':'');
+  var list=document.getElementById('usersList'); list.innerHTML='';
+  STATE.users.forEach(function(u){
+    var role=normRole(u.role); var co=companyName(u.company_id);
+    var mem=membersOf(u.id);
+    var el=document.createElement('div'); el.className='urow glass rounded-2xl p-4 md:p-5'; el.dataset.uid=u.id;
+    var roleOpts=ROLES.map(function(r){return '<option value="'+r+'"'+(r===role?' selected':'')+'>'+ROLE_LABEL[r]+'</option>';}).join('');
+    var projOpts=STATE.projects.map(function(p){return '<option value="'+p.id+'">'+escapeHtml(p.name||p.slug||'Chantier')+'</option>';}).join('');
+    var localOpts=LOCAL_ROLES.map(function(r){return '<option value="'+r+'">'+r+'</option>';}).join('');
+    var chips = mem.length ? mem.map(function(m){
+      var p=STATE.projects.filter(function(x){return x.id===m.project_id;})[0];
+      var pname=p?(p.name||p.slug):'(chantier)';
+      return '<span class="chip" data-pid="'+m.project_id+'">'+escapeHtml(pname)+(m.role?' · <span class="text-slate2-500">'+escapeHtml(m.role)+'</span>':'')+' <button title="Retirer" data-act="rm" data-uid="'+u.id+'" data-pid="'+m.project_id+'">✕</button></span>';
+    }).join('') : '<span class="text-xs text-slate2-500">Aucun chantier rattaché</span>';
+
+    el.innerHTML =
+      '<div class="flex items-start gap-4 flex-wrap">'+
+        '<div class="w-12 h-12 rounded-full grid place-items-center font-display font-600 text-base text-ink-900 shrink-0" style="background:linear-gradient(135deg,#93C5FD,#2563EB)">'+escapeHtml(initials(u.full_name||u.email).toUpperCase())+'</div>'+
+        '<div class="flex-1 min-w-0">'+
+          '<div class="flex items-center gap-2 flex-wrap">'+
+            '<span class="nameDisplay font-display text-white text-base">'+escapeHtml(u.full_name||'(sans nom)')+'</span>'+
+            '<button class="editName btn-outline rounded-lg px-2 py-1 text-[11px]" title="Renommer">Renommer</button>'+
+            '<span class="pill '+role+'">'+escapeHtml(ROLE_LABEL[role]||role)+'</span>'+
+          '</div>'+
+          '<div class="text-xs text-slate2-500 mt-1">'+escapeHtml(u.email||'')+(co?' · '+escapeHtml(co):'')+'</div>'+
+        '</div>'+
+        '<div class="shrink-0">'+
+          '<label class="font-mono text-[10px] tracking-[0.15em] uppercase text-slate2-500 block mb-1">Rôle</label>'+
+          '<select class="roleSel field" data-uid="'+u.id+'">'+roleOpts+'</select>'+
+        '</div>'+
+      '</div>'+
+      '<div class="mt-4 pt-3 border-t border-white/5">'+
+        '<div class="flex items-center justify-between gap-3 mb-2 flex-wrap">'+
+          '<span class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500">Chantiers rattachés</span>'+
+        '</div>'+
+        '<div class="flex items-center gap-2 flex-wrap mb-3">'+chips+'</div>'+
+        (STATE.projects.length ?
+        '<div class="flex items-center gap-2 flex-wrap">'+
+          '<select class="addProj field" data-uid="'+u.id+'">'+projOpts+'</select>'+
+          '<select class="addLocal field" data-uid="'+u.id+'">'+localOpts+'</select>'+
+          '<button class="addMember btn-azure rounded-xl px-3.5 py-2 text-xs font-medium" data-uid="'+u.id+'">Rattacher</button>'+
+        '</div>' : '<span class="text-xs text-slate2-500">Aucun chantier en base.</span>')+
+      '</div>';
+    list.appendChild(el);
+  });
+
+  if(STATE.demo) return; // pas d'écriture en mode démo
+  bindActions();
+}
+
+function bindActions(){
+  /* Changement de rôle */
+  document.querySelectorAll('.roleSel').forEach(function(sel){
+    sel.addEventListener('change', async function(){
+      var uid=sel.dataset.uid, role=sel.value;
+      if(uid===STATE.me.id && role!=='admin'){
+        toast('Vous ne pouvez pas retirer votre propre rôle admin.', false);
+        sel.value='admin'; return;
+      }
+      var r=await AxionAuth.sb.from('user_profiles').update({role:role}).eq('id',uid);
+      if(r.error){ toast('Échec : '+r.error.message, false); return; }
+      var u=STATE.users.filter(function(x){return x.id===uid;})[0]; if(u) u.role=role;
+      render(); toast('Rôle mis à jour → '+ROLE_LABEL[role]);
+    });
+  });
+  /* Renommer */
+  document.querySelectorAll('.editName').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var row=btn.closest('.urow'); var uid=row.dataset.uid;
+      var u=STATE.users.filter(function(x){return x.id===uid;})[0];
+      var disp=row.querySelector('.nameDisplay');
+      var input=document.createElement('input'); input.className='field'; input.value=u.full_name||''; input.style.minWidth='200px';
+      disp.replaceWith(input); btn.textContent='Enregistrer'; input.focus();
+      var save=async function(){
+        var val=input.value.trim();
+        var r=await AxionAuth.sb.from('user_profiles').update({full_name:val}).eq('id',uid);
+        if(r.error){ toast('Échec : '+r.error.message, false); return; }
+        u.full_name=val; render(); toast('Nom mis à jour');
+      };
+      btn.onclick=save;
+      input.addEventListener('keydown',function(e){ if(e.key==='Enter') save(); });
+    });
+  });
+  /* Rattacher à un chantier */
+  document.querySelectorAll('.addMember').forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      var uid=btn.dataset.uid;
+      var row=btn.closest('.urow');
+      var pid=row.querySelector('.addProj').value;
+      var local=row.querySelector('.addLocal').value;
+      if(membersOf(uid).some(function(m){return m.project_id===pid;})){ toast('Déjà rattaché à ce chantier.', false); return; }
+      var r=await AxionAuth.sb.from('project_members').insert({project_id:pid,user_id:uid,role:local});
+      if(r.error){ toast('Échec : '+r.error.message, false); return; }
+      STATE.members.push({project_id:pid,user_id:uid,role:local});
+      render(); toast('Rattaché au chantier');
+    });
+  });
+  /* Retirer d'un chantier */
+  document.querySelectorAll('[data-act="rm"]').forEach(function(b){
+    b.addEventListener('click', async function(){
+      var uid=b.dataset.uid, pid=b.dataset.pid;
+      var r=await AxionAuth.sb.from('project_members').delete().eq('project_id',pid).eq('user_id',uid);
+      if(r.error){ toast('Échec : '+r.error.message, false); return; }
+      STATE.members=STATE.members.filter(function(m){return !(m.user_id===uid&&m.project_id===pid);});
+      render(); toast('Rattachement retiré');
+    });
+  });
+}
+
+function demoData(){
+  return {
+    users:[
+      { id:'u1', email:'f.clarisse@cadence-architectes.fr', full_name:'Florent Clarisse', role:'admin', company_id:null },
+      { id:'u2', email:'c.havet@cadence-architectes.fr', full_name:'C. Havet', role:'moe', company_id:null },
+      { id:'u3', email:'o.penarette@cadence-architectes.fr', full_name:'O. Penarette', role:'moe', company_id:null },
+      { id:'u4', email:'contact@france-pierre.fr', full_name:'France Pierre (MOA)', role:'moa', company_id:'c1' }
+    ],
+    companies:{ c1:'France Pierre' },
+    projects:[ {id:'p1',name:'Les Jardins de Lisa',slug:'jardins-lisa'}, {id:'p2',name:'Domaine des Gueules Cassées',slug:'gueules-cassees'} ],
+    members:[ {project_id:'p1',user_id:'u2',role:'pilote'}, {project_id:'p1',user_id:'u4',role:'observateur'} ]
+  };
+}
+
+(async function(){
+  function reveal(){ document.getElementById('loadingScreen').style.display='none'; document.getElementById('sidebar').style.visibility='visible'; document.getElementById('content').style.visibility='visible'; }
+  var isPreview=/[?&]demo=1\b/.test(window.location.search);
+
+  if(isPreview){
+    var d=demoData(); STATE.demo=true; STATE.me={id:'u1'};
+    STATE.users=d.users; STATE.companies=d.companies; STATE.projects=d.projects; STATE.members=d.members;
+    document.getElementById('userName').textContent='Aperçu démonstration';
+    document.getElementById('avatar').textContent='AP';
+    document.getElementById('demoBadge').classList.remove('hidden');
+    render(); reveal(); return;
+  }
+
+  var session=await AxionAuth.currentSession();
+  if(!session){ window.location.href='login.html'; return; }
+  var profile; try{ profile=await AxionAuth.fetchProfile(session.user.id);}catch(e){ window.location.href='login.html?error=role'; return; }
+  var role=profile&&normRole(profile.role);
+  if(role!=='admin'){ window.location.href='app.html'; return; } // page réservée admin
+  STATE.me={ id:session.user.id, role:role };
+
+  document.getElementById('userName').textContent=profile.full_name||profile.email;
+  document.getElementById('avatar').textContent=initials(profile.full_name||profile.email).toUpperCase();
+  document.getElementById('logoutBtn').addEventListener('click', async function(){ await AxionAuth.signOut(); window.location.href='login.html'; });
+
+  /* Chargement données (admin → RLS autorise tout) */
+  try { var up=await AxionAuth.sb.from('user_profiles').select('id,email,full_name,role,company_id'); if(!up.error) STATE.users=up.data||[]; }
+  catch(e){ console.warn(e); }
+  try { var co=await AxionAuth.sb.from('companies').select('id,name'); if(!co.error)(co.data||[]).forEach(function(c){STATE.companies[c.id]=c.name;}); }catch(e){}
+  try { var pr=await AxionAuth.sb.from('projects').select('id,name,slug').order('name'); if(!pr.error) STATE.projects=pr.data||[]; }catch(e){}
+  try { var pm=await AxionAuth.sb.from('project_members').select('*'); if(!pm.error) STATE.members=pm.data||[]; }catch(e){ console.warn('project_members', e); }
+
+  render(); reveal();
+})();
+</script>
+</body>
+</html>

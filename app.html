@@ -61,6 +61,7 @@
   .pill.moe        { color:#93C5FD; border-color:rgba(96,165,250,.35); background:rgba(59,130,246,.08) }
   .pill.moa        { color:#5EEAD4; border-color:rgba(45,212,191,.35); background:rgba(45,212,191,.08) }
   .pill.entreprise { color:#C4B5FD; border-color:rgba(167,139,250,.35); background:rgba(167,139,250,.08) }
+  .pill.economiste { color:#FDBA74; border-color:rgba(251,146,60,.35); background:rgba(251,146,60,.08) }
 
   a:focus-visible, button:focus-visible { outline:2px solid #60A5FA; outline-offset:3px; border-radius:4px; }
   ::selection { background:#2563EB; color:#fff; }
@@ -307,7 +308,7 @@ var NAV = [
   { id:'plans',       label:'Plans & EXE',     icon:'plans',       href:'#' },
   { id:'notaire',     label:'Notice notaire',  icon:'notaire',     href:'#' },
   { id:'camera',      label:'Caméra chantier', icon:'camera',      href:'#' },
-  { id:'users',       label:'Utilisateurs',    icon:'users',       href:'#' },
+  { id:'users',       label:'Utilisateurs',    icon:'users',       href:'utilisateurs.html' },
   { id:'settings',    label:'Paramètres',      icon:'settings',    href:'#' }
 ];
 
@@ -362,6 +363,15 @@ var ROLES = {
     nav:['dashboard','monlot','documents','plannings','cr','plans'],
     kpi:['chantiers','documents','plans','cr'],
     quick:['depotAtt','myPlans','consultPlan'], canEdit:false
+  },
+  economiste: {
+    label:'Économiste', pill:'economiste', avatarGrad:'linear-gradient(135deg,#FDBA74,#EA580C)',
+    heroTitle:'Tableau de bord <span class="text-grad">économiste</span>',
+    lead:'Analyse des marchés et préparation des négociations : avancement, pièces et comparatifs des opérations suivies.',
+    chantiersKicker:'Mes opérations',
+    nav:['dashboard','chantiers','documents','plannings','coherence','plans'],
+    kpi:['chantiers','documents','cr'],
+    quick:['coherence','addDoc'], canEdit:true
   }
 };
 
@@ -385,7 +395,7 @@ var QUICK_ACCENT = {
 
 function svgIcon(name, cls){ return '<svg class="'+(cls||'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">'+(ICONS[name]||'')+'</svg>'; }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
-function normRole(r){ if(r==='admin'||r==='moe'||r==='moa'||r==='entreprise') return r; if(r==='user'||r==='partner'||r==='viewer') return 'entreprise'; return null; }
+function normRole(r){ if(r==='admin'||r==='moe'||r==='moa'||r==='entreprise'||r==='economiste') return r; if(r==='user'||r==='partner'||r==='viewer') return 'entreprise'; return null; }
 function initials(name){ var p=(name||'').trim().split(/\s+/); return ((p[0]||'')[0]||'')+((p[1]||'')[0]||'')||'?'; }
 function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=document.getElementById('scrim'); var open=(force===undefined)?!s.classList.contains('open'):force; s.classList.toggle('open',open); sc.classList.toggle('show',open); }
 
