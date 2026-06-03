@@ -481,13 +481,18 @@
   document.getElementById('crumbLoc').textContent = project.location || project.slug || '—';
 
   // Cover image : cover_url explicite, sinon convention /assets/img/cover-<slug>.png.
-  // Chaque chantier a donc son image dès qu'on dépose cover-<slug>.png dans assets/img/.
-  // Si l'image est absente, on masque la balise → le dégradé du bandeau prend le relais.
+  // Appliquée comme FOND du bandeau (robuste, insensible au cache de la balise <img>),
+  // superposée au dégradé de repli : si l'image manque, le dégradé reste visible.
   var coverImg = document.getElementById('coverImg');
+  var coverMedia = document.querySelector('.cover-media');
   var coverUrl = project.cover_url || ('/assets/img/cover-' + (project.slug || '') + '.png');
-  coverImg.onerror = function () { coverImg.removeAttribute('src'); coverImg.style.display = 'none'; };
-  coverImg.style.display = '';
-  coverImg.src = coverUrl;
+  if (coverImg) coverImg.style.display = 'none';
+  if (coverMedia) {
+    coverMedia.style.backgroundImage = "url('" + coverUrl + "'), linear-gradient(135deg, #1E3A5F, #0A1628)";
+    coverMedia.style.backgroundSize = 'cover, cover';
+    coverMedia.style.backgroundPosition = 'center center, center center';
+    coverMedia.style.backgroundRepeat = 'no-repeat, no-repeat';
+  }
 
   // Sous-titre : pill + description courte
   var sub = document.getElementById('projSub');
