@@ -474,7 +474,7 @@ function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=docum
 
   // Documents (+ ventilation par catégorie/projet)
   try {
-    var dc = await AxionAuth.sb.from('documents').select('project_id,category,title,created_at,updated_at');
+    var dc = await AxionAuth.sb.from('documents').select('project_id,category,title,created_at');
     if (!dc.error && dc.data) {
       counts.documents = dc.data.length;
       dc.data.forEach(function(d){
