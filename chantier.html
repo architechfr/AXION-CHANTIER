@@ -248,6 +248,53 @@
   .doc-row-compact { padding:8px 12px; }
   .doc-empty { color: var(--text-faint); font-size:13px; padding:14px 0; }
 
+  /* ============================================================
+     RESPONSIVE — Tablette (< 1040px) + Mobile (< 768px et < 480px)
+     ============================================================ */
+  @media (max-width: 768px) {
+    .appbar { padding: 10px 14px; gap: 10px; }
+    .appbar .brand .word { font-size: 15px; letter-spacing: .18em; }
+    .appbar .btn[style*="margin-left:12px"] { margin-left: 6px !important; padding: 0 10px; }
+    .user-chip { padding: 3px 8px 3px 3px; gap: 7px; }
+    .user-chip .nm, .user-chip .rl { display: none; }       /* mobile : avatar seul */
+    .icon-btn { width: 34px; height: 34px; }
+    .cover-media { height: 200px; }
+    .cover-inner { padding: 0 14px 16px; margin-top: -90px; }
+    .cover h1 { font-size: clamp(24px, 7vw, 32px); }
+    .cover .sub { font-size: 13px; gap: 8px; }
+    .cover-row { gap: 12px; margin-top: 10px; }
+    .cover-actions { width: 100%; flex-wrap: wrap; }
+    .cover-meta { gap: 14px; margin-top: 14px; }
+    .facts { gap: 14px; }
+    .fact .v { font-size: 14.5px; }
+    .tabs { padding: 0 14px; }
+    .tab { padding: 12px 10px 13px; font-size: 13px; }
+    .layout { padding: 18px 14px 40px; gap: 16px; }
+    .placeholder { padding: 32px 18px; }
+    .placeholder h3 { font-size: 16.5px; }
+    .placeholder p { font-size: 13px; }
+    /* Notices : empilées en 1 colonne sous mobile */
+    .notice-grid { grid-template-columns: 1fr !important; }
+    /* Toolbar docs : recherche en haut, sélecteur + compteur en dessous */
+    .doc-toolbar { gap: 8px; }
+    .doc-search { min-width: 0; width: 100%; font-size: 14px; }
+    .doc-sort { font-size: 13px; }
+    /* Doc rows : icon + meta seuls, badge catégorie + chevron retirés sous mobile */
+    .doc-row .doc-cat { display: none; }
+    .doc-row .doc-action { display: none; }
+    .doc-row { gap: 10px; padding: 10px 12px; }
+    /* Hero card des CR : layout vertical */
+    .doc-hero { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
+    .doc-hero .doc-action { display: none; }
+  }
+  @media (max-width: 480px) {
+    .appbar .btn[style*="margin-left:12px"] span { display: none; }   /* Accueil → icône seule */
+    .cover-actions .btn { font-size: 12.5px; padding: 0 12px; height: 36px; }
+    .cover h1 { font-size: clamp(22px, 8vw, 28px); }
+    .cover-media { height: 170px; }
+    .cover-inner { margin-top: -80px; }
+  }
+
   /* Notices : 1 carte par fonction (Accession / Social…), côte à côte */
   .notice-grid { margin-bottom:8px; }
   .notice-col { display:flex; flex-direction:column; gap:8px; }
@@ -289,9 +336,9 @@
       <img src="assets/img/logo-axion-icon.png" alt="AXION" />
       <span class="word hidden sm:inline">AXION</span>
     </a>
-    <a href="app.html" class="btn btn-glass btn-sm" style="margin-left:12px" title="Retour à l'accueil">
+    <a href="app.html" class="btn btn-glass btn-sm" style="margin-left:12px" title="Retour à l'accueil" aria-label="Accueil">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11.5 12 4l9 7.5M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>
-      Accueil
+      <span>Accueil</span>
     </a>
     <div class="spacer"></div>
     <a class="user-chip" href="compte.html" title="Mon compte" style="cursor:pointer;text-decoration:none;color:inherit">
