@@ -217,6 +217,37 @@
   .doc-chip:hover { color:var(--text); border-color:var(--border-2); }
   .doc-chip.active { background: rgba(59,130,246,.15); border-color: rgba(96,165,250,.4); color: var(--azure-soft); font-weight:600; }
 
+  /* Toolbar recherche / tri (au-dessus de chaque onglet de documents) */
+  .doc-toolbar { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+  .doc-search { flex:1; min-width:220px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:9px 12px; font-size:13px; font-family:inherit; }
+  .doc-search:focus { outline:none; border-color: rgba(96,165,250,.4); box-shadow:0 0 0 3px rgba(96,165,250,.12); }
+  .doc-sort   { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:9px 12px; font-size:13px; font-family:inherit; cursor:pointer; }
+  .doc-sort:focus { outline:none; border-color: rgba(96,165,250,.4); }
+  .doc-count  { font-family:"JetBrains Mono"; font-size:10.5px; color:var(--text-faint); letter-spacing:.05em; }
+
+  /* Hero : carte du document le plus récent */
+  .doc-hero { display:flex; align-items:center; gap:14px; padding:18px 18px; border-radius:14px;
+              background:linear-gradient(135deg, rgba(52,211,153,.07), rgba(255,255,255,.02));
+              border:1px solid rgba(52,211,153,.22); margin-bottom:14px; text-decoration:none; color:inherit;
+              transition: transform .25s, border-color .25s, box-shadow .25s; }
+  .doc-hero:hover { transform: translateY(-2px); border-color: rgba(52,211,153,.42); box-shadow: 0 16px 36px -18px rgba(52,211,153,.35); }
+  .doc-hero .doc-ic { width:48px; height:48px; }
+  .hero-badges { display:flex; gap:10px; align-items:center; margin-bottom:6px; flex-wrap:wrap; }
+  .hero-recent { font-size:11px; padding:3px 10px; border-radius:99px; background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.32); color:#86EFAC; font-weight:500; }
+  .hero-ago    { font-size:11.5px; color: var(--text-dim); }
+  .hero-title  { font-family:"Space Grotesk"; font-weight:600; font-size:16.5px; color:var(--text); line-height:1.3; }
+  .hero-sub    { font-size:11.5px; color: var(--text-dim); margin-top:4px; }
+
+  /* Archives : section repliable */
+  .doc-archives-wrap { margin-top:6px; }
+  .doc-archives-toggle { background:transparent; border:none; color: var(--text-faint); font-family:"JetBrains Mono";
+                         font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; cursor:pointer;
+                         padding:6px 0; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+  .doc-archives-toggle:hover { color: var(--azure-soft); }
+  .doc-archives-toggle svg { transition: transform .2s; }
+  .doc-row-compact { padding:8px 12px; }
+  .doc-empty { color: var(--text-faint); font-size:13px; padding:14px 0; }
+
   /* ── Loading screen ───────────────────────────────────────────── */
   #loadingScreen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; color:var(--text-dim); z-index:50; }
   .spin { width:32px; height:32px; border:2px solid rgba(96,165,250,.2); border-top-color:#60A5FA; border-radius:50%; animation:spin .9s linear infinite; margin-right:14px; }
@@ -671,28 +702,123 @@ async function loadDocuments(projectId) {
       render(mountEl, docs);
     });
 
-    function render(mount, list) {
-      var html = '<div class="doc-list">';
-      list.forEach(function (d) {
-        var url = d.url || '#';
-        var cat = d.category || 'Document';
-        var t = docType(d);   // { key, icon }
-        var meta = ['Consultation · Téléchargement'];
-        if (d.code) meta.push(d.code);
-        if (d.updated_at) meta.push(new Date(d.updated_at).toLocaleDateString('fr-FR'));
-        html +=
-          '<a class="doc-row" href="' + escapeAttr(url) + '" target="_blank" rel="noopener">' +
-            '<div class="doc-ic ic-' + t.key + '">' + t.icon + '</div>' +
-            '<div class="doc-meta">' +
-              '<div class="nm">' + escapeHtml(d.name || 'Document') + '</div>' +
-              (meta.length ? '<div class="sub">' + meta.map(escapeHtml).join(' · ') + '</div>' : '') +
+    // Render avec pattern « Le plus récent + Archives » + barre recherche/tri.
+    // State (q, sort) local au mount, reset à chaque appel externe — l'utilisateur
+    // peut piloter recherche et tri dans la barre, et la liste se réordonne.
+    function render(mount, fullList) {
+      var state = { q: '', sort: 'date_desc' };
+
+      function crNum(d) { var m = String(d.name||'').match(/n[°º]\s*(\d+)/i); return m ? parseInt(m[1],10) : null; }
+      function docDate(d) { return d.created_at || d.updated_at || null; }
+      function fmtLong(v) { if(!v) return ''; var d=new Date(v); return isNaN(d)?'':d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
+      function ago(v) {
+        if(!v) return ''; var d=new Date(v); if(isNaN(d)) return '';
+        var diff = Math.round((new Date()-d)/86400000);
+        if (diff<=0) return "aujourd'hui";
+        if (diff===1) return 'hier';
+        if (diff<7) return 'il y a '+diff+' jours';
+        if (diff<14) return 'il y a 1 semaine';
+        if (diff<31) return 'il y a '+Math.round(diff/7)+' semaines';
+        if (diff<60) return 'il y a 1 mois';
+        if (diff<365) return 'il y a '+Math.round(diff/30)+' mois';
+        return 'il y a '+Math.round(diff/365)+' an'+(diff>=730?'s':'');
+      }
+
+      function paint() {
+        var q = state.q.toLowerCase().trim();
+        var filtered = fullList.filter(function(d){
+          if (!q) return true;
+          return (((d.name||'')+' '+(d.category||'')).toLowerCase()).indexOf(q) >= 0;
+        });
+        filtered.sort(function(a,b){
+          if (state.sort==='num_desc') return (crNum(b)==null?-Infinity:crNum(b)) - (crNum(a)==null?-Infinity:crNum(a));
+          if (state.sort==='num_asc')  return (crNum(a)==null? Infinity:crNum(a)) - (crNum(b)==null? Infinity:crNum(b));
+          if (state.sort==='date_asc') return new Date(docDate(a)||0) - new Date(docDate(b)||0);
+          return new Date(docDate(b)||0) - new Date(docDate(a)||0); // date_desc default
+        });
+
+        var hasNum = fullList.some(function(d){ return crNum(d) !== null; });
+        var toolbar = '<div class="doc-toolbar">' +
+            '<input type="text" class="doc-search" placeholder="Rechercher (nom, catégorie…)" value="' + escapeAttr(state.q) + '" />' +
+            '<select class="doc-sort" aria-label="Tri">' +
+              '<option value="date_desc"' + (state.sort==='date_desc'?' selected':'') + '>Plus récent en premier</option>' +
+              '<option value="date_asc"'  + (state.sort==='date_asc' ?' selected':'')  + '>Plus ancien en premier</option>' +
+              (hasNum ? '<option value="num_desc"' + (state.sort==='num_desc'?' selected':'') + '>N° décroissant</option>' : '') +
+              (hasNum ? '<option value="num_asc"'  + (state.sort==='num_asc' ?' selected':'')  + '>N° croissant</option>'  : '') +
+            '</select>' +
+            (filtered.length !== fullList.length ? '<span class="doc-count">' + filtered.length + ' / ' + fullList.length + '</span>' : '') +
+          '</div>';
+
+        if (!filtered.length) {
+          mount.innerHTML = toolbar + '<p class="doc-empty">Aucun document ne correspond à la recherche.</p>';
+          bindToolbar(); return;
+        }
+
+        var hero = filtered[0];
+        var archives = filtered.slice(1);
+        var th = docType(hero);
+        var hd = docDate(hero);
+
+        var heroHtml = '<a class="doc-hero" href="' + escapeAttr(hero.url || '#') + '" target="_blank" rel="noopener">' +
+          '<div class="doc-ic ic-' + th.key + '">' + th.icon + '</div>' +
+          '<div class="doc-meta">' +
+            '<div class="hero-badges">' +
+              '<span class="hero-recent">Le plus récent</span>' +
+              (hd ? '<span class="hero-ago">' + escapeHtml(ago(hd)) + '</span>' : '') +
             '</div>' +
-            '<span class="doc-cat cat-' + t.key + '">' + escapeHtml(cat) + '</span>' +
-            '<div class="doc-action"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg></div>' +
-          '</a>';
-      });
-      html += '</div>';
-      mount.innerHTML = html;
+            '<div class="hero-title">' + escapeHtml(hero.name || 'Document') + '</div>' +
+            '<div class="hero-sub">' + (hero.category ? escapeHtml(hero.category)+' · ' : '') + (hd ? escapeHtml(fmtLong(hd)) : 'Consultation · Téléchargement') + '</div>' +
+          '</div>' +
+          '<div class="doc-action"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg></div>' +
+        '</a>';
+
+        var archivesHtml = '';
+        if (archives.length) {
+          var collapsed = archives.length > 5;
+          var arcId = 'arc_' + Math.random().toString(36).slice(2,7);
+          var rows = archives.map(function(d){
+            var t = docType(d); var dt = docDate(d);
+            return '<a class="doc-row doc-row-compact" href="' + escapeAttr(d.url || '#') + '" target="_blank" rel="noopener">' +
+                '<div class="doc-ic ic-' + t.key + '">' + t.icon + '</div>' +
+                '<div class="doc-meta">' +
+                  '<div class="nm">' + escapeHtml(d.name || 'Document') + '</div>' +
+                  '<div class="sub">' + (dt ? escapeHtml(fmtLong(dt)) : 'Consultation · Téléchargement') + '</div>' +
+                '</div>' +
+                '<span class="doc-cat cat-' + t.key + '">' + escapeHtml(d.category || 'Document') + '</span>' +
+                '<div class="doc-action"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg></div>' +
+              '</a>';
+          }).join('');
+          archivesHtml = '<div class="doc-archives-wrap">' +
+            '<button type="button" class="doc-archives-toggle" data-arc="' + arcId + '">' +
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"' + (collapsed ? '' : ' style="transform:rotate(90deg)"') + '><path d="M9 6l6 6-6 6"/></svg>' +
+              'Archives · ' + archives.length +
+            '</button>' +
+            '<div id="' + arcId + '" class="doc-list"' + (collapsed ? ' style="display:none"' : '') + '>' + rows + '</div>' +
+          '</div>';
+        }
+
+        mount.innerHTML = toolbar + heroHtml + archivesHtml;
+        bindToolbar(); bindArchives();
+      }
+
+      function bindToolbar() {
+        var sin = mount.querySelector('.doc-search');
+        var ssel = mount.querySelector('.doc-sort');
+        if (sin) sin.addEventListener('input',  function(){ state.q = sin.value; paint(); /* préserver focus + curseur */ var f=mount.querySelector('.doc-search'); if(f){ f.focus(); f.setSelectionRange(f.value.length, f.value.length); } });
+        if (ssel) ssel.addEventListener('change', function(){ state.sort = ssel.value; paint(); });
+      }
+      function bindArchives() {
+        mount.querySelectorAll('.doc-archives-toggle').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var t = document.getElementById(btn.dataset.arc); if (!t) return;
+            var open = t.style.display !== 'none';
+            t.style.display = open ? 'none' : '';
+            var svg = btn.querySelector('svg'); if (svg) svg.style.transform = open ? '' : 'rotate(90deg)';
+          });
+        });
+      }
+
+      paint();
     }
 
     // Détecte le type d'un document (PDF/DWG/CCTP/CR/autre) à partir de
