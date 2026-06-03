@@ -318,7 +318,8 @@ var QUICK = {
   inviteCo:   { label:'Inviter une entreprise',icon:'entreprises', accent:'green' },
   depotAtt:   { label:'Déposer attestation',   icon:'cr',          accent:'green' },
   myPlans:    { label:'Mes plans à jour',      icon:'plans',       accent:'azure' },
-  consultPlan:{ label:'Consulter planning',    icon:'plannings',   accent:'azure' }
+  consultPlan:{ label:'Consulter planning',    icon:'plannings',   accent:'azure' },
+  newPlanning:{ label:'Nouveau planning',      icon:'plannings',   accent:'amber', href:'https://architechfr.github.io/CADENCE-AXION/configurateur.html' }
 };
 
 /* Configuration par rôle */
@@ -330,7 +331,7 @@ var ROLES = {
     chantiersKicker:'Tous les chantiers',
     nav:['dashboard','chantiers','entreprises','documents','plannings','cr','plans','notaire','users','settings'],
     kpi:['chantiers','entreprises','documents','users'],
-    quick:['newProject','importPlan','addDoc','newCR','inviteCo'], canEdit:true
+    quick:['newProject','newPlanning','importPlan','addDoc','newCR','inviteCo'], canEdit:true
   },
   moe: {
     label:'Maître d’œuvre', pill:'moe', avatarGrad:'linear-gradient(135deg,#93C5FD,#2563EB)',
@@ -339,7 +340,7 @@ var ROLES = {
     chantiersKicker:'Mes opérations',
     nav:['dashboard','chantiers','entreprises','documents','plannings','cr','plans','notaire'],
     kpi:['chantiers','entreprises','documents','cr'],
-    quick:['importPlan','addDoc','newCR','inviteCo'], canEdit:true
+    quick:['newPlanning','importPlan','addDoc','newCR','inviteCo'], canEdit:true
   },
   moa: {
     label:'Maître d’ouvrage', pill:'moa', avatarGrad:'linear-gradient(135deg,#5EEAD4,#0D9488)',
@@ -558,6 +559,7 @@ function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=docum
   cfg.quick.forEach(function(q){
     var def = QUICK[q]; if(!def) return; var ac = QUICK_ACCENT[def.accent];
     var el = document.createElement('a'); el.href='#';
+    if (def.href) { el.href = def.href; el.target = '_blank'; el.rel = 'noopener'; }
     if ((q==='importPlan' || q==='consultPlan') && planningHref) { el.href = planningHref; el.target = '_blank'; el.rel = 'noopener'; }
     el.className='glass card-hover rounded-2xl p-4 flex items-center gap-3';
     el.innerHTML =
