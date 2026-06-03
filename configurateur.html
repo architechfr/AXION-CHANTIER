@@ -3,22 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ChantierFlow — Nouveau projet</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>AXION — Nouveau planning</title>
+<link rel="icon" type="image/png" href="assets/img/logo-axion-icon.png" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--b0:#0c0e14;--b1:#131620;--b2:#1a1e2c;--b3:#232838;--b4:#2c3248;--bd:#2e3450;--t:#e4e6f0;--t2:#8a90aa;--t3:#5c6280;--or:#f59e0b;--ord:rgba(245,158,11,.12);--r:#ef4444;--g:#22c55e;--R:8px}
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;color:var(--t);min-height:100vh;background:linear-gradient(rgba(12,14,20,.82),rgba(12,14,20,.92)),url('planning.png') center/cover no-repeat fixed,var(--b0)}
-.hdr{background:var(--b1);border-bottom:1px solid var(--bd);padding:12px 20px;display:flex;align-items:center;gap:12px}
-.hdr-logo{width:34px;height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.hdr-logo svg{width:34px;height:34px}
-.hdr h1{font-size:16px;font-weight:700}.hdr h1 b{color:var(--or)}.hdr-sub{font-size:10px;color:var(--t2)}
-.hdr-nav{margin-left:auto}.hdr-nav a{font-size:10px;color:var(--or);text-decoration:none;padding:5px 12px;border:1px solid var(--or);border-radius:14px}
+:root{--b0:#0A1628;--b1:#0F1B30;--b2:#131E36;--b3:#1A2233;--b4:#28304a;--bd:#252c40;--t:#E2E8F0;--t2:#94A3B8;--t3:#64748B;--or:#3B82F6;--ord:rgba(59,130,246,.12);--gold:#C9A95C;--r:#F87171;--g:#34D399;--R:10px}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;color:var(--t);min-height:100vh;background:linear-gradient(rgba(10,22,40,.82),rgba(10,22,40,.92)),url('planning.png') center/cover no-repeat fixed,var(--b0)}
+.font-display{font-family:'Space Grotesk',sans-serif}
+.hdr{background:rgba(13,19,32,.72);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid rgba(125,165,225,.16);padding:14px 22px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:40}
+.hdr-logo-img{width:36px;height:36px;border-radius:10px;border:1px solid rgba(96,165,250,.25);flex-shrink:0}
+.hdr h1{font-size:17px;font-weight:700;font-family:'Space Grotesk',sans-serif;letter-spacing:.18em}.hdr h1 b{color:var(--or);font-weight:700}.hdr-sub{font-size:10px;color:var(--t2);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+.hdr-nav{margin-left:auto}.hdr-nav a{font-size:12px;color:var(--t2);text-decoration:none;padding:7px 14px;border:1px solid var(--bd);border-radius:10px;transition:.18s}.hdr-nav a:hover{color:var(--t);border-color:var(--t3);background:rgba(255,255,255,.04)}
 .wrap{max-width:800px;margin:0 auto;padding:24px 20px}
 .step{display:none}.step.on{display:block}
 .prog{display:flex;gap:4px;margin-bottom:24px}.prog .dot{flex:1;height:4px;border-radius:2px;background:var(--bd)}.prog .dot.done{background:var(--or)}.prog .dot.cur{background:var(--or);opacity:.5}
-.title{font-size:22px;font-weight:700;margin-bottom:4px;letter-spacing:-.3px}.subtitle{font-size:13px;color:var(--t2);margin-bottom:20px}
+.title{font-size:24px;font-weight:700;margin-bottom:4px;letter-spacing:-.4px;font-family:'Space Grotesk',sans-serif}.subtitle{font-size:13px;color:var(--t2);margin-bottom:20px}
 .fg{margin-bottom:16px}.fg label{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
-.fg input,.fg select{width:100%;padding:10px 14px;font:15px 'DM Sans',sans-serif;background:var(--b3);border:1px solid var(--bd);border-radius:var(--R);color:var(--t);outline:none}
+.fg input,.fg select{width:100%;padding:11px 14px;font:15px 'Inter',sans-serif;background:var(--b3);border:1px solid var(--bd);border-radius:var(--R);color:var(--t);outline:none;transition:border-color .18s}
 .fg input:focus,.fg select:focus{border-color:var(--or)}
 .row{display:flex;gap:12px}.row .fg{flex:1}
 .cards{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
@@ -31,8 +32,8 @@
 .bldg-card h4{font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .bldg-card h4 .code{background:var(--or);color:#000;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
 .actions{display:flex;justify-content:space-between;margin-top:24px}
-.btn{padding:10px 24px;border:none;border-radius:var(--R);font:600 14px 'DM Sans',sans-serif;cursor:pointer}
-.btn-p{background:var(--or);color:#000}.btn-p:hover{background:#fbbf24}
+.btn{padding:11px 26px;border:none;border-radius:var(--R);font:600 14px 'Space Grotesk',sans-serif;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.btn-p{background:linear-gradient(135deg,#60A5FA,#2563EB);color:#fff;box-shadow:0 10px 30px -10px rgba(59,130,246,.6)}.btn-p:hover{transform:translateY(-2px)}
 .btn-o{background:transparent;color:var(--t2);border:1px solid var(--bd)}.btn-o:hover{border-color:var(--t2)}
 .ss-detail{margin-top:16px;padding:14px;background:var(--b2);border:1px solid var(--bd);border-radius:var(--R);font-size:12px;line-height:1.6;color:var(--t2)}
 .ss-detail b{color:var(--t)}.ss-detail .chain{color:var(--or);font-weight:600}
@@ -55,9 +56,9 @@ body.light .cad-logo-full{background-image:url("data:image/png;base64,iVBORw0KGg
 </head>
 <body>
 <header class="hdr">
-  <div class="hdr-logo"><div class="cad-emblem" title="CADENCE Architectes Associés"></div></div>
-  <div><h1><span style="font-weight:300;letter-spacing:2px">CADENCE</span> <b>Flow</b></h1><div class="hdr-sub">Nouveau projet</div></div>
-  <div class="hdr-nav"><a href="chantierflow-lisa.html">← Planning Lisa</a></div>
+  <img src="assets/img/logo-axion-icon.png" alt="AXION" class="hdr-logo-img" />
+  <div><h1>AXION <b>Flow</b></h1><div class="hdr-sub">Nouveau planning</div></div>
+  <div class="hdr-nav"><a href="app.html">← Retour à AXION</a></div>
 </header>
 
 <div class="wrap">
