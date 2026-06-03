@@ -480,10 +480,14 @@
   document.getElementById('projTitle').textContent = project.name;
   document.getElementById('crumbLoc').textContent = project.location || project.slug || '—';
 
-  // Cover image (par défaut : la photo Cadence en ligne)
-  var coverUrl = project.cover_url
-    || 'https://axion-sand-iota.vercel.app/assets/images/projets/jardins-de-lisa/vue-2.jpg';
-  document.getElementById('coverImg').src = coverUrl;
+  // Cover image : cover_url explicite, sinon convention /assets/img/cover-<slug>.png.
+  // Chaque chantier a donc son image dès qu'on dépose cover-<slug>.png dans assets/img/.
+  // Si l'image est absente, on masque la balise → le dégradé du bandeau prend le relais.
+  var coverImg = document.getElementById('coverImg');
+  var coverUrl = project.cover_url || ('/assets/img/cover-' + (project.slug || '') + '.png');
+  coverImg.onerror = function () { coverImg.removeAttribute('src'); coverImg.style.display = 'none'; };
+  coverImg.style.display = '';
+  coverImg.src = coverUrl;
 
   // Sous-titre : pill + description courte
   var sub = document.getElementById('projSub');
@@ -514,16 +518,20 @@
     factsEl.appendChild(div);
   });
 
-  // Actions de la cover (admin uniquement)
+  // Actions de la cover : retour aux chantiers (tous) + gérer les accès (admin)
   var actions = document.getElementById('coverActions');
+  var actionsHtml =
+    '<a class="btn btn-glass btn-sm" href="app.html">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>' +
+      'Retour aux chantiers</a>';
   if (isAdmin) {
-    actions.innerHTML =
+    actionsHtml +=
       '<a class="btn btn-glass btn-sm" href="#">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>' +
         'Gérer les accès</a>';
-    // Note : pas de bouton « Nouveau compte-rendu » — la rédaction des CR
-    // reste hors AXION (export Word → dossier SharePoint synchronisé).
+    // Note : pas de bouton « Nouveau compte-rendu » — rédaction des CR hors AXION.
   }
+  actions.innerHTML = actionsHtml;
 
   // 5) Sidebar — infos
   document.getElementById('infoSlug').textContent = project.slug || '—';
