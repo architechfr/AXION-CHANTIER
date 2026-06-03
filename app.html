@@ -379,10 +379,10 @@ var ROLES = {
 var KPI_DEFS = {
   chantiers:  { label:'Chantiers actifs',   icon:'chantiers',   color:'#60A5FA', bg:'rgba(59,130,246,.12)',  bd:'rgba(96,165,250,.25)' },
   entreprises:{ label:'Entreprises actives',icon:'entreprises', color:'#34D399', bg:'rgba(52,211,153,.12)',  bd:'rgba(52,211,153,.25)' },
-  documents:  { label:'Documents',          icon:   color:'#A78BFA', bg:'rgba(167,139,250,.12)', bd:'rgba(167,139,250,.25)' },
+  documents:  { label:'Documents',          icon:'documents',   color:'#A78BFA', bg:'rgba(167,139,250,.12)', bd:'rgba(167,139,250,.25)' },
   users:      { label:'Utilisateurs actifs',icon:'users',       color:'#F59E0B', bg:'rgba(245,158,11,.12)',  bd:'rgba(245,158,11,.25)' },
-  cr:         { label:'Comptes-rendus',     icon:          color:'#38BDF8', bg:'rgba(56,189,248,.12)',  bd:'rgba(56,189,248,.25)' },
-  plans:      { label:'Plans à jour',       icon:       color:'#60A5FA', bg:'rgba(59,130,246,.12)',  bd:'rgba(96,165,250,.25)' },
+  cr:         { label:'Comptes-rendus',     icon:'cr',          color:'#38BDF8', bg:'rgba(56,189,248,.12)',  bd:'rgba(56,189,248,.25)' },
+  plans:      { label:'Plans à jour',       icon:'plans',       color:'#60A5FA', bg:'rgba(59,130,246,.12)',  bd:'rgba(96,165,250,.25)' },
   livraisons: { label:'Livraisons prévues', icon:'plannings',   color:'#F59E0B', bg:'rgba(245,158,11,.12)',  bd:'rgba(245,158,11,.25)' }
 };
 
@@ -610,13 +610,13 @@ function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=docum
     var out = [];
     projects.forEach(function(p){
       var b = byProject[p.id]||{};
-      if (b.lastCR) out.push({ title:'Compte-rendu publié', sub:p.name, time:timeAgo(b.lastCR), icon: color:'#38BDF8', bg:'rgba(56,189,248,.12)', bd:'rgba(56,189,248,.25)', href:'chantier.html?id='+encodeURIComponent(p.id) });
+      if (b.lastCR) out.push({ title:'Compte-rendu publié', sub:p.name, time:timeAgo(b.lastCR), icon:'cr', color:'#38BDF8', bg:'rgba(56,189,248,.12)', bd:'rgba(56,189,248,.25)', href:'chantier.html?id='+encodeURIComponent(p.id) });
     });
     // Jalons indicatifs (affichés tant que le flux d'événements n'est pas branché)
     if (projects[0]) out.push({ title:'Planning mis à jour', sub:projects[0].name, time:'récent', icon:'plannings', color:'#A78BFA', bg:'rgba(167,139,250,.12)', bd:'rgba(167,139,250,.25)' });
-    if (projects[0]) out.push({ title:'Notice notaire ajoutée', sub:projects[projects.length>1?1:0].name, time:'hier', icon: color:'#34D399', bg:'rgba(52,211,153,.12)', bd:'rgba(52,211,153,.25)' });
+    if (projects[0]) out.push({ title:'Notice notaire ajoutée', sub:projects[projects.length>1?1:0].name, time:'hier', icon:'notaire', color:'#34D399', bg:'rgba(52,211,153,.12)', bd:'rgba(52,211,153,.25)' });
     if (role==='admin') out.push({ title:'Entreprise invitée', sub:projects[0]?projects[0].name:'—', time:'hier', icon:'entreprises', color:'#F59E0B', bg:'rgba(245,158,11,.12)', bd:'rgba(245,158,11,.25)' });
-    out.push({ title:'Plan EXE mis à jour', sub:projects[projects.length>1?1:0]?projects[projects.length>1?1:0].name:'—', time:'27/05', icon: color:'#60A5FA', bg:'rgba(59,130,246,.12)', bd:'rgba(96,165,250,.25)' });
+    out.push({ title:'Plan EXE mis à jour', sub:projects[projects.length>1?1:0]?projects[projects.length>1?1:0].name:'—', time:'27/05', icon:'plans', color:'#60A5FA', bg:'rgba(59,130,246,.12)', bd:'rgba(96,165,250,.25)' });
     return out.slice(0,6);
   }
   function timeAgo(iso){
