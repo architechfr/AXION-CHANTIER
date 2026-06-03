@@ -601,6 +601,18 @@ var DOC_TAB_MAP = {
   'Vente':  { mount: 'venteMount',  filters: 'venteFilters',  badge: null },
 };
 
+// Routage tolérant : accepte « Compte-rendu », « CR », « compte rendu »,
+// « Notice notaire », « Plans de vente », « Plans EXE »… via regex sur
+// la catégorie. Même logique que la page Documents (cf. famille FAM).
+function routeCategoryToTab(cat) {
+  var c = String(cat || '').toUpperCase();
+  if (/\bCR\b|COMPTE[\s-]?RENDU|R[ÉE]UNION/.test(c)) return DOC_TAB_MAP.CR;
+  if (/NOTICE|NOTAIRE/.test(c))                       return DOC_TAB_MAP.Notice;
+  if (/VENTE/.test(c))                                return DOC_TAB_MAP.Vente;
+  if (/\bDWG\b/.test(c))                              return DOC_TAB_MAP.DWG;
+  return DOC_TAB_MAP.PDF; // défaut : Plans & EXE
+}
+
 async function loadDocuments(projectId) {
   try {
     var res = await AxionAuth.sb.from('documents').select('*').eq('project_id', projectId).order('title', { ascending: true });
@@ -619,8 +631,7 @@ async function loadDocuments(projectId) {
     // Group par onglet de destination
     var byTab = {};
     allDocs.forEach(function (d) {
-      var cat = d.category || 'PDF';
-      var dest = DOC_TAB_MAP[cat] || DOC_TAB_MAP['PDF'];
+      var dest = routeCategoryToTab(d.category);
       if (!byTab[dest.mount]) byTab[dest.mount] = { docs: [], dest: dest };
       byTab[dest.mount].docs.push(d);
     });
