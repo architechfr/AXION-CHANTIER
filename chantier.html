@@ -427,6 +427,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/supabase-config.js"></script>
 <script src="assets/js/axion-auth.js"></script>
+<script src="assets/js/axion-analyse.js"></script>
 <script>
 (async function () {
   // 1) Auth gate
@@ -542,14 +543,18 @@
   addInfo('Maître d\'ouvrage', project.moa);
   addInfo('Adresse', project.address);
 
-  // 6) Documents → onglet Plans
-  await loadDocuments(projectId);
-
-  // 7) Membres (onglet Membres + sidebar Intervenants)
-  await loadMembres(projectId);
-  await loadIntervenants(projectId);
+  // 6/7) Vue selon la phase du chantier
+  if (window.AxionAnalysis && AxionAnalysis.isAnalysisPhase(project)) {
+    // Chantier en phase d'études → onglets d'analyse (offres, CCTP, BREEAM…)
+    await AxionAnalysis.mount(project);
+  } else {
+    // Chantier en travaux → onglets documentaires classiques
+    await loadDocuments(projectId);
+    await loadMembres(projectId);
+  }
 
   // 8) Activité récente (timeline combinée : docs + connexions + entreprises)
+  await loadIntervenants(projectId);
   await loadActivity(projectId);
 
   // 9) Tabs
