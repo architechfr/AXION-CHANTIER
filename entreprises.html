@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AXION — Entreprises</title>
+<meta name="theme-color" content="#0A0E1A">
+<link rel="icon" type="image/png" href="assets/img/logo-axion-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    fontFamily: { display:['"Space Grotesk"','ui-sans-serif','system-ui'], sans:['Inter','ui-sans-serif','system-ui'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    colors: { ink:{900:'#070A12',800:'#0A0E1A',700:'#0D1320',600:'#111827',500:'#1A2233'}, azure:{300:'#93C5FD',400:'#60A5FA',500:'#3B82F6',600:'#2563EB'}, cyan:{400:'#38BDF8'}, slate2:{300:'#CBD5E1',400:'#94A3B8',500:'#64748B'} },
+  } } };
+</script>
+<style>
+  :root { color-scheme: dark; --sb-w: 256px; }
+  html, body { background:#0A1628; }
+  body { font-family:'Inter',system-ui,sans-serif; color:#E2E8F0; -webkit-font-smoothing:antialiased; min-height:100vh; }
+  .font-display{font-family:'Space Grotesk',sans-serif;} .font-mono{font-family:'JetBrains Mono',monospace;}
+  .grid-faint{background-image:linear-gradient(rgba(148,163,184,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.05) 1px,transparent 1px);background-size:46px 46px;}
+  .glass{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}
+  .glass-strong{background:rgba(13,19,32,.72);border:1px solid rgba(255,255,255,.10);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);}
+  .card-hover{transition:transform .35s cubic-bezier(.2,.7,.1,1),border-color .35s,box-shadow .35s;}
+  .card-hover:hover{transform:translateY(-3px);border-color:rgba(96,165,250,.35);box-shadow:0 20px 44px -24px rgba(59,130,246,.45);}
+  .btn-azure{background:linear-gradient(135deg,#3B82F6,#2563EB);color:#fff;box-shadow:0 10px 30px -10px rgba(59,130,246,.6);transition:transform .25s;}
+  .btn-azure:hover{transform:translateY(-2px);}
+  .btn-outline{border:1px solid rgba(255,255,255,.18);color:#E2E8F0;transition:background .25s,border-color .25s;background:transparent;}
+  .btn-outline:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.32);}
+  .text-grad{background:linear-gradient(120deg,#60A5FA,#38BDF8);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .dot{width:7px;height:7px;border-radius:50%;}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);font-weight:500;}
+  .pill.admin{color:#FCD34D;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)}
+  .pill.moe{color:#93C5FD;border-color:rgba(96,165,250,.35);background:rgba(59,130,246,.08)}
+  .pill.moa{color:#5EEAD4;border-color:rgba(45,212,191,.35);background:rgba(45,212,191,.08)}
+  .pill.entreprise{color:#C4B5FD;border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.08)}
+  .pill.economiste{color:#FDBA74;border-color:rgba(251,146,60,.35);background:rgba(251,146,60,.08)}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#CBD5E1;}
+  .field{background:#0A1628;border:1px solid rgba(255,255,255,.12);color:#E2E8F0;border-radius:10px;padding:9px 12px;font-size:14px;}
+  .field:focus{outline:none;border-color:#60A5FA;box-shadow:0 0 0 3px rgba(96,165,250,.15);}
+  a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #60A5FA;outline-offset:2px;border-radius:6px;}
+  ::selection{background:#2563EB;color:#fff;}::-webkit-scrollbar{width:10px;height:10px;}::-webkit-scrollbar-thumb{background:#1A2233;border-radius:8px;}
+  #sidebar{width:var(--sb-w);transition:transform .35s cubic-bezier(.2,.7,.1,1);}
+  .nav-link{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;font-size:14px;font-weight:500;color:#94A3B8;transition:.18s;position:relative;}
+  .nav-link svg{width:18px;height:18px;flex:0 0 18px;}
+  .nav-link:hover{color:#E2E8F0;background:rgba(255,255,255,.04);}
+  .nav-link.on{color:#fff;background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(37,99,235,.10));border:1px solid rgba(96,165,250,.25);}
+  .nav-link.on::before{content:"";position:absolute;left:-1px;top:9px;bottom:9px;width:3px;border-radius:3px;background:linear-gradient(#60A5FA,#38BDF8);}
+  #loadingScreen{position:fixed;inset:0;background:#0A1628;display:flex;align-items:center;justify-content:center;color:#94A3B8;z-index:60;}
+  .spin{width:32px;height:32px;border:2px solid rgba(96,165,250,.2);border-top-color:#60A5FA;border-radius:50%;animation:spin .9s linear infinite;margin-right:14px}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;transition:.3s;z-index:70;pointer-events:none;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  @media (max-width:1023px){ #sidebar{position:fixed;z-index:55;top:0;bottom:0;left:0;transform:translateX(-100%);} #sidebar.open{transform:translateX(0);} #content{margin-left:0!important;} }
+  #scrim{position:fixed;inset:0;background:rgba(5,8,18,.6);z-index:54;opacity:0;pointer-events:none;transition:opacity .3s;}#scrim.show{opacity:1;pointer-events:auto;}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body class="bg-ink-800 text-slate-200">
+
+<div id="loadingScreen"><span class="spin"></span><span class="font-mono text-xs tracking-wider uppercase">Chargement des entreprises…</span></div>
+<div id="scrim" onclick="toggleSidebar(false)"></div>
+<div id="toast"><div class="glass-strong rounded-xl px-4 py-3 text-sm font-medium"></div></div>
+
+<aside id="sidebar" class="fixed top-0 left-0 h-screen flex flex-col glass-strong" style="visibility:hidden;border-radius:0;border-right:1px solid rgba(255,255,255,.08)">
+  <div class="px-5 py-5 flex items-center gap-2.5 border-b border-white/5">
+    <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-9 h-9 rounded-xl" style="border:1px solid rgba(96,165,250,.2)" onerror="this.style.display='none'" />
+    <span class="font-display text-lg font-700 tracking-[0.22em] text-white">AXION</span>
+  </div>
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+    <a href="app.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12l9-9 9 9M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Tableau de bord</span></a>
+    <a href="app.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 21h18M5 21V7l8-4 8 4v14" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Chantiers</span></a>
+    <a href="entreprises.html" class="nav-link on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 21V7l9-4 9 4v14M9 21V11h6v10" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Entreprises</span></a>
+    <a href="documents.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Documents</span></a>
+    <a href="moe-coherence.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3v18h18M7 14l3-4 4 3 5-7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Cohérence planning</span></a>
+    <a href="utilisateurs.html" class="nav-link" id="navUsers" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Utilisateurs</span></a>
+  </nav>
+  <div class="px-4 py-4 border-t border-white/5">
+    <div class="glass rounded-xl px-3.5 py-3">
+      <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500">Espace</p>
+      <div class="flex items-center justify-between mt-1">
+        <span class="font-display text-sm tracking-[0.18em] text-slate2-200">AXION</span>
+        <span class="inline-flex items-center gap-1.5 text-[11px] text-green-300"><span class="dot bg-green-400"></span>En ligne</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div id="content" class="lg:ml-[256px] min-h-screen grid-faint" style="visibility:hidden">
+  <header class="sticky top-0 z-40 glass-strong" style="border-radius:0;border-bottom:1px solid rgba(255,255,255,.07)">
+    <div class="px-5 md:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="lg:hidden btn-outline rounded-xl w-10 h-10 grid place-items-center" aria-label="Menu"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg></button>
+        <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400">Entreprises · Intervenants</p>
+      </div>
+      <div class="flex items-center gap-3 md:gap-4">
+        <a href="compte.html" id="userName" class="hidden md:inline text-sm text-slate2-300 hover:text-white transition-colors" style="text-decoration:none"></a>
+        <span class="pill" id="rolePill"></span>
+        <div id="avatar" class="w-10 h-10 rounded-full grid place-items-center font-display font-600 text-sm text-ink-900" style="background:linear-gradient(135deg,#93C5FD,#2563EB)"></div>
+        <button id="logoutBtn" class="btn-outline rounded-xl px-3.5 py-2 text-xs font-medium hidden md:inline">Déconnexion</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="px-5 md:px-8 py-7 max-w-[1300px] mx-auto w-full">
+    <section class="mb-6 flex items-end justify-between gap-4 flex-wrap">
+      <div>
+        <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-2">Annuaire</p>
+        <h1 class="font-display text-3xl md:text-4xl font-700 text-white leading-tight">Entreprises <span class="text-grad">& intervenants</span></h1>
+        <p class="text-slate2-400 mt-2 text-sm md:text-base">Sociétés de travaux et intervenants, leur corps d'état et les chantiers où elles interviennent. <span id="demoBadge" class="hidden pill ml-1" style="color:#F59E0B;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)"><span class="dot" style="background:#F59E0B"></span>Démo</span></p>
+      </div>
+      <button id="addBtn" class="btn-azure rounded-xl px-5 py-3 text-sm font-medium hidden">+ Ajouter une entreprise</button>
+    </section>
+
+    <section id="addPanel" class="hidden mb-6">
+      <div class="glass-strong rounded-2xl p-5">
+        <div class="grid md:grid-cols-3 gap-3">
+          <input id="fName" class="field" placeholder="Nom de la société" />
+          <input id="fTrade" class="field" placeholder="Corps d'état / lot (ex. Gros œuvre)" />
+          <select id="fProject" class="field"><option value="">— Rattacher à un chantier (optionnel) —</option></select>
+        </div>
+        <div class="flex items-center gap-2 mt-3">
+          <button id="fSave" class="btn-azure rounded-xl px-5 py-2.5 text-sm font-medium">Enregistrer</button>
+          <button id="fCancel" class="btn-outline rounded-xl px-4 py-2.5 text-sm">Annuler</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-6 flex flex-col lg:flex-row lg:items-center gap-3">
+      <div class="relative flex-1">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate2-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>
+        <input id="search" class="field w-full pl-9" placeholder="Rechercher une entreprise, un corps d'état…" />
+      </div>
+      <select id="projFilter" class="field lg:w-64"><option value="">Tous les chantiers</option></select>
+    </section>
+
+    <section id="kpiRow" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6"></section>
+    <section id="list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></section>
+
+    <footer class="border-t border-white/5 pt-6 pb-10 mt-10 text-center">
+      <p class="font-mono text-[11px] tracking-[0.25em] uppercase text-slate2-500">Cadence Architectes Associés · Paris 12e</p>
+      <p class="text-xs text-slate2-500 mt-2">agence@cadence-architectes.fr</p>
+    </footer>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/axion-auth.js"></script>
+<script>
+/* AXION — Entreprises : companies + project_companies (chantiers d'intervention) */
+function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=document.getElementById('scrim'); var open=(force===undefined)?!s.classList.contains('open'):force; s.classList.toggle('open',open); sc.classList.toggle('show',open); }
+function normRole(r){ if(r==='admin'||r==='moe'||r==='moa'||r==='entreprise'||r==='economiste') return r; if(r==='user'||r==='partner'||r==='viewer') return 'entreprise'; return r||null; }
+function initials(n){ var p=(n||'').trim().split(/\s+/); return (((p[0]||'')[0]||'')+((p[1]||'')[0]||''))||'?'; }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function toast(msg, ok){ var t=document.getElementById('toast'); t.firstElementChild.textContent=msg; t.firstElementChild.style.color=ok===false?'#FCA5A5':'#86EFAC'; t.classList.add('show'); clearTimeout(window.__tt); window.__tt=setTimeout(function(){t.classList.remove('show');},2600); }
+var ROLE_LABEL={admin:'Administrateur',moe:'Maître d’œuvre',moa:'Maître d’ouvrage',entreprise:'Entreprise',economiste:'Économiste'};
+
+/* Couleur d'avatar par corps d'état détecté */
+function tradeColor(trade){
+  var t=(trade||'').toLowerCase();
+  if(/gros|œuvre|oeuvre|béton|beton|maçon|macon|vrd|terrass/.test(t)) return '#60A5FA';
+  if(/charp|couver|toit|étanch|etanch|zinc/.test(t)) return '#38BDF8';
+  if(/menuis|alu|bois|vitr/.test(t)) return '#A78BFA';
+  if(/plomb|cvc|chauf|sanit/.test(t)) return '#34D399';
+  if(/élec|elec|courant/.test(t)) return '#FBBF24';
+  if(/peint|cloison|placo|carrel|sol|finiti/.test(t)) return '#F472B6';
+  if(/bet|bureau|étude|etude|contrôl|controle|coord|sps|spps/.test(t)) return '#5EEAD4';
+  return '#94A3B8';
+}
+
+var STATE={ companies:[], links:[], projects:{}, projList:[], role:null, canEdit:false, demo:false, q:'', proj:'' };
+function chantiersOf(cid){ return STATE.links.filter(function(l){return l.company_id===cid;}).map(function(l){return STATE.projects[l.project_id];}).filter(Boolean); }
+
+function render(){
+  var rows=STATE.companies.filter(function(c){
+    if(STATE.proj && !STATE.links.some(function(l){return l.company_id===c.id&&l.project_id===STATE.proj;})) return false;
+    if(STATE.q){ var hay=((c.name||'')+' '+(c.trade||'')).toLowerCase(); if(hay.indexOf(STATE.q)<0) return false; }
+    return true;
+  });
+
+  var kr=document.getElementById('kpiRow'); kr.innerHTML='';
+  var nbLinked=STATE.companies.filter(function(c){return chantiersOf(c.id).length;}).length;
+  [['Entreprises',STATE.companies.length,'#34D399'],['Affectées à un chantier',nbLinked,'#60A5FA'],['Chantiers',STATE.projList.length,'#A78BFA'],['Affichées',rows.length,'#38BDF8']].forEach(function(k){
+    var el=document.createElement('div'); el.className='glass rounded-2xl p-3.5';
+    el.innerHTML='<div class="font-display text-2xl font-700 text-white leading-none">'+k[1]+'</div><div class="text-[11px] text-slate2-400 mt-1.5">'+k[0]+'</div>';
+    kr.appendChild(el);
+  });
+
+  var list=document.getElementById('list');
+  if(rows.length===0){
+    list.className='';
+    list.innerHTML='<div class="glass rounded-2xl p-10 text-center"><div class="w-14 h-14 rounded-2xl grid place-items-center mx-auto mb-4" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25)"><svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="1.5"><path d="M3 21V7l9-4 9 4v14M9 21V11h6v10" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'+
+      '<p class="font-display text-white text-lg">'+(STATE.companies.length?'Aucune entreprise pour ce filtre':'Aucune entreprise enregistrée')+'</p>'+
+      '<p class="text-sm text-slate2-500 mt-1">'+(STATE.canEdit?'Ajoutez une société avec le bouton « Ajouter une entreprise ».':'Les entreprises affectées apparaîtront ici.')+'</p></div>';
+    return;
+  }
+  list.className='grid sm:grid-cols-2 lg:grid-cols-3 gap-4';
+  list.innerHTML=rows.map(function(c){
+    var col=tradeColor(c.trade); var chs=chantiersOf(c.id);
+    var chips = chs.length ? chs.map(function(n){return '<span class="chip">'+escapeHtml(n)+'</span>';}).join('') : '<span class="text-[11px] text-slate2-500">Non affectée</span>';
+    return '<div class="glass card-hover rounded-2xl p-5">'+
+      '<div class="flex items-center gap-3 mb-3">'+
+        '<div class="w-11 h-11 rounded-xl grid place-items-center font-display font-600 text-sm" style="background:'+col+'1f;border:1px solid '+col+'55;color:'+col+'">'+escapeHtml(initials(c.name).toUpperCase())+'</div>'+
+        '<div class="min-w-0"><div class="font-display text-white text-base truncate">'+escapeHtml(c.name||'Société')+'</div>'+
+          (c.trade?'<div class="text-xs mt-0.5" style="color:'+col+'">'+escapeHtml(c.trade)+'</div>':'<div class="text-xs text-slate2-500 mt-0.5">Corps d\'état non précisé</div>')+'</div>'+
+      '</div>'+
+      '<div class="pt-3 border-t border-white/5">'+
+        '<p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500 mb-2">Chantiers</p>'+
+        '<div class="flex items-center gap-1.5 flex-wrap">'+chips+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function demoData(){
+  return { companies:[
+      {id:'c1',name:'BatiPro',trade:'Gros œuvre'},{id:'c2',name:'ToituRe',trade:'Charpente · couverture'},
+      {id:'c3',name:'AluVitre',trade:'Menuiseries extérieures'},{id:'c4',name:'AquaFlux',trade:'Plomberie · CVC'},
+      {id:'c5',name:'ElecVolt',trade:'Électricité'},{id:'c6',name:'ColorFin',trade:'Peinture · finitions'},
+      {id:'c7',name:'Véritas',trade:'Bureau de contrôle'} ],
+    links:[{company_id:'c1',project_id:'p1'},{company_id:'c2',project_id:'p1'},{company_id:'c3',project_id:'p1'},{company_id:'c4',project_id:'p1'},{company_id:'c1',project_id:'p2'},{company_id:'c7',project_id:'p1'}],
+    projects:{p1:'Les Jardins de Lisa',p2:'Domaine des Gueules Cassées'},
+    projList:[{id:'p1',name:'Les Jardins de Lisa'},{id:'p2',name:'Domaine des Gueules Cassées'}] };
+}
+
+(async function(){
+  function reveal(){ document.getElementById('loadingScreen').style.display='none'; document.getElementById('sidebar').style.visibility='visible'; document.getElementById('content').style.visibility='visible'; }
+  var isPreview=/[?&]demo=1\b/.test(location.search);
+
+  function setupFilters(){
+    var pf=document.getElementById('projFilter'); STATE.projList.forEach(function(p){ var o=document.createElement('option'); o.value=p.id; o.textContent=p.name; pf.appendChild(o); });
+    pf.addEventListener('change',function(){ STATE.proj=pf.value; render(); });
+    var sp=document.getElementById('fProject'); STATE.projList.forEach(function(p){ var o=document.createElement('option'); o.value=p.id; o.textContent=p.name; sp.appendChild(o); });
+    document.getElementById('search').addEventListener('input',function(e){ STATE.q=e.target.value.toLowerCase().trim(); render(); });
+  }
+
+  if(isPreview){
+    var d=demoData(); STATE.demo=true; STATE.companies=d.companies; STATE.links=d.links; STATE.projects=d.projects; STATE.projList=d.projList; STATE.role='admin'; STATE.canEdit=true;
+    document.getElementById('userName').textContent='Aperçu démonstration';
+    document.getElementById('rolePill').textContent='Administrateur'; document.getElementById('rolePill').classList.add('admin');
+    document.getElementById('avatar').textContent='AP'; document.getElementById('avatar').style.background='linear-gradient(135deg,#FCD34D,#F59E0B)';
+    document.getElementById('demoBadge').classList.remove('hidden');
+    setupFilters(); render(); reveal(); return;
+  }
+
+  var session=await AxionAuth.currentSession();
+  if(!session){ window.location.href='login.html'; return; }
+  var profile; try{ profile=await AxionAuth.fetchProfile(session.user.id);}catch(e){ window.location.href='login.html?error=role'; return; }
+  var role=profile&&normRole(profile.role);
+  if(!role){ await AxionAuth.signOut(); window.location.href='login.html?error=role'; return; }
+  STATE.role=role; STATE.canEdit=(role==='admin'||role==='moe');
+
+  document.getElementById('userName').textContent=profile.full_name||profile.email;
+  var pill=document.getElementById('rolePill'); pill.textContent=ROLE_LABEL[role]||role; pill.classList.add(role);
+  var av=document.getElementById('avatar'); av.textContent=initials(profile.full_name||profile.email).toUpperCase();
+  if(role==='admin'){ av.style.background='linear-gradient(135deg,#FCD34D,#F59E0B)'; document.getElementById('navUsers').style.display=''; }
+  document.getElementById('logoutBtn').addEventListener('click', async function(){ await AxionAuth.signOut(); window.location.href='login.html'; });
+
+  try { var pr=await AxionAuth.sb.from('projects').select('id,name,slug').order('name'); if(!pr.error){ STATE.projList=pr.data||[]; STATE.projList.forEach(function(p){ STATE.projects[p.id]=p.name||p.slug; }); } }catch(e){}
+  try { var co=await AxionAuth.sb.from('companies').select('id,name,trade').order('name'); if(!co.error) STATE.companies=co.data||[]; }catch(e){ console.warn('companies',e); }
+  try { var lk=await AxionAuth.sb.from('project_companies').select('project_id,company_id'); if(!lk.error) STATE.links=lk.data||[]; }catch(e){ console.warn('project_companies',e); }
+  setupFilters();
+
+  if(STATE.canEdit){
+    var addBtn=document.getElementById('addBtn'); addBtn.classList.remove('hidden');
+    var panel=document.getElementById('addPanel');
+    addBtn.addEventListener('click',function(){ panel.classList.toggle('hidden'); });
+    document.getElementById('fCancel').addEventListener('click',function(){ panel.classList.add('hidden'); });
+    document.getElementById('fSave').addEventListener('click', async function(){
+      var name=document.getElementById('fName').value.trim();
+      var trade=document.getElementById('fTrade').value.trim();
+      var pid=document.getElementById('fProject').value;
+      if(!name){ toast('Le nom est obligatoire.', false); return; }
+      var r=await AxionAuth.sb.from('companies').insert({name:name,trade:trade||null}).select();
+      if(r.error){ toast('Échec : '+r.error.message, false); return; }
+      var co=(r.data&&r.data[0])||{id:null,name:name,trade:trade}; STATE.companies.push(co);
+      if(pid && co.id){
+        var rl=await AxionAuth.sb.from('project_companies').insert({project_id:pid,company_id:co.id});
+        if(!rl.error) STATE.links.push({project_id:pid,company_id:co.id});
+      }
+      document.getElementById('fName').value=''; document.getElementById('fTrade').value='';
+      panel.classList.add('hidden'); render(); toast('Entreprise ajoutée');
+    });
+  }
+
+  render(); reveal();
+})();
+</script>
+</body>
+</html>
