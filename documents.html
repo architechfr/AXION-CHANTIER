@@ -234,6 +234,19 @@ var STATE={ docs:[], projects:{}, role:null, canEdit:false, demo:false, fam:'tou
 
 function docName(d){ return d.title||d.name||'Document'; }
 function docUrl(d){ return d.url||d.file_path||'#'; }
+function docDate(d){ return d.created_at||d.updated_at||null; }
+function fmtDateLong(v){ if(!v) return ''; var d=new Date(v); return isNaN(d)?'':d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
+function timeAgo(v){ if(!v) return ''; var d=new Date(v); if(isNaN(d)) return '';
+  var diff=Math.round((new Date()-d)/86400000);
+  if(diff<=0) return "aujourd'hui";
+  if(diff===1) return "hier";
+  if(diff<7) return "il y a "+diff+" jours";
+  if(diff<14) return "il y a 1 semaine";
+  if(diff<31) return "il y a "+Math.round(diff/7)+" semaines";
+  if(diff<60) return "il y a 1 mois";
+  if(diff<365) return "il y a "+Math.round(diff/30)+" mois";
+  return "il y a "+Math.round(diff/365)+" an"+(diff>=730?'s':'');
+}
 
 function render(){
   var list=document.getElementById('docsList');
@@ -259,23 +272,76 @@ function render(){
     return;
   }
 
-  // regroupement par famille
-  var groups={}; docs.forEach(function(d){ var f=famOf(d); (groups[f.label]=groups[f.label]||{color:f.color,t2:f.t2,items:[]}).items.push(d); });
+  /* Regroupement par famille avec pattern « Le plus récent en avant + Archives ».
+     Tri intra-famille : date décroissante (created_at/updated_at). Le premier
+     document de chaque famille est rendu en grande carte ; les autres en
+     archives (grille compacte, cachée par défaut si ≥ 4). */
+  var groups={};
+  docs.forEach(function(d){ var f=famOf(d); (groups[f.label]=groups[f.label]||{color:f.color,t2:f.t2,key:f.key,items:[]}).items.push(d); });
   list.innerHTML='';
   Object.keys(groups).forEach(function(label){
     var g=groups[label];
+    /* Tri par date décroissante — sans date au dernier rang */
+    g.items.sort(function(a,b){ var da=docDate(a), db=docDate(b); if(!da&&!db) return 0; if(!da) return 1; if(!db) return -1; return new Date(db)-new Date(da); });
+    var latest = g.items[0];
+    var archives = g.items.slice(1);
+    var pname = STATE.projects[latest.project_id]||'';
+    var ago = timeAgo(docDate(latest));
+
+    var head = '<div class="flex items-center gap-2 mb-3 flex-wrap">'+
+      '<span class="dot" style="width:9px;height:9px;background:'+g.color+'"></span>'+
+      '<h2 class="font-display text-lg font-600 text-white">'+escapeHtml(label)+'</h2>'+
+      '<span class="font-mono text-[11px] text-slate2-500">'+g.items.length+'</span>'+
+      (g.t2?'<span class="pill ml-1" style="color:#F59E0B;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)">Confidentiel</span>':'')+
+    '</div>';
+
+    /* Grande carte du plus récent */
+    var hero = '<a href="'+escapeHtml(docUrl(latest))+'" target="_blank" rel="noopener" class="glass card-hover rounded-2xl p-5 flex items-center gap-4 block mb-3" style="border-color:'+g.color+'33;background:linear-gradient(135deg,'+g.color+'10,rgba(255,255,255,.03))">'+
+      '<div class="w-14 h-14 rounded-2xl grid place-items-center shrink-0" style="background:'+g.color+'24;border:1px solid '+g.color+'55"><svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="'+g.color+'" stroke-width="1.6"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'+
+      '<div class="flex-1 min-w-0">'+
+        '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
+          '<span class="pill" style="color:'+g.color+';border-color:'+g.color+'55;background:'+g.color+'12">Le plus récent</span>'+
+          (ago?'<span class="text-[11px] text-slate2-400">'+ago+'</span>':'')+
+        '</div>'+
+        '<div class="font-display text-white text-base md:text-lg leading-snug">'+escapeHtml(docName(latest))+'</div>'+
+        '<div class="text-xs text-slate2-500 mt-1">'+(pname?escapeHtml(pname)+' · ':'')+(latest.category?escapeHtml(latest.category)+' · ':'')+fmtDateLong(docDate(latest))+'</div>'+
+      '</div>'+
+      '<svg class="w-5 h-5 text-slate2-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 17L17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
+
+    /* Archives : grille compacte, repliée si > 3 */
+    var archHtml = '';
+    if(archives.length){
+      var cards = archives.map(function(d){
+        var p = STATE.projects[d.project_id]||'';
+        return '<a href="'+escapeHtml(docUrl(d))+'" target="_blank" rel="noopener" class="glass card-hover rounded-xl px-3 py-2.5 flex items-center gap-2.5 block">'+
+          '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="'+g.color+'" stroke-width="1.6"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+          '<div class="flex-1 min-w-0"><div class="text-[13px] text-slate2-200 truncate">'+escapeHtml(docName(d))+'</div>'+
+            '<div class="text-[10px] text-slate2-500 truncate">'+(p?escapeHtml(p)+' · ':'')+fmtDate(docDate(d))+'</div></div>'+
+        '</a>';
+      }).join('');
+      var collapsed = archives.length > 3;
+      var arcId = 'arc_'+g.key+'_'+Math.random().toString(36).slice(2,7);
+      archHtml = '<div class="mt-1">'+
+        '<button data-arc="'+arcId+'" class="archToggle font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500 hover:text-azure-300 mb-2 flex items-center gap-2">'+
+          '<svg class="w-3 h-3 transition-transform" style="'+(collapsed?'':'transform:rotate(90deg)')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>'+
+          'Archives · '+archives.length+
+        '</button>'+
+        '<div id="'+arcId+'" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2"'+(collapsed?' style="display:none"':'')+'>'+cards+'</div>'+
+      '</div>';
+    }
+
     var sec=document.createElement('div');
-    var head='<div class="flex items-center gap-2 mb-3"><span class="dot" style="width:9px;height:9px;background:'+g.color+'"></span><h2 class="font-display text-lg font-600 text-white">'+escapeHtml(label)+'</h2><span class="font-mono text-[11px] text-slate2-500">'+g.items.length+'</span>'+(g.t2?'<span class="pill ml-1" style="color:#F59E0B;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)">Confidentiel</span>':'')+'</div>';
-    var cards=g.items.map(function(d){
-      var pname=STATE.projects[d.project_id]||'';
-      return '<a href="'+escapeHtml(docUrl(d))+'" target="_blank" rel="noopener" class="glass card-hover rounded-2xl p-4 flex items-start gap-3 block">'+
-        '<div class="w-10 h-10 rounded-xl grid place-items-center shrink-0" style="background:'+g.color+'1f;border:1px solid '+g.color+'44"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="'+g.color+'" stroke-width="1.6"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'+
-        '<div class="flex-1 min-w-0"><div class="font-display text-white text-sm leading-snug truncate">'+escapeHtml(docName(d))+'</div>'+
-          '<div class="text-[11px] text-slate2-500 mt-1 truncate">'+(pname?escapeHtml(pname)+' · ':'')+(d.category?escapeHtml(d.category)+' · ':'')+fmtDate(d.updated_at||d.created_at)+'</div></div>'+
-        '<svg class="w-4 h-4 text-slate2-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 17L17 7M9 7h8v8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
-    }).join('');
-    sec.innerHTML=head+'<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">'+cards+'</div>';
+    sec.innerHTML = head + hero + archHtml;
     list.appendChild(sec);
+  });
+  /* Toggle archives */
+  list.querySelectorAll('.archToggle').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t = document.getElementById(b.dataset.arc);
+      var open = t.style.display !== 'none';
+      t.style.display = open ? 'none' : 'grid';
+      var svg = b.querySelector('svg'); if(svg) svg.style.transform = open ? '' : 'rotate(90deg)';
+    });
   });
 }
 
@@ -398,14 +464,18 @@ async function importBulk(){
 }
 
 function demoDocs(){
-  return { docs:[
-    {id:'d1',project_id:'p1',title:'Plan EXE — Bât A · R+2 ind. C',category:'Plans EXE',file_path:'#',updated_at:'2026-05-20'},
-    {id:'d2',project_id:'p1',title:'Plan EXE — Bât B · RDC ind. B',category:'Plans EXE',file_path:'#',updated_at:'2026-05-12'},
-    {id:'d3',project_id:'p1',title:'CR de chantier n°14',category:'Compte-rendu',file_path:'#',updated_at:'2026-05-28'},
-    {id:'d4',project_id:'p1',title:'Notice descriptive notaire',category:'Notice notaire',file_path:'#',updated_at:'2026-04-02'},
-    {id:'d5',project_id:'p2',title:'Plan de vente — Lot 12',category:'Plans de vente',file_path:'#',updated_at:'2026-03-15'},
-    {id:'d6',project_id:'p1',title:'Analyse des offres — Lot Gros œuvre',category:'DCE / Marchés',file_path:'#',updated_at:'2026-02-10'}
-  ], projects:{p1:'Les Jardins de Lisa',p2:'Domaine des Gueules Cassées'},
+  var crs = [
+    ['CR n°48 — 1er juin 2026','2026-06-01'],['CR n°47 — 22 mai 2026','2026-05-22'],['CR n°46 — 13 mai 2026','2026-05-13'],
+    ['CR n°45 — 7 mai 2026','2026-05-07'],['CR n°44 — 29 avril 2026','2026-04-29'],['CR n°43 — 27 avril 2026','2026-04-27']
+  ].map(function(t,i){ return {id:'cr'+i,project_id:'p1',title:t[0],category:'Compte-rendu',file_path:'#',created_at:t[1]}; });
+  return { docs: crs.concat([
+    {id:'d1',project_id:'p1',title:'Plan EXE — Bât A · R+2 ind. C',category:'Plans EXE',file_path:'#',created_at:'2026-05-20'},
+    {id:'d2',project_id:'p1',title:'Plan EXE — Bât B · RDC ind. B',category:'Plans EXE',file_path:'#',created_at:'2026-05-12'},
+    {id:'d4',project_id:'p1',title:'LISA ACCESSION — V4',category:'Notice notaire',file_path:'#',created_at:'2026-04-02'},
+    {id:'d4b',project_id:'p1',title:'LISA SOCIAL — V4',category:'Notice notaire',file_path:'#',created_at:'2026-04-02'},
+    {id:'d5',project_id:'p2',title:'Plan de vente — Lot 12',category:'Plans de vente',file_path:'#',created_at:'2026-03-15'},
+    {id:'d6',project_id:'p1',title:'Analyse des offres — Lot Gros œuvre',category:'DCE / Marchés',file_path:'#',created_at:'2026-02-10'}
+  ]), projects:{p1:'Les Jardins de Lisa',p2:'Domaine des Gueules Cassées'},
      projList:[{id:'p1',name:'Les Jardins de Lisa'},{id:'p2',name:'Domaine des Gueules Cassées'}] };
 }
 
