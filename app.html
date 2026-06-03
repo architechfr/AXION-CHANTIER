@@ -295,18 +295,18 @@ var ICONS = {
   monlot: '<path d="M9 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2h-4M9 11V7a3 3 0 016 0v4M9 11h6" stroke-linecap="round" stroke-linejoin="round"/>'
 };
 
-/* Tous les items de navigation possibles */
+/* Tous les items de navigation possibles.
+   Décision UX 2026-06-04 : on a RETIRÉ « Documents », « Comptes-rendus »,
+   « Plans & EXE » et « Notice notaire » du menu de gauche. Tous les documents
+   d'une opération s'accèdent UNIQUEMENT via la page Chantier (compartimentage
+   strict — pas de mélange entre chantiers). Cf. axion-ux-doc-logique. */
 var NAV = [
   { id:'dashboard',   label:'Tableau de bord', icon:'dashboard',   href:'app.html' },
   { id:'chantiers',   label:'Chantiers',       icon:'chantiers',   href:'app.html#chantiers' },
   { id:'monlot',      label:'Mon lot',         icon:'monlot',      href:'app.html#chantiers' },
   { id:'entreprises', label:'Entreprises',     icon:'entreprises', href:'entreprises.html' },
-  { id:'documents',   label:'Documents',       icon:'documents',   href:'documents.html' },
   { id:'plannings',   label:'Plannings',       icon:'plannings',   href:'#planning' },
   { id:'coherence',   label:'Cohérence planning', icon:'coherence', href:'moe-coherence.html' },
-  { id:'cr',          label:'Comptes-rendus',  icon:'cr',          href:'documents.html?cat=cr' },
-  { id:'plans',       label:'Plans & EXE',     icon:'plans',       href:'documents.html?cat=plans' },
-  { id:'notaire',     label:'Notice notaire',  icon:'notaire',     href:'documents.html?cat=notice' },
   { id:'camera',      label:'Caméra chantier', icon:'camera',      href:'#' },
   { id:'users',       label:'Utilisateurs',    icon:'users',       href:'utilisateurs.html' },
   { id:'settings',    label:'Paramètres',      icon:'settings',    href:'#' }
@@ -317,11 +317,11 @@ var QUICK = {
   coherence:  { label:'Cohérence planning',    icon:'coherence',   accent:'azure', href:'moe-coherence.html' },
   newProject: { label:'Nouveau chantier',     icon:'chantiers',   accent:'azure' },
   importPlan: { label:'Importer planning',     icon:'plannings',   accent:'azure' },
-  addDoc:     { label:'Ajouter document',      icon:'documents',   accent:'violet' },
-  newCR:      { label:'Nouveau compte-rendu',  icon:'cr',          accent:'amber' },
+  addDoc:     { label:'Ajouter document',      icon:   accent:'violet' },
+  newCR:      { label:'Nouveau compte-rendu',  icon:          accent:'amber' },
   inviteCo:   { label:'Inviter une entreprise',icon:'entreprises', accent:'green' },
-  depotAtt:   { label:'Déposer attestation',   icon:'cr',          accent:'green' },
-  myPlans:    { label:'Mes plans à jour',      icon:'plans',       accent:'azure' },
+  depotAtt:   { label:'Déposer attestation',   icon:          accent:'green' },
+  myPlans:    { label:'Mes plans à jour',      icon:       accent:'azure' },
   consultPlan:{ label:'Consulter planning',    icon:'plannings',   accent:'azure' },
   newPlanning:{ label:'Nouveau planning',      icon:'plannings',   accent:'amber', href:'configurateur.html' }
 };
@@ -333,8 +333,8 @@ var ROLES = {
     heroTitle:'Tableau de bord <span class="text-grad">administrateur</span>',
     lead:'Accès complet : tous les chantiers, entreprises, documents et plannings.',
     chantiersKicker:'Tous les chantiers',
-    nav:['dashboard','chantiers','entreprises','documents','plannings','coherence','cr','plans','notaire','users','settings'],
-    kpi:['chantiers','entreprises','documents','users'],
+    nav:['dashboard','chantiers','entreprises','plannings','coherence','users','settings'],
+    kpi:['chantiers','entreprises','users'],
     quick:['newProject','newPlanning','coherence','importPlan','addDoc','newCR','inviteCo'], canEdit:true
   },
   moe: {
@@ -342,8 +342,8 @@ var ROLES = {
     heroTitle:'Tableau de bord <span class="text-grad">maître d’œuvre</span>',
     lead:'Vos opérations : pilotage du planning, des plans EXE, des comptes-rendus et des entreprises.',
     chantiersKicker:'Mes opérations',
-    nav:['dashboard','chantiers','entreprises','documents','plannings','coherence','cr','plans','notaire'],
-    kpi:['chantiers','entreprises','documents','cr'],
+    nav:['dashboard','chantiers','entreprises','plannings','coherence'],
+    kpi:['chantiers','entreprises','cr'],
     quick:['coherence','newPlanning','importPlan','addDoc','newCR','inviteCo'], canEdit:true
   },
   moa: {
@@ -351,8 +351,8 @@ var ROLES = {
     heroTitle:'Tableau de bord <span class="text-grad">maître d’ouvrage</span>',
     lead:'Vue client : avancement de vos opérations, livraisons, comptes-rendus et documents.',
     chantiersKicker:'Mes opérations',
-    nav:['dashboard','chantiers','documents','plannings','cr','plans','notaire','camera'],
-    kpi:['chantiers','documents','cr','livraisons'],
+    nav:['dashboard','chantiers','plannings','camera'],
+    kpi:['chantiers','livraisons'],
     quick:['consultPlan','addDoc'], canEdit:false
   },
   entreprise: {
@@ -360,8 +360,8 @@ var ROLES = {
     heroTitle:'Votre espace <span class="text-grad">chantier</span>',
     lead:'Votre lot : planning, plans à jour, dépôts et comptes-rendus — accès limité par vos droits.',
     chantiersKicker:'Mon lot',
-    nav:['dashboard','monlot','documents','plannings','cr','plans'],
-    kpi:['chantiers','documents','plans','cr'],
+    nav:['dashboard','monlot','plannings'],
+    kpi:['chantiers','cr'],
     quick:['depotAtt','myPlans','consultPlan'], canEdit:false
   },
   economiste: {
@@ -369,8 +369,8 @@ var ROLES = {
     heroTitle:'Tableau de bord <span class="text-grad">économiste</span>',
     lead:'Analyse des marchés et préparation des négociations : avancement, pièces et comparatifs des opérations suivies.',
     chantiersKicker:'Mes opérations',
-    nav:['dashboard','chantiers','documents','plannings','coherence','plans'],
-    kpi:['chantiers','documents','cr'],
+    nav:['dashboard','chantiers','plannings','coherence'],
+    kpi:['chantiers','cr'],
     quick:['coherence','addDoc'], canEdit:true
   }
 };
@@ -379,10 +379,10 @@ var ROLES = {
 var KPI_DEFS = {
   chantiers:  { label:'Chantiers actifs',   icon:'chantiers',   color:'#60A5FA', bg:'rgba(59,130,246,.12)',  bd:'rgba(96,165,250,.25)' },
   entreprises:{ label:'Entreprises actives',icon:'entreprises', color:'#34D399', bg:'rgba(52,211,153,.12)',  bd:'rgba(52,211,153,.25)' },
-  documents:  { label:'Documents',          icon:'documents',   color:'#A78BFA', bg:'rgba(167,139,250,.12)', bd:'rgba(167,139,250,.25)' },
+  documents:  { label:'Documents',          icon:   color:'#A78BFA', bg:'rgba(167,139,250,.12)', bd:'rgba(167,139,250,.25)' },
   users:      { label:'Utilisateurs actifs',icon:'users',       color:'#F59E0B', bg:'rgba(245,158,11,.12)',  bd:'rgba(245,158,11,.25)' },
-  cr:         { label:'Comptes-rendus',     icon:'cr',          color:'#38BDF8', bg:'rgba(56,189,248,.12)',  bd:'rgba(56,189,248,.25)' },
-  plans:      { label:'Plans à jour',       icon:'plans',       color:'#60A5FA', bg:'rgba(59,130,246,.12)',  bd:'rgba(96,165,250,.25)' },
+  cr:         { label:'Comptes-rendus',     icon:          color:'#38BDF8', bg:'rgba(56,189,248,.12)',  bd:'rgba(56,189,248,.25)' },
+  plans:      { label:'Plans à jour',       icon:       color:'#60A5FA', bg:'rgba(59,130,246,.12)',  bd:'rgba(96,165,250,.25)' },
   livraisons: { label:'Livraisons prévues', icon:'plannings',   color:'#F59E0B', bg:'rgba(245,158,11,.12)',  bd:'rgba(245,158,11,.25)' }
 };
 
@@ -610,13 +610,13 @@ function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=docum
     var out = [];
     projects.forEach(function(p){
       var b = byProject[p.id]||{};
-      if (b.lastCR) out.push({ title:'Compte-rendu publié', sub:p.name, time:timeAgo(b.lastCR), icon:'cr', color:'#38BDF8', bg:'rgba(56,189,248,.12)', bd:'rgba(56,189,248,.25)', href:'chantier.html?id='+encodeURIComponent(p.id) });
+      if (b.lastCR) out.push({ title:'Compte-rendu publié', sub:p.name, time:timeAgo(b.lastCR), icon: color:'#38BDF8', bg:'rgba(56,189,248,.12)', bd:'rgba(56,189,248,.25)', href:'chantier.html?id='+encodeURIComponent(p.id) });
     });
     // Jalons indicatifs (affichés tant que le flux d'événements n'est pas branché)
     if (projects[0]) out.push({ title:'Planning mis à jour', sub:projects[0].name, time:'récent', icon:'plannings', color:'#A78BFA', bg:'rgba(167,139,250,.12)', bd:'rgba(167,139,250,.25)' });
-    if (projects[0]) out.push({ title:'Notice notaire ajoutée', sub:projects[projects.length>1?1:0].name, time:'hier', icon:'notaire', color:'#34D399', bg:'rgba(52,211,153,.12)', bd:'rgba(52,211,153,.25)' });
+    if (projects[0]) out.push({ title:'Notice notaire ajoutée', sub:projects[projects.length>1?1:0].name, time:'hier', icon: color:'#34D399', bg:'rgba(52,211,153,.12)', bd:'rgba(52,211,153,.25)' });
     if (role==='admin') out.push({ title:'Entreprise invitée', sub:projects[0]?projects[0].name:'—', time:'hier', icon:'entreprises', color:'#F59E0B', bg:'rgba(245,158,11,.12)', bd:'rgba(245,158,11,.25)' });
-    out.push({ title:'Plan EXE mis à jour', sub:projects[projects.length>1?1:0]?projects[projects.length>1?1:0].name:'—', time:'27/05', icon:'plans', color:'#60A5FA', bg:'rgba(59,130,246,.12)', bd:'rgba(96,165,250,.25)' });
+    out.push({ title:'Plan EXE mis à jour', sub:projects[projects.length>1?1:0]?projects[projects.length>1?1:0].name:'—', time:'27/05', icon: color:'#60A5FA', bg:'rgba(59,130,246,.12)', bd:'rgba(96,165,250,.25)' });
     return out.slice(0,6);
   }
   function timeAgo(iso){
