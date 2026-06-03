@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AXION — Espace de travail</title>
+<title>AXION — Tableau de bord</title>
 <meta name="theme-color" content="#0A0E1A">
 
 <link rel="icon" type="image/png" href="assets/img/logo-axion-icon.png" />
@@ -34,16 +34,14 @@
 </script>
 
 <style>
-  :root { color-scheme: dark; }
+  :root { color-scheme: dark; --sb-w: 256px; }
   html, body { background: #0A1628; }
   body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; min-height: 100vh; }
   .font-display { font-family: 'Space Grotesk', sans-serif; }
   .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-  .bg-stage { position: relative; overflow: hidden; }
-  .bg-stage::before { content:""; position:absolute; top:-20%; left:50%; transform:translateX(-50%); width:1100px; height:700px;
-    background: radial-gradient(ellipse at center, rgba(59,130,246,.22), rgba(56,189,248,.08) 40%, transparent 70%); filter: blur(20px); pointer-events:none; }
-  .grid-faint { background-image: linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px); background-size: 44px 44px; }
+  /* Décor de fond global */
+  .grid-faint { background-image: linear-gradient(rgba(148,163,184,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.05) 1px, transparent 1px); background-size: 46px 46px; }
 
   .glass { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
   .glass-strong { background: rgba(13,19,32,.72); border: 1px solid rgba(255,255,255,.10); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
@@ -59,16 +57,54 @@
   .text-grad { background: linear-gradient(120deg,#60A5FA,#38BDF8); -webkit-background-clip:text; background-clip:text; color:transparent; }
   .dot { width:7px; height:7px; border-radius:50%; }
   .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; font-size:12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); font-weight:500; }
-  .pill.admin { color:#FCD34D; border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.08) }
-  .pill.user  { color:#93C5FD; border-color:rgba(96,165,250,.35); background:rgba(59,130,246,.08) }
+  .pill.admin      { color:#FCD34D; border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.08) }
+  .pill.moe        { color:#93C5FD; border-color:rgba(96,165,250,.35); background:rgba(59,130,246,.08) }
+  .pill.moa        { color:#5EEAD4; border-color:rgba(45,212,191,.35); background:rgba(45,212,191,.08) }
+  .pill.entreprise { color:#C4B5FD; border-color:rgba(167,139,250,.35); background:rgba(167,139,250,.08) }
 
   a:focus-visible, button:focus-visible { outline:2px solid #60A5FA; outline-offset:3px; border-radius:4px; }
   ::selection { background:#2563EB; color:#fff; }
   ::-webkit-scrollbar { width:10px; height:10px; } ::-webkit-scrollbar-thumb { background:#1A2233; border-radius:8px; }
 
-  #loadingScreen { position:fixed; inset:0; background:#0A1628; display:flex; align-items:center; justify-content:center; color:#94A3B8; z-index:50; font-family:'Inter',sans-serif }
+  /* ---------- Sidebar ---------- */
+  #sidebar { width: var(--sb-w); transition: transform .35s cubic-bezier(.2,.7,.1,1); }
+  .nav-link { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:12px; font-size:14px; font-weight:500; color:#94A3B8; transition:.18s; position:relative; }
+  .nav-link svg { width:18px; height:18px; flex:0 0 18px; }
+  .nav-link:hover { color:#E2E8F0; background:rgba(255,255,255,.04); }
+  .nav-link.on { color:#fff; background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(37,99,235,.10)); border:1px solid rgba(96,165,250,.25); }
+  .nav-link.on::before { content:""; position:absolute; left:-1px; top:9px; bottom:9px; width:3px; border-radius:3px; background:linear-gradient(#60A5FA,#38BDF8); }
+
+  /* ---------- Hero visuel (grue + réseau) ---------- */
+  .hero-band { position:relative; overflow:hidden; border:1px solid rgba(255,255,255,.07); border-radius:24px;
+    background:
+      radial-gradient(900px 420px at 78% -10%, rgba(59,130,246,.20), transparent 60%),
+      radial-gradient(700px 380px at 4% 120%, rgba(56,189,248,.12), transparent 60%),
+      linear-gradient(180deg, #0B1426, #0A1322); }
+  /* Si vous déposez assets/img/dashboard-bg.png, il devient le fond du hero */
+  .hero-band.has-bg { background-image:
+      linear-gradient(90deg, rgba(10,18,34,.82) 0%, rgba(10,18,34,.45) 45%, rgba(10,18,34,.20) 100%),
+      url('assets/img/dashboard-bg.png');
+    background-size: cover; background-position: center; }
+  .hero-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  @keyframes pulse { 0%,100%{opacity:.35} 50%{opacity:1} }
+  .nd { animation: pulse 3.4s ease-in-out infinite; }
+
+  /* ---------- KPI ---------- */
+  .kpi { transition: transform .35s, border-color .35s; }
+  .kpi:hover { transform: translateY(-3px); border-color: rgba(96,165,250,.3); }
+
+  #loadingScreen { position:fixed; inset:0; background:#0A1628; display:flex; align-items:center; justify-content:center; color:#94A3B8; z-index:60; font-family:'Inter',sans-serif }
   .spin { width:32px; height:32px; border:2px solid rgba(96,165,250,.2); border-top-color:#60A5FA; border-radius:50%; animation:spin .9s linear infinite; margin-right:14px }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Responsive sidebar ---------- */
+  @media (max-width: 1023px){
+    #sidebar { position:fixed; z-index:55; top:0; bottom:0; left:0; transform:translateX(-100%); }
+    #sidebar.open { transform:translateX(0); }
+    #content { margin-left:0 !important; }
+  }
+  #scrim { position:fixed; inset:0; background:rgba(5,8,18,.6); z-index:54; opacity:0; pointer-events:none; transition:opacity .3s; }
+  #scrim.show { opacity:1; pointer-events:auto; }
 </style>
 </head>
 
@@ -76,231 +112,496 @@
 
 <div id="loadingScreen"><span class="spin"></span><span class="font-mono text-xs tracking-wider uppercase">Chargement de votre espace…</span></div>
 
-<!-- ============ NAV ============ -->
-<header id="appHeader" class="fixed top-4 left-4 right-4 z-50" style="visibility:hidden">
-  <nav class="glass-strong rounded-2xl max-w-6xl mx-auto px-5 md:px-6 py-3 flex items-center justify-between">
-    <a href="axion.html" class="flex items-center gap-2.5 group">
-      <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-9 h-9 rounded-xl" style="border:1px solid rgba(96,165,250,.2)" />
-      <span class="font-display text-lg font-700 tracking-[0.22em] text-white hidden sm:inline">AXION</span>
-    </a>
-    <div class="flex items-center gap-3 md:gap-4">
-      <a href="compte.html" id="userName" class="hidden md:inline text-sm text-slate2-400 hover:text-slate-100 transition-colors" title="Mon compte" style="text-decoration:none"></a>
-      <span class="pill" id="rolePill"></span>
-      <button id="logoutBtn" class="btn-outline rounded-xl px-3.5 py-2 text-xs font-medium">Déconnexion</button>
-    </div>
-  </nav>
-</header>
+<div id="scrim" onclick="toggleSidebar(false)"></div>
 
-<!-- ============ HERO ============ -->
-<main id="appMain" style="visibility:hidden" class="pt-28 md:pt-36 pb-20">
-  <section class="bg-stage grid-faint px-5 md:px-8 pb-4">
-    <div class="max-w-6xl mx-auto">
-      <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-4">Espace de travail</p>
-      <h1 class="font-display text-4xl md:text-5xl font-700 leading-[1.05] tracking-tight text-white" id="welcome"></h1>
-      <p class="mt-4 text-slate2-300 text-base md:text-lg leading-relaxed max-w-2xl" id="lead"></p>
-    </div>
-  </section>
+<!-- ============================ SIDEBAR ============================ -->
+<aside id="sidebar" class="fixed top-0 left-0 h-screen flex flex-col glass-strong" style="visibility:hidden; border-radius:0; border-right:1px solid rgba(255,255,255,.08)">
+  <div class="px-5 py-5 flex items-center gap-2.5 border-b border-white/5">
+    <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-9 h-9 rounded-xl" style="border:1px solid rgba(96,165,250,.2)" />
+    <span class="font-display text-lg font-700 tracking-[0.22em] text-white">AXION</span>
+  </div>
 
-  <!-- ============ CHANTIERS ============ -->
-  <section class="px-5 md:px-8 mt-14">
-    <div class="max-w-6xl mx-auto">
-      <div class="flex items-end justify-between mb-5">
-        <div>
-          <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-2">Mes chantiers</p>
-          <h2 class="font-display text-2xl md:text-3xl font-700 text-white tracking-tight">Vos opérations en cours</h2>
+  <nav id="navList" class="flex-1 overflow-y-auto px-3 py-4 space-y-1"></nav>
+
+  <div class="px-4 py-4 border-t border-white/5">
+    <div class="glass rounded-xl px-3.5 py-3">
+      <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500">Espace</p>
+      <div class="flex items-center justify-between mt-1">
+        <span class="font-display text-sm tracking-[0.18em] text-slate2-200">AXION</span>
+        <span class="inline-flex items-center gap-1.5 text-[11px] text-green-300"><span class="dot bg-green-400"></span>En ligne</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ============================ CONTENU ============================ -->
+<div id="content" class="lg:ml-[256px] min-h-screen grid-faint" style="visibility:hidden">
+
+  <!-- Topbar -->
+  <header class="sticky top-0 z-40 glass-strong" style="border-radius:0; border-bottom:1px solid rgba(255,255,255,.07)">
+    <div class="px-5 md:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="lg:hidden btn-outline rounded-xl w-10 h-10 grid place-items-center" aria-label="Menu">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
+        </button>
+        <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400" id="topbarSection">Tableau de bord</p>
+      </div>
+      <div class="flex items-center gap-3 md:gap-4">
+        <a href="compte.html" id="userName" class="hidden md:inline text-sm text-slate2-300 hover:text-white transition-colors" title="Mon compte" style="text-decoration:none"></a>
+        <span class="pill" id="rolePill"></span>
+        <button class="relative btn-outline rounded-xl w-10 h-10 grid place-items-center" aria-label="Notifications">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="absolute -top-1 -right-1 text-[10px] font-mono font-600 text-white bg-azure-500 rounded-full w-4.5 h-4.5 grid place-items-center" style="width:18px;height:18px" id="notifCount">3</span>
+        </button>
+        <div id="avatar" class="w-10 h-10 rounded-full grid place-items-center font-display font-600 text-sm text-ink-900" style="background:linear-gradient(135deg,#FCD34D,#F59E0B)"></div>
+        <button id="logoutBtn" class="btn-outline rounded-xl px-3.5 py-2 text-xs font-medium hidden md:inline">Déconnexion</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="px-5 md:px-8 py-7 max-w-[1400px] mx-auto w-full">
+
+    <!-- ===== HERO ===== -->
+    <section id="heroBand" class="hero-band p-7 md:p-10 mb-7">
+      <!-- Visuel SVG : grue filaire (gauche) + graphe réseau modules (droite) -->
+      <svg class="hero-svg hidden md:block" viewBox="0 0 1400 460" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="wire" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#60A5FA"/><stop offset="1" stop-color="#1D4ED8"/>
+          </linearGradient>
+          <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#3B82F6" stop-opacity=".35"/><stop offset="1" stop-color="#3B82F6" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <!-- grue + bâtiment filaire à gauche -->
+        <g stroke="url(#wire)" stroke-width="1.1" fill="none" opacity=".55">
+          <path d="M70 430 L70 90 M70 90 L300 130 M70 120 L150 60 M150 60 L150 95 M150 60 L60 100"/>
+          <path d="M150 95 L150 230 M120 230 L180 230 M120 260 L180 260 M150 230 L150 430"/>
+          <rect x="110" y="250" width="180" height="180"/>
+          <rect x="140" y="290" width="120" height="140"/>
+          <path d="M110 290 L290 290 M110 330 L290 330 M110 370 L290 370 M170 250 L170 430 M230 250 L230 430"/>
+          <path d="M300 130 L300 150 L70 110"/>
+        </g>
+        <!-- nuage de points -->
+        <g fill="#60A5FA">
+          <circle cx="60" cy="430" r="2" opacity=".7"/><circle cx="120" cy="445" r="1.6" opacity=".5"/>
+          <circle cx="250" cy="200" r="1.6" opacity=".5"/><circle cx="320" cy="300" r="2" opacity=".6"/>
+          <circle cx="40" cy="250" r="1.5" opacity=".4"/><circle cx="200" cy="120" r="1.6" opacity=".5"/>
+        </g>
+        <!-- graphe réseau de modules à droite -->
+        <g stroke="rgba(96,165,250,.30)" stroke-width="1">
+          <line x1="1180" y1="120" x2="1280" y2="70"/><line x1="1180" y1="120" x2="1100" y2="230"/>
+          <line x1="1180" y1="120" x2="1300" y2="200"/><line x1="1100" y1="230" x2="1180" y2="330"/>
+          <line x1="1100" y1="230" x2="1300" y2="200"/><line x1="1180" y1="330" x2="1300" y2="380"/>
+          <line x1="1300" y1="200" x2="1300" y2="380"/><line x1="1280" y1="70" x2="1300" y2="200"/>
+        </g>
+        <g>
+          <circle class="nd" cx="1280" cy="70"  r="6" fill="#60A5FA"/>
+          <circle class="nd" cx="1180" cy="120" r="7" fill="#818CF8" style="animation-delay:.4s"/>
+          <circle class="nd" cx="1100" cy="230" r="8" fill="#34D399" style="animation-delay:.8s"/>
+          <circle class="nd" cx="1300" cy="200" r="7" fill="#F59E0B" style="animation-delay:.2s"/>
+          <circle class="nd" cx="1180" cy="330" r="6" fill="#60A5FA" style="animation-delay:1s"/>
+          <circle class="nd" cx="1300" cy="380" r="7" fill="#F59E0B" style="animation-delay:.6s"/>
+        </g>
+        <ellipse cx="1220" cy="230" rx="220" ry="200" fill="url(#glow)"/>
+      </svg>
+
+      <div class="relative max-w-2xl">
+        <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-4">Espace de travail</p>
+        <h1 class="font-display text-3xl md:text-5xl font-700 leading-[1.05] tracking-tight text-white" id="welcome"></h1>
+        <p class="mt-4 text-slate2-300 text-base md:text-lg leading-relaxed" id="lead"></p>
+      </div>
+
+      <!-- KPI -->
+      <div id="kpiRow" class="relative grid grid-cols-2 lg:grid-cols-4 gap-4 mt-9"></div>
+    </section>
+
+    <!-- ===== CHANTIERS + ACTIVITÉ ===== -->
+    <section class="grid lg:grid-cols-3 gap-6 mb-7">
+      <!-- Chantiers -->
+      <div class="lg:col-span-2">
+        <div class="flex items-end justify-between mb-4">
+          <div>
+            <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-1.5" id="chantiersKicker">Mes chantiers</p>
+            <h2 class="font-display text-2xl font-700 text-white tracking-tight">Vos opérations en cours</h2>
+          </div>
+          <span class="font-mono text-xs text-slate2-500" id="projectsCount"></span>
         </div>
-        <span class="font-mono text-xs text-slate2-500" id="projectsCount"></span>
+        <div id="projectsGrid" class="grid sm:grid-cols-2 gap-5"></div>
+        <div id="projectsEmpty" class="glass rounded-2xl p-10 text-center hidden">
+          <p class="text-slate2-400">Aucun chantier autorisé pour votre compte.</p>
+          <p class="text-xs text-slate2-500 mt-2">Contactez l'administrateur pour être rattaché à une opération.</p>
+        </div>
+        <div id="projectsError" class="glass rounded-2xl p-6 text-center hidden">
+          <p class="text-red-300 text-sm">Erreur lors du chargement de vos chantiers.</p>
+        </div>
       </div>
-      <div id="projectsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
-      <div id="projectsEmpty" class="glass rounded-2xl p-10 text-center hidden">
-        <p class="text-slate2-400">Aucun chantier autorisé pour votre compte.</p>
-        <p class="text-xs text-slate2-500 mt-2">Contactez l'administrateur pour être rattaché à une opération.</p>
+
+      <!-- Activité récente -->
+      <div>
+        <div class="flex items-center gap-2 mb-4">
+          <svg class="w-4 h-4 text-azure-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h2 class="font-display text-base font-600 text-white tracking-wide uppercase" style="letter-spacing:.12em">Activité récente</h2>
+        </div>
+        <div class="glass rounded-2xl p-2.5" id="activityPanel"></div>
       </div>
-      <div id="projectsError" class="glass rounded-2xl p-6 text-center hidden">
-        <p class="text-red-300 text-sm">Erreur lors du chargement de vos chantiers.</p>
+    </section>
+
+    <!-- ===== ACCÈS RAPIDE ===== -->
+    <section class="mb-12">
+      <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-4">Accès rapide</p>
+      <div id="quickRow" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"></div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="pt-8 border-t border-white/5">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate2-500">
+        <div class="flex items-center gap-2.5">
+          <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-7 h-7 rounded-lg" />
+          <span class="font-display tracking-[0.22em] text-slate2-300">AXION</span>
+        </div>
+        <p>Cadence Architectes Associés · Paris 12<sup>e</sup></p>
+        <p class="font-mono text-xs">agence@cadence-architectes.fr</p>
       </div>
-    </div>
-  </section>
-
-  <!-- ============ MODULES ============ -->
-  <section class="px-5 md:px-8 mt-16">
-    <div class="max-w-6xl mx-auto">
-      <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-2">Modules</p>
-      <h2 class="font-display text-2xl md:text-3xl font-700 text-white tracking-tight mb-8">Outils de pilotage</h2>
-
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        <!-- ChantierFlow — Nouveau planning -->
-        <a href="https://architechfr.github.io/CADENCE-AXION/configurateur.html" target="_blank" rel="noopener" class="glass card-hover rounded-2xl p-7 block" style="border-color:rgba(245,158,11,.28)">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-11 h-11 rounded-xl grid place-items-center" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3)">
-              <svg class="w-5 h-5" style="color:#F59E0B" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 14v4M10 16h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <p class="font-mono text-[10px] tracking-[0.25em] uppercase" style="color:#F59E0B">ChantierFlow</p>
-          </div>
-          <h3 class="font-display text-lg text-white mb-1.5">Nouveau planning</h3>
-          <p class="text-sm text-slate2-400 leading-relaxed">Créer un planning de chantier TCE : opération, lots, phasage, dépendances et jalons.</p>
-        </a>
-
-        <!-- Planning -->
-        <a id="planningTile" href="#" class="glass card-hover rounded-2xl p-7 block">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-11 h-11 rounded-xl grid place-items-center" style="background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.25)">
-              <svg class="w-5 h-5 text-azure-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <p class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400">Planning</p>
-          </div>
-          <h3 class="font-display text-lg text-white mb-1.5">Planning chantier</h3>
-          <p class="text-sm text-slate2-400 leading-relaxed" id="planningDesc">Ouvrir le planning de vos opérations.</p>
-        </a>
-
-        <!-- Documents -->
-        <a id="docsTile" href="#" class="glass card-hover rounded-2xl p-7 block disabled">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-11 h-11 rounded-xl grid place-items-center" style="background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.25)">
-              <svg class="w-5 h-5 text-azure-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <p class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400">Documents</p>
-          </div>
-          <h3 class="font-display text-lg text-white mb-1.5">Documents</h3>
-          <p class="text-sm text-slate2-400 leading-relaxed" id="docsDesc">Module en préparation — accès aux plans, CCTP, rendus.</p>
-        </a>
-
-        <!-- Admin (réservé) -->
-        <a id="adminTile" href="#" class="glass card-hover rounded-2xl p-7 block hidden">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-11 h-11 rounded-xl grid place-items-center" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25)">
-              <svg class="w-5 h-5" style="color:#F59E0B" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <p class="font-mono text-[10px] tracking-[0.25em] uppercase" style="color:#F59E0B">Administration</p>
-          </div>
-          <h3 class="font-display text-lg text-white mb-1.5">Gestion des utilisateurs</h3>
-          <p class="text-sm text-slate2-400 leading-relaxed">Entreprises, comptes et affectations aux chantiers.</p>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ FOOTER ============ -->
-  <footer class="px-5 md:px-8 mt-20 pt-10 border-t border-white/5">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate2-500">
-      <div class="flex items-center gap-2.5">
-        <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-7 h-7 rounded-lg" />
-        <span class="font-display tracking-[0.22em] text-slate2-300">AXION</span>
-      </div>
-      <p>Cadence Architectes Associés · Paris 12<sup>e</sup></p>
-      <p class="font-mono text-xs">agence@cadence-architectes.fr</p>
-    </div>
-  </footer>
-</main>
+    </footer>
+  </main>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/supabase-config.js"></script>
 <script src="assets/js/axion-auth.js"></script>
 <script>
-  (async function () {
-    var session = await AxionAuth.currentSession();
-    if (!session) { window.location.href = 'login.html'; return; }
+/* ============================================================================
+   AXION — Tableau de bord (app.html)
+   Rôles supportés : admin · moe · moa · entreprise
+   Rétro-compat : 'user' et 'partner' → traités comme 'entreprise'
+   ========================================================================== */
 
-    var profile;
-    try { profile = await AxionAuth.fetchProfile(session.user.id); }
-    catch (e) { window.location.href = 'login.html?error=role'; return; }
+/* ---- Catalogue d'icônes (chemins SVG, style trait) ---- */
+var ICONS = {
+  dashboard: '<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>',
+  chantiers: '<path d="M3 21h18M5 21V7l8-4 8 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01" stroke-linecap="round"/>',
+  entreprises: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-linecap="round" stroke-linejoin="round"/>',
+  documents: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" stroke-linecap="round" stroke-linejoin="round"/>',
+  plannings: '<path d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"/>',
+  cr: '<path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round" stroke-linejoin="round"/>',
+  plans: '<path d="M3 3h18v18H3zM3 9h18M9 21V9" stroke-linecap="round" stroke-linejoin="round"/>',
+  notaire: '<path d="M12 3l9 4-9 4-9-4 9-4zM3 7v6M21 7v6M7 11v4c0 1.7 2.2 3 5 3s5-1.3 5-3v-4" stroke-linecap="round" stroke-linejoin="round"/>',
+  users: '<path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-linecap="round" stroke-linejoin="round"/>',
+  settings: '<path d="M12 15a3 3 0 100-6 3 3 0 000 6z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" stroke-linecap="round" stroke-linejoin="round"/>',
+  camera: '<path d="M23 7l-7 5 7 5V7zM14 5H3a2 2 0 00-2 2v10a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2z" stroke-linecap="round" stroke-linejoin="round"/>',
+  monlot: '<path d="M9 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2h-4M9 11V7a3 3 0 016 0v4M9 11h6" stroke-linecap="round" stroke-linejoin="round"/>'
+};
 
-    if (!profile || (profile.role !== 'admin' && profile.role !== 'user')) {
-      await AxionAuth.signOut();
-      window.location.href = 'login.html?error=role';
-      return;
+/* Tous les items de navigation possibles */
+var NAV = [
+  { id:'dashboard',   label:'Tableau de bord', icon:'dashboard',   href:'app.html' },
+  { id:'chantiers',   label:'Chantiers',       icon:'chantiers',   href:'app.html#chantiers' },
+  { id:'monlot',      label:'Mon lot',         icon:'monlot',      href:'app.html#chantiers' },
+  { id:'entreprises', label:'Entreprises',     icon:'entreprises', href:'#' },
+  { id:'documents',   label:'Documents',       icon:'documents',   href:'#' },
+  { id:'plannings',   label:'Plannings',       icon:'plannings',   href:'#planning' },
+  { id:'cr',          label:'Comptes-rendus',  icon:'cr',          href:'#' },
+  { id:'plans',       label:'Plans & EXE',     icon:'plans',       href:'#' },
+  { id:'notaire',     label:'Notice notaire',  icon:'notaire',     href:'#' },
+  { id:'camera',      label:'Caméra chantier', icon:'camera',      href:'#' },
+  { id:'users',       label:'Utilisateurs',    icon:'users',       href:'#' },
+  { id:'settings',    label:'Paramètres',      icon:'settings',    href:'#' }
+];
+
+/* Actions d'accès rapide possibles */
+var QUICK = {
+  newProject: { label:'Nouveau chantier',     icon:'chantiers',   accent:'azure' },
+  importPlan: { label:'Importer planning',     icon:'plannings',   accent:'azure' },
+  addDoc:     { label:'Ajouter document',      icon:'documents',   accent:'violet' },
+  newCR:      { label:'Nouveau compte-rendu',  icon:'cr',          accent:'amber' },
+  inviteCo:   { label:'Inviter une entreprise',icon:'entreprises', accent:'green' },
+  depotAtt:   { label:'Déposer attestation',   icon:'cr',          accent:'green' },
+  myPlans:    { label:'Mes plans à jour',      icon:'plans',       accent:'azure' },
+  consultPlan:{ label:'Consulter planning',    icon:'plannings',   accent:'azure' }
+};
+
+/* Configuration par rôle */
+var ROLES = {
+  admin: {
+    label:'Administrateur', pill:'admin', avatarGrad:'linear-gradient(135deg,#FCD34D,#F59E0B)',
+    heroTitle:'Tableau de bord <span class="text-grad">administrateur</span>',
+    lead:'Accès complet : tous les chantiers, entreprises, documents et plannings.',
+    chantiersKicker:'Tous les chantiers',
+    nav:['dashboard','chantiers','entreprises','documents','plannings','cr','plans','notaire','users','settings'],
+    kpi:['chantiers','entreprises','documents','users'],
+    quick:['newProject','importPlan','addDoc','newCR','inviteCo'], canEdit:true
+  },
+  moe: {
+    label:'Maître d’œuvre', pill:'moe', avatarGrad:'linear-gradient(135deg,#93C5FD,#2563EB)',
+    heroTitle:'Tableau de bord <span class="text-grad">maître d’œuvre</span>',
+    lead:'Vos opérations : pilotage du planning, des plans EXE, des comptes-rendus et des entreprises.',
+    chantiersKicker:'Mes opérations',
+    nav:['dashboard','chantiers','entreprises','documents','plannings','cr','plans','notaire'],
+    kpi:['chantiers','entreprises','documents','cr'],
+    quick:['importPlan','addDoc','newCR','inviteCo'], canEdit:true
+  },
+  moa: {
+    label:'Maître d’ouvrage', pill:'moa', avatarGrad:'linear-gradient(135deg,#5EEAD4,#0D9488)',
+    heroTitle:'Tableau de bord <span class="text-grad">maître d’ouvrage</span>',
+    lead:'Vue client : avancement de vos opérations, livraisons, comptes-rendus et documents.',
+    chantiersKicker:'Mes opérations',
+    nav:['dashboard','chantiers','documents','plannings','cr','plans','notaire','camera'],
+    kpi:['chantiers','documents','cr','livraisons'],
+    quick:['consultPlan','addDoc'], canEdit:false
+  },
+  entreprise: {
+    label:'Entreprise', pill:'entreprise', avatarGrad:'linear-gradient(135deg,#C4B5FD,#7C3AED)',
+    heroTitle:'Votre espace <span class="text-grad">chantier</span>',
+    lead:'Votre lot : planning, plans à jour, dépôts et comptes-rendus — accès limité par vos droits.',
+    chantiersKicker:'Mon lot',
+    nav:['dashboard','monlot','documents','plannings','cr','plans'],
+    kpi:['chantiers','documents','plans','cr'],
+    quick:['depotAtt','myPlans','consultPlan'], canEdit:false
+  }
+};
+
+/* Définition des KPI (libellé + couleur + icône) */
+var KPI_DEFS = {
+  chantiers:  { label:'Chantiers actifs',   icon:'chantiers',   color:'#60A5FA', bg:'rgba(59,130,246,.12)',  bd:'rgba(96,165,250,.25)' },
+  entreprises:{ label:'Entreprises actives',icon:'entreprises', color:'#34D399', bg:'rgba(52,211,153,.12)',  bd:'rgba(52,211,153,.25)' },
+  documents:  { label:'Documents',          icon:'documents',   color:'#A78BFA', bg:'rgba(167,139,250,.12)', bd:'rgba(167,139,250,.25)' },
+  users:      { label:'Utilisateurs actifs',icon:'users',       color:'#F59E0B', bg:'rgba(245,158,11,.12)',  bd:'rgba(245,158,11,.25)' },
+  cr:         { label:'Comptes-rendus',     icon:'cr',          color:'#38BDF8', bg:'rgba(56,189,248,.12)',  bd:'rgba(56,189,248,.25)' },
+  plans:      { label:'Plans à jour',       icon:'plans',       color:'#60A5FA', bg:'rgba(59,130,246,.12)',  bd:'rgba(96,165,250,.25)' },
+  livraisons: { label:'Livraisons prévues', icon:'plannings',   color:'#F59E0B', bg:'rgba(245,158,11,.12)',  bd:'rgba(245,158,11,.25)' }
+};
+
+var QUICK_ACCENT = {
+  azure:  { color:'#60A5FA', bg:'rgba(59,130,246,.12)',  bd:'rgba(96,165,250,.28)' },
+  amber:  { color:'#F59E0B', bg:'rgba(245,158,11,.12)',  bd:'rgba(245,158,11,.28)' },
+  violet: { color:'#A78BFA', bg:'rgba(167,139,250,.12)', bd:'rgba(167,139,250,.28)' },
+  green:  { color:'#34D399', bg:'rgba(52,211,153,.12)',  bd:'rgba(52,211,153,.28)' }
+};
+
+function svgIcon(name, cls){ return '<svg class="'+(cls||'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">'+(ICONS[name]||'')+'</svg>'; }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function normRole(r){ if(r==='admin'||r==='moe'||r==='moa'||r==='entreprise') return r; if(r==='user'||r==='partner'||r==='viewer') return 'entreprise'; return null; }
+function initials(name){ var p=(name||'').trim().split(/\s+/); return ((p[0]||'')[0]||'')+((p[1]||'')[0]||'')||'?'; }
+function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=document.getElementById('scrim'); var open=(force===undefined)?!s.classList.contains('open'):force; s.classList.toggle('open',open); sc.classList.toggle('show',open); }
+
+(async function () {
+  var session = await AxionAuth.currentSession();
+  if (!session) { window.location.href = 'login.html'; return; }
+
+  var profile;
+  try { profile = await AxionAuth.fetchProfile(session.user.id); }
+  catch (e) { window.location.href = 'login.html?error=role'; return; }
+
+  var role = profile && normRole(profile.role);
+  if (!role) { await AxionAuth.signOut(); window.location.href = 'login.html?error=role'; return; }
+  var cfg = ROLES[role];
+  var isAdmin = role === 'admin';
+
+  /* ---- Planning (handoff SSO) : URL préparée pour nav + accès rapide ---- */
+  var planningUrl = window.AXION_SUPABASE && window.AXION_SUPABASE.planningUrl;
+  var planningHref = planningUrl ? AxionAuth.planningHandoffUrl(session, role) : null;
+
+  /* ---- Topbar : identité ---- */
+  document.getElementById('userName').textContent = profile.full_name || profile.email;
+  var pill = document.getElementById('rolePill');
+  pill.textContent = cfg.label; pill.classList.add(cfg.pill);
+  var av = document.getElementById('avatar');
+  av.textContent = initials(profile.full_name || profile.email).toUpperCase();
+  av.style.background = cfg.avatarGrad;
+
+  /* ---- Hero ---- */
+  document.getElementById('welcome').innerHTML = cfg.heroTitle;
+  document.getElementById('lead').textContent = cfg.lead;
+  document.getElementById('chantiersKicker').textContent = cfg.chantiersKicker;
+
+  /* ---- Navigation (filtrée par rôle) ---- */
+  var navList = document.getElementById('navList');
+  cfg.nav.forEach(function(id){
+    var item = NAV.find(function(n){return n.id===id;}); if(!item) return;
+    var a = document.createElement('a');
+    a.href = item.href; a.className = 'nav-link' + (id==='dashboard'?' on':'');
+    if (id==='plannings' && planningHref) { a.href = planningHref; a.target = '_blank'; a.rel = 'noopener'; }
+    a.innerHTML = svgIcon(item.icon) + '<span>'+item.label+'</span>';
+    navList.appendChild(a);
+  });
+
+  /* ---- Déconnexion ---- */
+  document.getElementById('logoutBtn').addEventListener('click', async function(){
+    await AxionAuth.signOut(); window.location.href='login.html';
+  });
+
+  /* ================= DONNÉES (Supabase, filtrées par RLS) ================= */
+  var counts = { chantiers:0, entreprises:0, documents:0, users:0, cr:0, plans:0, livraisons:0 };
+  var projects = [], byProject = {};
+
+  try {
+    var projRes = await AxionAuth.sb.from('projects')
+      .select('id,name,slug,status,cover_url,moa,units,delivery').order('name');
+    if (projRes.error) throw projRes.error;
+    projects = projRes.data || [];
+    counts.chantiers = projects.length;
+    projects.forEach(function(p){ byProject[p.id] = { entreprises:0, documents:0, users:0, cr:0, lastCR:null }; });
+  } catch(e){ console.warn('[app] projets', e); document.getElementById('projectsError').classList.remove('hidden'); }
+
+  // Liaisons entreprises ↔ chantiers
+  try {
+    var pc = await AxionAuth.sb.from('project_companies').select('project_id,company_id');
+    if (!pc.error && pc.data) {
+      var coSet = {};
+      pc.data.forEach(function(r){ coSet[r.company_id]=1; if(byProject[r.project_id]) byProject[r.project_id].entreprises++; });
+      counts.entreprises = Object.keys(coSet).length;
     }
+  } catch(e){ /* silencieux */ }
+  // Fallback : table companies si dispo
+  if (!counts.entreprises) {
+    try { var co = await AxionAuth.sb.from('companies').select('id'); if(!co.error&&co.data) counts.entreprises = co.data.length; } catch(e){}
+  }
 
-    var isAdmin = profile.role === 'admin';
-    var canEdit = isAdmin;   // seul l'admin édite le planning (mode MOE)
-
-    // En-tête
-    document.getElementById('userName').textContent = profile.full_name || profile.email;
-    var pill = document.getElementById('rolePill');
-    pill.textContent = isAdmin ? 'Administrateur' : 'Entreprise';
-    pill.classList.add(profile.role);
-
-    // Hero
-    document.getElementById('welcome').innerHTML = isAdmin
-      ? 'Tableau de bord <span class="text-grad">administrateur</span>'
-      : 'Votre espace <span class="text-grad">chantier</span>';
-    document.getElementById('lead').textContent = isAdmin
-      ? 'Accès complet : tous les chantiers, entreprises, documents et plannings.'
-      : 'Vos chantiers, vos plannings et vos documents — accès limité par vos droits.';
-
-    // Module Planning
-    var planningTile = document.getElementById('planningTile');
-    var planningUrl = window.AXION_SUPABASE && window.AXION_SUPABASE.planningUrl;
-    if (planningUrl) {
-      planningTile.href = AxionAuth.planningHandoffUrl(session, profile.role);
-      planningTile.target = '_blank';
-      document.getElementById('planningDesc').textContent = canEdit
-        ? 'Édition du planning de vos chantiers (mode MOE).'
-        : 'Consultation du planning de vos chantiers (lecture seule).';
-    } else {
-      planningTile.classList.add('disabled');
-      planningTile.removeAttribute('href');
-      document.getElementById('planningDesc').textContent =
-        'Module en préparation — disponible après déploiement du planning protégé.';
+  // Documents (+ ventilation par catégorie/projet)
+  try {
+    var dc = await AxionAuth.sb.from('documents').select('project_id,category,title,created_at,updated_at');
+    if (!dc.error && dc.data) {
+      counts.documents = dc.data.length;
+      dc.data.forEach(function(d){
+        if (byProject[d.project_id]) byProject[d.project_id].documents++;
+        var cat = (d.category||'').toUpperCase();
+        if (cat.indexOf('CR')>-1 || cat.indexOf('COMPTE')>-1) { counts.cr++; if(byProject[d.project_id]){byProject[d.project_id].cr++; byProject[d.project_id].lastCR = d.updated_at||d.created_at;} }
+        if (cat.indexOf('PDF')>-1 || cat.indexOf('DWG')>-1 || cat.indexOf('PLAN')>-1 || cat.indexOf('EXE')>-1) counts.plans++;
+      });
     }
+  } catch(e){ /* silencieux */ }
 
-    // Admin tile
-    if (isAdmin) document.getElementById('adminTile').classList.remove('hidden');
+  // Utilisateurs (admin uniquement ; RLS limite les autres à leur ligne)
+  try { var up = await AxionAuth.sb.from('user_profiles').select('id'); if(!up.error&&up.data) counts.users = up.data.length; } catch(e){}
+  // Livraisons = chantiers ayant une date de livraison renseignée
+  counts.livraisons = projects.filter(function(p){return p.delivery;}).length;
 
-    // Chantiers autorisés (RLS) — admin voit tout, user voit les siens
-    var grid = document.getElementById('projectsGrid');
-    var emptyBox = document.getElementById('projectsEmpty');
-    var errorBox = document.getElementById('projectsError');
-    var counter = document.getElementById('projectsCount');
-    try {
-      var projRes = await AxionAuth.sb.from('projects').select('id,name,slug').order('name');
-      if (projRes.error) throw projRes.error;
-      var projects = projRes.data || [];
-      counter.textContent = projects.length + ' chantier' + (projects.length > 1 ? 's' : '');
-      if (projects.length === 0) {
-        emptyBox.classList.remove('hidden');
-      } else {
-        projects.forEach(function (p, i) {
-          var a = document.createElement('a');
-          a.href = 'chantier.html?id=' + encodeURIComponent(p.id);
-          a.className = 'glass card-hover rounded-2xl p-6 block';
-          a.innerHTML =
-            '<div class="flex items-center justify-between mb-4">' +
-              '<span class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400">Chantier ' + String(i+1).padStart(2,'0') + '</span>' +
-              '<span class="dot bg-green-400"></span>' +
-            '</div>' +
-            '<h3 class="font-display text-xl text-white mb-2">' + escapeHtml(p.name || 'Sans nom') + '</h3>' +
-            (p.slug ? '<p class="font-mono text-[11px] text-slate2-500">' + escapeHtml(p.slug) + '</p>' : '') +
-            '<div class="mt-5 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-slate2-500">' +
-              '<span>Planning · Documents</span>' +
-              '<span class="text-azure-400">→</span>' +
-            '</div>';
-          grid.appendChild(a);
-        });
-      }
-    } catch (e) {
-      console.warn('[app] erreur chargement projets', e);
-      errorBox.classList.remove('hidden');
-      counter.textContent = '';
-    }
+  /* ================= KPI ================= */
+  var kpiRow = document.getElementById('kpiRow');
+  cfg.kpi.forEach(function(k){
+    var d = KPI_DEFS[k]; if(!d) return;
+    var el = document.createElement('div');
+    el.className = 'kpi glass rounded-2xl p-4 md:p-5';
+    el.innerHTML =
+      '<div class="w-10 h-10 rounded-xl grid place-items-center mb-3" style="background:'+d.bg+';border:1px solid '+d.bd+'">'+
+        svgIcon(d.icon,'w-5 h-5').replace('stroke="currentColor"','stroke="'+d.color+'"')+
+      '</div>'+
+      '<div class="font-display text-3xl font-700 text-white leading-none">'+counts[k]+'</div>'+
+      '<div class="text-xs text-slate2-400 mt-1.5">'+d.label+'</div>';
+    kpiRow.appendChild(el);
+  });
 
-    // Déconnexion
-    document.getElementById('logoutBtn').addEventListener('click', async function () {
-      await AxionAuth.signOut();
-      window.location.href = 'login.html';
-    });
-
-    // Révèle l'UI
-    document.getElementById('loadingScreen').style.display = 'none';
-    document.getElementById('appHeader').style.visibility = 'visible';
-    document.getElementById('appMain').style.visibility = 'visible';
-  })();
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  /* ================= CARTES CHANTIERS ================= */
+  var grid = document.getElementById('projectsGrid');
+  var counter = document.getElementById('projectsCount');
+  counter.textContent = projects.length + ' chantier' + (projects.length>1?'s':'');
+  if (projects.length === 0) {
+    if (document.getElementById('projectsError').classList.contains('hidden'))
+      document.getElementById('projectsEmpty').classList.remove('hidden');
+  } else {
+    projects.forEach(function(p,i){
+      var b = byProject[p.id] || {entreprises:0,documents:0,users:0,cr:0,lastCR:null};
+      var cover = p.cover_url || ('assets/img/cover-'+(p.slug||'')+'.png');
+      var statusTxt = (p.status||'En cours');
+      var lastCR = b.lastCR ? timeAgo(b.lastCR) : '—';
+      var a = document.createElement('a');
+      a.href = 'chantier.html?id=' + encodeURIComponent(p.id);
+      a.className = 'glass card-hover rounded-2xl overflow-hidden block';
+      a.innerHTML =
+        '<div class="relative h-36 bg-ink-700">'+
+          '<img src="'+escapeHtml(cover)+'" alt="" class="absolute inset-0 w-full h-full object-cover" loading="lazy" onerror="this.style.display=\'none\'" />'+
+          '<div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(10,18,34,.15),rgba(10,18,34,.85))"></div>'+
+          '<span class="absolute top-3 left-3 font-mono text-[10px] tracking-[0.25em] uppercase text-azure-300 glass rounded-full px-2.5 py-1">Chantier '+String(i+1).padStart(2,'0')+'</span>'+
+          '<span class="absolute top-3 right-3 inline-flex items-center gap-1.5 text-[11px] text-green-300 glass rounded-full px-2.5 py-1"><span class="dot bg-green-400"></span>'+escapeHtml(statusTxt)+'</span>'+
+          '<h3 class="absolute bottom-3 left-4 right-4 font-display text-lg text-white leading-tight">'+escapeHtml(p.name||'Sans nom')+'</h3>'+
+        '</div>'+
+        '<div class="p-4">'+
+          (p.slug?'<p class="font-mono text-[11px] text-slate2-500 mb-3">'+escapeHtml(p.slug)+'</p>':'')+
+          '<div class="grid grid-cols-3 gap-2 text-center">'+
+            statCell(b.entreprises,'Entreprises','entreprises')+
+            statCell(b.documents,'Documents','documents')+
+            statCell(b.cr,'CR','cr')+
+          '</div>'+
+          '<div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate2-500">'+
+            '<span>Dernier CR · '+lastCR+'</span>'+
+            '<span class="text-azure-400">→</span>'+
+          '</div>'+
+        '</div>';
+      grid.appendChild(a);
     });
   }
+  function statCell(val,label,icon){
+    return '<div class="glass rounded-xl py-2.5"><div class="flex items-center justify-center gap-1.5 text-slate2-300">'+
+      svgIcon(icon,'w-3.5 h-3.5')+'<span class="font-display text-base text-white">'+val+'</span></div>'+
+      '<div class="text-[10px] text-slate2-500 mt-0.5">'+label+'</div></div>';
+  }
+
+  /* ================= ACTIVITÉ RÉCENTE ================= */
+  var actEl = document.getElementById('activityPanel');
+  var activity = buildActivity(projects, byProject, role);
+  if (activity.length === 0) {
+    actEl.innerHTML = '<div class="p-5 text-center text-sm text-slate2-500">Aucune activité récente.</div>';
+  } else {
+    actEl.innerHTML = activity.map(function(a){
+      return '<a href="'+(a.href||'#')+'" class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/[.04] transition-colors">'+
+        '<div class="w-8 h-8 rounded-lg grid place-items-center shrink-0" style="background:'+a.bg+';border:1px solid '+a.bd+'">'+
+          svgIcon(a.icon,'w-4 h-4').replace('stroke="currentColor"','stroke="'+a.color+'"')+'</div>'+
+        '<div class="min-w-0 flex-1"><p class="text-sm text-slate2-200 leading-snug">'+escapeHtml(a.title)+'</p>'+
+          '<p class="text-[11px] text-slate2-500 mt-0.5 truncate">'+escapeHtml(a.sub)+'</p></div>'+
+        '<span class="font-mono text-[10px] text-slate2-500 shrink-0">'+escapeHtml(a.time)+'</span></a>';
+    }).join('');
+  }
+
+  /* ================= ACCÈS RAPIDE ================= */
+  var quickRow = document.getElementById('quickRow');
+  cfg.quick.forEach(function(q){
+    var def = QUICK[q]; if(!def) return; var ac = QUICK_ACCENT[def.accent];
+    var el = document.createElement('a'); el.href='#';
+    if ((q==='importPlan' || q==='consultPlan') && planningHref) { el.href = planningHref; el.target = '_blank'; el.rel = 'noopener'; }
+    el.className='glass card-hover rounded-2xl p-4 flex items-center gap-3';
+    el.innerHTML =
+      '<div class="w-10 h-10 rounded-xl grid place-items-center shrink-0" style="background:'+ac.bg+';border:1px solid '+ac.bd+'">'+
+        svgIcon(def.icon,'w-5 h-5').replace('stroke="currentColor"','stroke="'+ac.color+'"')+'</div>'+
+      '<span class="text-sm font-500 text-slate2-200 leading-tight">'+def.label+'</span>';
+    quickRow.appendChild(el);
+  });
+
+  /* ---- Si une image de fond perso est déposée, l'activer ---- */
+  var bgProbe = new Image();
+  bgProbe.onload = function(){ document.getElementById('heroBand').classList.add('has-bg'); };
+  bgProbe.src = 'assets/img/dashboard-bg.png';
+
+  /* ---- Révèle l'UI ---- */
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('sidebar').style.visibility = 'visible';
+  document.getElementById('content').style.visibility = 'visible';
+
+  /* ================= Helpers activité ================= */
+  function buildActivity(projects, byProject, role){
+    // Construit un flux à partir des dernières dates connues ; complété par des jalons génériques.
+    var out = [];
+    projects.forEach(function(p){
+      var b = byProject[p.id]||{};
+      if (b.lastCR) out.push({ title:'Compte-rendu publié', sub:p.name, time:timeAgo(b.lastCR), icon:'cr', color:'#38BDF8', bg:'rgba(56,189,248,.12)', bd:'rgba(56,189,248,.25)', href:'chantier.html?id='+encodeURIComponent(p.id) });
+    });
+    // Jalons indicatifs (affichés tant que le flux d'événements n'est pas branché)
+    if (projects[0]) out.push({ title:'Planning mis à jour', sub:projects[0].name, time:'récent', icon:'plannings', color:'#A78BFA', bg:'rgba(167,139,250,.12)', bd:'rgba(167,139,250,.25)' });
+    if (projects[0]) out.push({ title:'Notice notaire ajoutée', sub:projects[projects.length>1?1:0].name, time:'hier', icon:'notaire', color:'#34D399', bg:'rgba(52,211,153,.12)', bd:'rgba(52,211,153,.25)' });
+    if (role==='admin') out.push({ title:'Entreprise invitée', sub:projects[0]?projects[0].name:'—', time:'hier', icon:'entreprises', color:'#F59E0B', bg:'rgba(245,158,11,.12)', bd:'rgba(245,158,11,.25)' });
+    out.push({ title:'Plan EXE mis à jour', sub:projects[projects.length>1?1:0]?projects[projects.length>1?1:0].name:'—', time:'27/05', icon:'plans', color:'#60A5FA', bg:'rgba(59,130,246,.12)', bd:'rgba(96,165,250,.25)' });
+    return out.slice(0,6);
+  }
+  function timeAgo(iso){
+    if(!iso) return '—'; var d=new Date(iso); if(isNaN(d)) return '—';
+    var s=(Date.now()-d.getTime())/1000;
+    if(s<3600) return 'il y a '+Math.max(1,Math.floor(s/60))+' min';
+    if(s<86400) return 'il y a '+Math.floor(s/3600)+' h';
+    if(s<172800) return 'hier';
+    if(s<604800) return 'il y a '+Math.floor(s/86400)+' j';
+    return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+  }
+})();
 </script>
 </body>
 </html>
