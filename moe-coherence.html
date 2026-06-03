@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AXION — Cohérence planning ↔ avancement</title>
+<meta name="theme-color" content="#0A0E1A">
+
+<link rel="icon" type="image/png" href="assets/img/logo-axion-icon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui'],
+          sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        },
+        colors: {
+          ink:    { 900:'#070A12', 800:'#0A0E1A', 700:'#0D1320', 600:'#111827', 500:'#1A2233' },
+          azure:  { 300:'#93C5FD', 400:'#60A5FA', 500:'#3B82F6', 600:'#2563EB' },
+          cyan:   { 400:'#38BDF8' },
+          slate2: { 300:'#CBD5E1', 400:'#94A3B8', 500:'#64748B' },
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  :root { color-scheme: dark; --sb-w: 256px; }
+  html, body { background: #0A1628; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  .font-display { font-family: 'Space Grotesk', sans-serif; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  .grid-faint { background-image: linear-gradient(rgba(148,163,184,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.05) 1px, transparent 1px); background-size: 46px 46px; }
+  .glass { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  .glass-strong { background: rgba(13,19,32,.72); border: 1px solid rgba(255,255,255,.10); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  .card-hover { transition: transform .4s cubic-bezier(.2,.7,.1,1), border-color .4s, box-shadow .4s; }
+  .card-hover:hover { transform: translateY(-4px); border-color: rgba(96,165,250,.35); box-shadow: 0 24px 50px -24px rgba(59,130,246,.45); }
+
+  .btn-azure { background: linear-gradient(135deg,#3B82F6,#2563EB); color:#fff; box-shadow: 0 10px 30px -10px rgba(59,130,246,.6); transition: transform .25s, box-shadow .25s; }
+  .btn-azure:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -12px rgba(59,130,246,.7); }
+  .btn-outline { border:1px solid rgba(255,255,255,.18); color:#E2E8F0; transition: background .25s, border-color .25s; background:transparent; }
+  .btn-outline:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.32); }
+
+  .text-grad { background: linear-gradient(120deg,#60A5FA,#38BDF8); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .dot { width:7px; height:7px; border-radius:50%; }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; font-size:12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); font-weight:500; }
+  .pill.moe { color:#93C5FD; border-color:rgba(96,165,250,.35); background:rgba(59,130,246,.08) }
+  .pill.admin { color:#FCD34D; border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.08) }
+
+  a:focus-visible, button:focus-visible { outline:2px solid #60A5FA; outline-offset:3px; border-radius:4px; }
+  ::selection { background:#2563EB; color:#fff; }
+  ::-webkit-scrollbar { width:10px; height:10px; } ::-webkit-scrollbar-thumb { background:#1A2233; border-radius:8px; }
+
+  #sidebar { width: var(--sb-w); transition: transform .35s cubic-bezier(.2,.7,.1,1); }
+  .nav-link { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:12px; font-size:14px; font-weight:500; color:#94A3B8; transition:.18s; position:relative; }
+  .nav-link svg { width:18px; height:18px; flex:0 0 18px; }
+  .nav-link:hover { color:#E2E8F0; background:rgba(255,255,255,.04); }
+  .nav-link.on { color:#fff; background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(37,99,235,.10)); border:1px solid rgba(96,165,250,.25); }
+  .nav-link.on::before { content:""; position:absolute; left:-1px; top:9px; bottom:9px; width:3px; border-radius:3px; background:linear-gradient(#60A5FA,#38BDF8); }
+
+  .hero-band { position:relative; overflow:hidden; border:1px solid rgba(255,255,255,.07); border-radius:24px;
+    background:
+      radial-gradient(900px 420px at 78% -10%, rgba(59,130,246,.20), transparent 60%),
+      radial-gradient(700px 380px at 4% 120%, rgba(56,189,248,.12), transparent 60%),
+      linear-gradient(180deg, #0B1426, #0A1322); }
+
+  .kpi { transition: transform .35s, border-color .35s; }
+  .kpi:hover { transform: translateY(-3px); border-color: rgba(96,165,250,.3); }
+
+  .track { position:relative; height:14px; border-radius:999px; background:rgba(148,163,184,.10); border:1px solid rgba(255,255,255,.06); overflow:hidden; }
+  .track .fill { position:absolute; inset:0 auto 0 0; border-radius:999px; transition:width .8s cubic-bezier(.2,.7,.1,1); }
+  .marker { position:absolute; top:-4px; bottom:-4px; width:2px; background:#CBD5E1; box-shadow:0 0 0 1px rgba(10,22,40,.8); z-index:2; }
+  .marker::after { content:""; position:absolute; top:-4px; left:-3px; width:8px; height:8px; border-radius:50%; background:#CBD5E1; }
+
+  .lotrow { transition: background .2s, border-color .2s; }
+  .lotrow:hover { background:rgba(255,255,255,.025); border-color:rgba(96,165,250,.2); }
+
+  #loadingScreen { position:fixed; inset:0; background:#0A1628; display:flex; align-items:center; justify-content:center; color:#94A3B8; z-index:60; font-family:'Inter',sans-serif }
+  .spin { width:32px; height:32px; border:2px solid rgba(96,165,250,.2); border-top-color:#60A5FA; border-radius:50%; animation:spin .9s linear infinite; margin-right:14px }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 1023px){
+    #sidebar { position:fixed; z-index:55; top:0; bottom:0; left:0; transform:translateX(-100%); }
+    #sidebar.open { transform:translateX(0); }
+    #content { margin-left:0 !important; }
+  }
+  #scrim { position:fixed; inset:0; background:rgba(5,8,18,.6); z-index:54; opacity:0; pointer-events:none; transition:opacity .3s; }
+  #scrim.show { opacity:1; pointer-events:auto; }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+
+<body class="bg-ink-800 text-slate-200">
+
+<div id="loadingScreen"><span class="spin"></span><span class="font-mono text-xs tracking-wider uppercase">Analyse de la cohérence planning…</span></div>
+<div id="scrim" onclick="toggleSidebar(false)"></div>
+
+<!-- ============================ SIDEBAR ============================ -->
+<aside id="sidebar" class="fixed top-0 left-0 h-screen flex flex-col glass-strong" style="visibility:hidden; border-radius:0; border-right:1px solid rgba(255,255,255,.08)">
+  <div class="px-5 py-5 flex items-center gap-2.5 border-b border-white/5">
+    <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-9 h-9 rounded-xl" style="border:1px solid rgba(96,165,250,.2)" onerror="this.style.display='none'" />
+    <span class="font-display text-lg font-700 tracking-[0.22em] text-white">AXION</span>
+  </div>
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+    <a href="app.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12l9-9 9 9M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Tableau de bord</span></a>
+    <a href="moe-coherence.html" class="nav-link on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3v18h18M7 14l3-4 4 3 5-7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Cohérence planning</span></a>
+    <a href="app.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h16v16H4zM4 9h16M9 4v16" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Chantiers</span></a>
+    <a href="app.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Documents</span></a>
+    <a id="planningLink" href="https://planning-lisa.vercel.app/" target="_blank" rel="noopener" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v16H4zM4 9h16M8 3v4M16 3v4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Planning (source)</span></a>
+  </nav>
+  <div class="px-4 py-4 border-t border-white/5">
+    <div class="glass rounded-xl px-3.5 py-3">
+      <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500">Atelier</p>
+      <div class="flex items-center justify-between mt-1">
+        <span class="font-display text-sm tracking-[0.18em] text-slate2-200">MOE</span>
+        <span class="inline-flex items-center gap-1.5 text-[11px] text-green-300"><span class="dot bg-green-400"></span>Maître d'œuvre</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ============================ CONTENU ============================ -->
+<div id="content" class="lg:ml-[256px] min-h-screen grid-faint" style="visibility:hidden">
+
+  <!-- Topbar -->
+  <header class="sticky top-0 z-40 glass-strong" style="border-radius:0; border-bottom:1px solid rgba(255,255,255,.07)">
+    <div class="px-5 md:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="lg:hidden btn-outline rounded-xl w-10 h-10 grid place-items-center" aria-label="Menu">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
+        </button>
+        <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400">Atelier MOE · Cohérence</p>
+      </div>
+      <div class="flex items-center gap-3 md:gap-4">
+        <a href="compte.html" id="userName" class="hidden md:inline text-sm text-slate2-300 hover:text-white transition-colors" title="Mon compte" style="text-decoration:none"></a>
+        <span class="pill moe" id="rolePill">Maître d'œuvre</span>
+        <div id="avatar" class="w-10 h-10 rounded-full grid place-items-center font-display font-600 text-sm text-ink-900" style="background:linear-gradient(135deg,#93C5FD,#2563EB)"></div>
+        <button id="logoutBtn" class="btn-outline rounded-xl px-3.5 py-2 text-xs font-medium hidden md:inline">Déconnexion</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="px-5 md:px-8 py-7 max-w-[1400px] mx-auto w-full">
+
+    <!-- ===== HERO ===== -->
+    <section class="hero-band p-6 md:p-9 mb-6">
+      <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+        <div>
+          <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-3">Atelier maître d'œuvre</p>
+          <h1 class="font-display text-3xl md:text-4xl font-700 text-white leading-tight">Cohérence <span class="text-grad">planning ↔ avancement</span></h1>
+          <p class="text-slate2-400 mt-3 max-w-2xl text-sm md:text-base">Lecture directe du pointage publié dans votre planning ChantierFlow. Avancement réel (tâches terminées) croisé au prévisionnel à date, par phase — les retards et jalons menacés sont détectés automatiquement.</p>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <label class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500">Chantier</label>
+            <select id="projectSelect" class="glass rounded-xl px-3 py-2 text-sm text-white bg-ink-700 focus:outline-none focus:border-azure-400" style="border:1px solid rgba(255,255,255,.12)"></select>
+            <span id="demoBadge" class="hidden pill" style="color:#F59E0B;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)">
+              <span class="dot" style="background:#F59E0B"></span>Données de démonstration
+            </span>
+            <span id="metaLine" class="font-mono text-[10px] tracking-[0.15em] uppercase text-slate2-500"></span>
+          </div>
+        </div>
+        <!-- Jauge globale réel vs planifié -->
+        <div class="glass-strong rounded-2xl p-5 min-w-[260px]">
+          <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500 mb-3">Avancement global</p>
+          <div class="flex items-end gap-4">
+            <div>
+              <div class="font-display text-4xl font-700 text-white leading-none"><span id="globalReal">—</span><span class="text-xl text-slate2-400">%</span></div>
+              <div class="text-[11px] text-slate2-500 mt-1">réel (terminé)</div>
+            </div>
+            <div class="pb-1">
+              <div class="font-display text-xl text-slate2-300 leading-none"><span id="globalPlanned">—</span>%</div>
+              <div class="text-[11px] text-slate2-500 mt-1">planifié à date</div>
+            </div>
+          </div>
+          <div class="track mt-4">
+            <div id="globalFill" class="fill" style="width:0%;background:linear-gradient(90deg,#3B82F6,#38BDF8)"></div>
+            <div id="globalMarker" class="marker" style="left:0%"></div>
+          </div>
+          <div id="globalDelta" class="text-xs mt-2 font-medium">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== KPI ===== -->
+    <section id="kpiRow" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></section>
+
+    <!-- ===== DÉRIVES ===== -->
+    <section class="mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-display text-lg font-600 text-white">Dérives détectées</h2>
+        <span id="derivesCount" class="font-mono text-[11px] tracking-[0.2em] uppercase text-slate2-500"></span>
+      </div>
+      <div id="derivesPanel" class="space-y-3"></div>
+    </section>
+
+    <!-- ===== AVANCEMENT PAR PHASE ===== -->
+    <section class="mb-6">
+      <h2 class="font-display text-lg font-600 text-white mb-3">Avancement par phase</h2>
+      <div class="glass rounded-2xl p-4 md:p-5">
+        <div class="flex items-center gap-5 mb-4 text-[11px] text-slate2-400 flex-wrap">
+          <span class="inline-flex items-center gap-2"><span style="display:inline-block;width:22px;height:8px;border-radius:99px;background:linear-gradient(90deg,#3B82F6,#38BDF8)"></span>Réel (tâches terminées)</span>
+          <span class="inline-flex items-center gap-2"><span style="display:inline-block;width:2px;height:12px;background:#CBD5E1"></span>Planifié à date (repère)</span>
+        </div>
+        <div id="lotsList" class="space-y-2.5"></div>
+      </div>
+    </section>
+
+    <!-- ===== JALONS ===== -->
+    <section class="mb-8">
+      <h2 class="font-display text-lg font-600 text-white mb-3">Jalons clés</h2>
+      <div id="milestonesRow" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+    </section>
+
+    <!-- ===== Source ===== -->
+    <section class="mb-10">
+      <div class="glass rounded-2xl p-4 md:p-5 text-sm text-slate2-400">
+        <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-azure-400 mb-2">Source des données</p>
+        Cet atelier lit en direct le snapshot publié par votre planning <a href="https://planning-lisa.vercel.app/" target="_blank" rel="noopener" class="text-azure-300 hover:text-white">ChantierFlow</a> (le pointage que vous y faites se répercute ici à la prochaine publication). L'avancement réel est dérivé du statut des tâches (terminé / en cours / à venir) et du chemin critique. Aucune saisie en double : <strong class="text-slate2-200">vous pointez dans le planning, AXION en tire les conséquences pour la maîtrise d'œuvre</strong>.
+      </div>
+    </section>
+
+    <footer class="border-t border-white/5 pt-6 pb-10 text-center">
+      <p class="font-mono text-[11px] tracking-[0.25em] uppercase text-slate2-500">Cadence Architectes Associés · Paris 12e</p>
+      <p class="text-xs text-slate2-500 mt-2">agence@cadence-architectes.fr</p>
+    </footer>
+  </main>
+</div>
+
+<!-- Supabase + auth -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/axion-auth.js"></script>
+
+<script>
+/* ============================================================================
+   ATELIER MOE — Cohérence planning ↔ avancement
+   ----------------------------------------------------------------------------
+   • Auth-gate : admin + moe (moa/entreprise → app.html)
+   • Source : snapshot LIVE du planning ChantierFlow (GET /api/state, format
+     'chantierflow-snapshot'). Le pointage = statut 'sts' par tâche (dn=terminé).
+   • Agrégation par PHASE (tâches sommaires de haut niveau), dérives au niveau
+     tâche (priorité chemin critique), jalons = tâches jalon.
+   ========================================================================== */
+
+var SNAPSHOT_URL = 'https://planning-lisa.vercel.app/api/state';
+
+function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=document.getElementById('scrim'); var open=(force===undefined)?!s.classList.contains('open'):force; s.classList.toggle('open',open); sc.classList.toggle('show',open); }
+function normRole(r){ if(r==='admin'||r==='moe'||r==='moa'||r==='entreprise') return r; if(r==='user'||r==='partner'||r==='viewer') return 'entreprise'; return null; }
+function initials(name){ var p=(name||'').trim().split(/\s+/); return ((p[0]||'')[0]||'')+((p[1]||'')[0]||'')||'?'; }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function parseDate(v){ if(!v) return null; var d=new Date(v); return isNaN(d)?null:d; }
+function fmtDate(d){ if(!d) return '—'; return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'2-digit'}); }
+function isDone(t){ return t.sts==='dn'; }
+
+var SEV = {
+  ok:       { color:'#22C55E', bg:'rgba(34,197,94,.10)',  bd:'rgba(34,197,94,.30)',  label:'À l\'heure' },
+  avance:   { color:'#38BDF8', bg:'rgba(56,189,248,.10)', bd:'rgba(56,189,248,.30)', label:'En avance' },
+  leger:    { color:'#F59E0B', bg:'rgba(245,158,11,.10)', bd:'rgba(245,158,11,.30)', label:'Retard léger' },
+  critique: { color:'#EF4444', bg:'rgba(239,68,68,.10)',  bd:'rgba(239,68,68,.32)',  label:'Retard critique' },
+  inactif:  { color:'#64748B', bg:'rgba(100,116,139,.08)',bd:'rgba(100,116,139,.22)',label:'Non démarré' }
+};
+
+/* ---- Moteur : agrège un snapshot chantierflow en phases + dérives + jalons ---- */
+function analyze(snap, today){
+  var tasks = (snap && snap.tasks) || [];
+  var sumByGroup = {};
+  tasks.forEach(function(t){ if(t.sum && t.group) sumByGroup[t.group]=t; });
+  var phases = tasks.filter(function(t){ return t.sum && !t.parent; });
+  var phaseCodes = {}; phases.forEach(function(p){ phaseCodes[p.group]=true; });
+
+  // Remonte du groupe d'une feuille jusqu'à sa phase de haut niveau
+  function topPhase(code){
+    if(phaseCodes[code]) return code;
+    var s = sumByGroup[code], guard=0;
+    while(s && s.parent && !phaseCodes[s.group] && guard<25){ s = sumByGroup[s.parent]; guard++; }
+    if(s && phaseCodes[s.group]) return s.group;
+    if(s && phaseCodes[s.parent]) return s.parent;
+    return null;
+  }
+  function dur(t){ var d=parseFloat(t.dur); if(!isNaN(d)&&d>0) return d; var s=parseDate(t.start),e=parseDate(t.end); return (s&&e)?Math.max(1,(e-s)/86400000):1; }
+  function plannedFrac(t){ var s=parseDate(t.start),e=parseDate(t.end); if(!s||!e) return isDone(t)?1:0; if(today<=s) return 0; if(today>=e) return 1; return (today-s)/(e-s); }
+
+  var leaves = tasks.filter(function(t){ return !t.sum && !t.jalon; });
+  var buckets = {}; phases.forEach(function(p){ buckets[p.group]={ phase:p, leaves:[] }; });
+  var other = { phase:{ group:'OTHER', name:'Autres tâches' }, leaves:[] };
+  leaves.forEach(function(t){ var code=topPhase(t.group); if(code && buckets[code]) buckets[code].leaves.push(t); else other.leaves.push(t); });
+  if(other.leaves.length) buckets['OTHER']=other;
+
+  var rows=[];
+  Object.keys(buckets).forEach(function(code){
+    var g=buckets[code]; if(!g.leaves.length) return;
+    var tot=0, real=0, plan=0, start=null, end=null, overdue=[];
+    g.leaves.forEach(function(t){
+      var d=dur(t); tot+=d;
+      if(isDone(t)) real+=d;
+      plan += d*clamp(plannedFrac(t),0,1);
+      var s=parseDate(t.start), e=parseDate(t.end);
+      if(s&&(!start||s<start)) start=s;
+      if(e&&(!end||e>end)) end=e;
+      if(e && today>e && !isDone(t)) overdue.push(t);
+    });
+    var realPct=tot?real/tot*100:0, planPct=tot?plan/tot*100:0, delta=realPct-planPct;
+    var started = start?today>=start:false;
+    var sev;
+    if(!started && realPct===0) sev='inactif';
+    else if(delta>=6) sev='avance';
+    else if(delta>=-4) sev='ok';
+    else if(delta>=-12) sev='leger';
+    else sev='critique';
+    rows.push({ code:code, name:g.phase.name, start:start, end:end, real:Math.round(realPct), plan:Math.round(planPct), delta:Math.round(delta), sev:sev, started:started, overdue:overdue, nb:g.leaves.length });
+  });
+  rows.sort(function(a,b){ return (a.start?a.start.getTime():0)-(b.start?b.start.getTime():0); });
+
+  // Global pondéré par durée (tâches démarrées)
+  var gTot=0,gReal=0,gPlan=0;
+  leaves.forEach(function(t){ var s=parseDate(t.start); if(s&&today<s) return; var d=dur(t); gTot+=d; if(isDone(t)) gReal+=d; gPlan+=d*clamp(plannedFrac(t),0,1); });
+  var global={ real: gTot?Math.round(gReal/gTot*100):0, plan: gTot?Math.round(gPlan/gTot*100):0 };
+  global.delta = global.real-global.plan;
+
+  // Dérives : tâches en retard (chemin critique prioritaire)
+  var derives=[];
+  rows.forEach(function(r){ r.overdue.forEach(function(t){ derives.push({ t:t, phase:r.name, crit:!!t.crit, end:parseDate(t.end) }); }); });
+  derives.sort(function(a,b){ if(a.crit!==b.crit) return a.crit?-1:1; return (a.end?a.end.getTime():0)-(b.end?b.end.getTime():0); });
+
+  // Jalons
+  var milestones = tasks.filter(function(t){ return t.jalon; }).map(function(t){
+    var date=parseDate(t.end||t.start); return { name:t.name, date:date, done:isDone(t), missed:(!isDone(t)&&date&&today>date) };
+  }).sort(function(a,b){ return (a.date?a.date.getTime():0)-(b.date?b.date.getTime():0); });
+
+  return { rows:rows, global:global, derives:derives, milestones:milestones,
+           meta:{ projet:(snap&&snap.projet)||'—', publishedAt:(snap&&(snap._publishedAt||snap.exportedAt))||null, version:(snap&&snap.appVersion)||null, nbTasks:tasks.length } };
+}
+
+/* ============================ RENDER ============================ */
+function render(a, isDemo){
+  document.getElementById('demoBadge').classList.toggle('hidden', !isDemo);
+  var ml=document.getElementById('metaLine');
+  if(a.meta.version || a.meta.publishedAt){
+    var pub = a.meta.publishedAt ? new Date(a.meta.publishedAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'2-digit'}) : '—';
+    ml.textContent = 'Planning '+(a.meta.version||'')+' · publié '+pub+' · '+a.meta.nbTasks+' tâches';
+  } else ml.textContent='';
+
+  /* Global */
+  var g=a.global;
+  document.getElementById('globalReal').textContent=g.real;
+  document.getElementById('globalPlanned').textContent=g.plan;
+  document.getElementById('globalFill').style.width=g.real+'%';
+  document.getElementById('globalMarker').style.left=g.plan+'%';
+  var gd=document.getElementById('globalDelta');
+  if(g.delta<-4){ gd.style.color='#EF4444'; gd.textContent='▼ '+Math.abs(g.delta)+' pts de retard sur le prévisionnel'; document.getElementById('globalFill').style.background='linear-gradient(90deg,#EF4444,#F59E0B)'; }
+  else if(g.delta>4){ gd.style.color='#38BDF8'; gd.textContent='▲ '+g.delta+' pts d\'avance sur le prévisionnel'; }
+  else { gd.style.color='#22C55E'; gd.textContent='● Conforme au prévisionnel ('+(g.delta>=0?'+':'')+g.delta+' pts)'; }
+
+  /* KPI */
+  var phRetard=a.rows.filter(function(r){return r.sev==='leger'||r.sev==='critique';}).length;
+  var phOk=a.rows.filter(function(r){return r.sev==='ok'||r.sev==='avance';}).length;
+  var nbCrit=a.derives.filter(function(d){return d.crit;}).length;
+  var msDone=a.milestones.filter(function(m){return m.done;}).length;
+  var kpis=[
+    { val:phOk,            label:'Phases à l\'heure',  color:'#22C55E', bg:'rgba(34,197,94,.12)',  bd:'rgba(34,197,94,.25)' },
+    { val:phRetard,        label:'Phases en retard',   color:'#F59E0B', bg:'rgba(245,158,11,.12)', bd:'rgba(245,158,11,.25)' },
+    { val:a.derives.length,label:'Tâches en retard',   color:'#EF4444', bg:'rgba(239,68,68,.12)',  bd:'rgba(239,68,68,.25)' },
+    { val:msDone+'/'+a.milestones.length, label:'Jalons tenus', color:'#60A5FA', bg:'rgba(59,130,246,.12)', bd:'rgba(96,165,250,.25)' }
+  ];
+  var kr=document.getElementById('kpiRow'); kr.innerHTML='';
+  kpis.forEach(function(k){
+    var el=document.createElement('div'); el.className='kpi glass rounded-2xl p-4 md:p-5';
+    el.innerHTML='<div class="w-10 h-10 rounded-xl grid place-items-center mb-3" style="background:'+k.bg+';border:1px solid '+k.bd+'"><span class="dot" style="width:10px;height:10px;background:'+k.color+'"></span></div>'+
+      '<div class="font-display text-3xl font-700 text-white leading-none">'+k.val+'</div>'+
+      '<div class="text-xs text-slate2-400 mt-1.5">'+k.label+'</div>';
+    kr.appendChild(el);
+  });
+
+  /* Dérives (cap 12) */
+  var dp=document.getElementById('derivesPanel'); dp.innerHTML='';
+  document.getElementById('derivesCount').textContent=a.derives.length+' tâche'+(a.derives.length>1?'s':'')+' en retard';
+  if(a.derives.length===0){
+    dp.innerHTML='<div class="glass rounded-2xl p-5 flex items-center gap-3" style="border-color:rgba(34,197,94,.25)"><span class="dot" style="width:10px;height:10px;background:#22C55E"></span><span class="text-sm text-slate2-300">Aucune tâche en retard — l\'avancement réel est conforme au prévisionnel.</span></div>';
+  } else {
+    a.derives.slice(0,12).forEach(function(d){
+      var sev = d.crit ? 'critique' : 'leger'; var s=SEV[sev];
+      var reco = d.crit ? 'Tâche sur le chemin critique — un retard ici décale toute la suite. Coordination prioritaire.'
+                        : 'Échéance dépassée le '+fmtDate(d.end)+' sans clôture — confirmer l\'avancement réel avec l\'entreprise.';
+      var el=document.createElement('div'); el.className='glass rounded-2xl p-4 flex items-start gap-4'; el.style.borderColor=s.bd;
+      el.innerHTML=
+        '<div class="w-9 h-9 rounded-xl grid place-items-center shrink-0" style="background:'+s.bg+';border:1px solid '+s.bd+'"><span class="dot" style="width:9px;height:9px;background:'+s.color+'"></span></div>'+
+        '<div class="flex-1 min-w-0">'+
+          '<div class="flex items-center justify-between gap-3 flex-wrap">'+
+            '<div class="font-display text-white text-base">'+escapeHtml(d.t.name)+' <span class="text-slate2-500 text-sm font-sans">· '+escapeHtml(d.phase)+'</span></div>'+
+            '<span class="pill" style="color:'+s.color+';border-color:'+s.bd+';background:'+s.bg+'">'+(d.crit?'Chemin critique':'Retard')+'</span>'+
+          '</div>'+
+          '<div class="text-sm text-slate2-400 mt-1.5">'+escapeHtml(reco)+'</div>'+
+          '<div class="text-[11px] text-slate2-500 mt-1.5">Échéance planifiée '+fmtDate(d.end)+' · statut non terminé</div>'+
+        '</div>';
+      dp.appendChild(el);
+    });
+    if(a.derives.length>12){
+      var more=document.createElement('div'); more.className='text-center text-xs text-slate2-500 font-mono';
+      more.textContent='+ '+(a.derives.length-12)+' autres tâches en retard';
+      dp.appendChild(more);
+    }
+  }
+
+  /* Avancement par phase */
+  var ll=document.getElementById('lotsList'); ll.innerHTML='';
+  a.rows.forEach(function(r){
+    var s=SEV[r.sev];
+    var el=document.createElement('div'); el.className='lotrow rounded-xl p-3 md:p-3.5'; el.style.border='1px solid rgba(255,255,255,.05)';
+    el.innerHTML=
+      '<div class="flex items-center justify-between gap-3 mb-2 flex-wrap">'+
+        '<div class="min-w-0"><span class="font-display text-white text-sm">'+escapeHtml(r.name)+'</span> <span class="text-slate2-500 text-xs">· '+r.nb+' tâches</span></div>'+
+        '<div class="flex items-center gap-2 shrink-0">'+
+          '<span class="text-xs text-slate2-400">'+fmtDate(r.start)+' → '+fmtDate(r.end)+'</span>'+
+          '<span class="pill" style="color:'+s.color+';border-color:'+s.bd+';background:'+s.bg+'">'+(r.delta>0?'+':'')+r.delta+' pts</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="flex items-center gap-3">'+
+        '<div class="track flex-1">'+
+          '<div class="fill" style="width:'+r.real+'%;background:linear-gradient(90deg,'+s.color+',#38BDF8)"></div>'+
+          '<div class="marker" style="left:'+r.plan+'%"></div>'+
+        '</div>'+
+        '<div class="font-display text-sm text-white w-10 text-right">'+r.real+'%</div>'+
+      '</div>';
+    ll.appendChild(el);
+  });
+
+  /* Jalons (les 8 plus proches d'aujourd'hui) */
+  var mr=document.getElementById('milestonesRow'); mr.innerHTML='';
+  var now=new Date();
+  var ms=a.milestones.slice().sort(function(x,y){ return Math.abs((x.date?x.date:now)-now)-Math.abs((y.date?y.date:now)-now); }).slice(0,8)
+            .sort(function(x,y){ return (x.date?x.date.getTime():0)-(y.date?y.date.getTime():0); });
+  ms.forEach(function(m){
+    var col=m.done?'#22C55E':(m.missed?'#EF4444':'#60A5FA');
+    var bg=m.done?'rgba(34,197,94,.10)':(m.missed?'rgba(239,68,68,.10)':'rgba(59,130,246,.10)');
+    var bd=m.done?'rgba(34,197,94,.28)':(m.missed?'rgba(239,68,68,.30)':'rgba(96,165,250,.25)');
+    var st=m.done?'Tenu':(m.missed?'Dépassé':'À venir');
+    var el=document.createElement('div'); el.className='glass rounded-2xl p-4 card-hover'; el.style.borderColor=bd;
+    el.innerHTML=
+      '<div class="flex items-center justify-between mb-2">'+
+        '<div class="w-10 h-10 rounded-xl grid place-items-center" style="background:'+bg+';border:1px solid '+bd+'"><span class="dot" style="width:10px;height:10px;background:'+col+'"></span></div>'+
+        '<span class="pill" style="color:'+col+';border-color:'+bd+';background:'+bg+'">'+st+'</span>'+
+      '</div>'+
+      '<div class="font-display text-white text-base leading-snug">'+escapeHtml(m.name)+'</div>'+
+      '<div class="text-xs text-slate2-500 mt-1">'+fmtDate(m.date)+'</div>';
+    mr.appendChild(el);
+  });
+}
+
+/* ---- Snapshot de démonstration (repli hors-ligne / ?demo=1) ---- */
+function demoSnapshot(){
+  function leaf(name,grp,start,end,dur,sts,crit){ return { name:name, group:grp, parent:'', start:start, end:end, dur:dur, sts:sts, sum:false, jalon:false, crit:!!crit }; }
+  function phase(grp,name,start,end){ return { name:name, group:grp, parent:'', start:start, end:end, sum:true, jalon:false }; }
+  return { format:'chantierflow-snapshot', projet:'Les Jardins de Lisa (démo)', appVersion:'démo', exportedAt:'2026-05-29T12:00:00Z',
+    tasks:[
+      phase('PH_INFRA','🏗 INFRASTRUCTURE','2025-09-01','2026-04-29'),
+        leaf('Terrassement général','PH_INFRA','2025-09-01','2025-10-21',37,'dn'),
+        leaf('Voiles contre terre','PH_INFRA','2025-10-27','2025-12-09',31,'dn'),
+        leaf('Fondations','PH_INFRA','2025-12-10','2026-02-02',35,'dn'),
+        leaf('Dalle basse SS','PH_INFRA','2026-02-03','2026-02-25',17,'dn'),
+      phase('PH_SUPER','🏢 SUPERSTRUCTURE (GO)','2026-03-02','2026-10-08'),
+        leaf('Bât A — RDC','PH_SUPER','2026-03-02','2026-03-19',13,'dn'),
+        leaf('Bât A — R+1','PH_SUPER','2026-03-23','2026-04-09',13,'dn'),
+        leaf('Bât A — R+2','PH_SUPER','2026-04-13','2026-04-29',12,'dn',true),
+        leaf('Bât A — R+3','PH_SUPER','2026-05-04','2026-05-21',13,'ns',true),
+        leaf('Bât B — RDC','PH_SUPER','2026-03-23','2026-04-09',13,'dn'),
+        leaf('Bât B — R+2','PH_SUPER','2026-05-04','2026-05-21',12,'ns'),
+      phase('PH_CLOS','🌧 CLOS / COUVERT','2026-09-01','2027-03-18'),
+        leaf('Étanchéité toitures','PH_CLOS','2026-09-01','2026-10-15',32,'ns'),
+        leaf('Menuiseries extérieures','PH_CLOS','2026-09-15','2026-11-30',50,'ns'),
+      phase('PH_SO','🛋 SECOND ŒUVRE','2026-11-11','2027-09-27'),
+        leaf('Cloisons / doublages','PH_SO','2026-11-11','2027-02-15',60,'ns'),
+        leaf('Plomberie','PH_SO','2026-12-01','2027-04-30',90,'ns'),
+      { name:'Hors d\'eau', group:'PH_CLOS', parent:'', start:'2026-05-20', end:'2026-05-20', sum:false, jalon:true, sts:'dn' },
+      { name:'Hors d\'air', group:'PH_CLOS', parent:'', start:'2026-06-25', end:'2026-06-25', sum:false, jalon:true, sts:'ns' },
+      { name:'Livraison', group:'PH_LIVR', parent:'', start:'2027-11-08', end:'2027-11-08', sum:false, jalon:true, sts:'ns' }
+    ], links:[] };
+}
+
+/* ============================ BOOT ============================ */
+(async function(){
+  var today = new Date();
+  var isPreview = /[?&]demo=1\b/.test(window.location.search);
+
+  function reveal(){ document.getElementById('loadingScreen').style.display='none'; document.getElementById('sidebar').style.visibility='visible'; document.getElementById('content').style.visibility='visible'; }
+
+  if(isPreview){
+    document.getElementById('userName').textContent='Aperçu démonstration';
+    var o=document.createElement('option'); o.value=''; o.textContent='Les Jardins de Lisa (démo)'; document.getElementById('projectSelect').appendChild(o);
+    render(analyze(demoSnapshot(), today), true);
+    reveal(); return;
+  }
+
+  var session = await AxionAuth.currentSession();
+  if(!session){ window.location.href='login.html'; return; }
+  var profile;
+  try { profile = await AxionAuth.fetchProfile(session.user.id); }
+  catch(e){ window.location.href='login.html?error=role'; return; }
+  var role = profile && normRole(profile.role);
+  if(!role){ await AxionAuth.signOut(); window.location.href='login.html?error=role'; return; }
+  if(role!=='moe' && role!=='admin'){ window.location.href='app.html'; return; }
+
+  document.getElementById('userName').textContent = profile.full_name || profile.email;
+  var pill=document.getElementById('rolePill'); pill.textContent = role==='admin'?'Administrateur':'Maître d\'œuvre'; pill.className='pill '+role;
+  var av=document.getElementById('avatar'); av.textContent=initials(profile.full_name||profile.email).toUpperCase();
+  if(role==='admin') av.style.background='linear-gradient(135deg,#FCD34D,#F59E0B)';
+  document.getElementById('logoutBtn').addEventListener('click', async function(){ await AxionAuth.signOut(); window.location.href='login.html'; });
+
+  /* Sélecteur chantier (1 chantier publié pour l'instant) */
+  var sel=document.getElementById('projectSelect');
+
+  async function load(){
+    var snap=null, isDemo=false;
+    try {
+      var resp = await fetch(SNAPSHOT_URL, { cache:'no-store' });
+      if(resp.ok){ var j=await resp.json(); if(j && j.ok && j.data && j.data.tasks){ snap=j.data; } }
+    } catch(e){ /* offline / CORS */ }
+    if(!snap){ snap=demoSnapshot(); isDemo=true; }
+    /* option chantier */
+    sel.innerHTML=''; var o=document.createElement('option'); o.textContent = snap.projet || 'Chantier'; sel.appendChild(o);
+    render(analyze(snap, today), isDemo);
+  }
+
+  await load();
+  reveal();
+})();
+</script>
+</body>
+</html>

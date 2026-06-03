@@ -280,6 +280,7 @@
 /* ---- Catalogue d'icônes (chemins SVG, style trait) ---- */
 var ICONS = {
   dashboard: '<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>',
+  coherence: '<path d="M3 3v18h18M7 14l3-4 4 3 5-7" stroke-linecap="round" stroke-linejoin="round"/>',
   chantiers: '<path d="M3 21h18M5 21V7l8-4 8 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01" stroke-linecap="round"/>',
   entreprises: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-linecap="round" stroke-linejoin="round"/>',
   documents: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -301,6 +302,7 @@ var NAV = [
   { id:'entreprises', label:'Entreprises',     icon:'entreprises', href:'#' },
   { id:'documents',   label:'Documents',       icon:'documents',   href:'#' },
   { id:'plannings',   label:'Plannings',       icon:'plannings',   href:'#planning' },
+  { id:'coherence',   label:'Cohérence planning', icon:'coherence', href:'moe-coherence.html' },
   { id:'cr',          label:'Comptes-rendus',  icon:'cr',          href:'#' },
   { id:'plans',       label:'Plans & EXE',     icon:'plans',       href:'#' },
   { id:'notaire',     label:'Notice notaire',  icon:'notaire',     href:'#' },
@@ -311,6 +313,7 @@ var NAV = [
 
 /* Actions d'accès rapide possibles */
 var QUICK = {
+  coherence:  { label:'Cohérence planning',    icon:'coherence',   accent:'azure', href:'moe-coherence.html' },
   newProject: { label:'Nouveau chantier',     icon:'chantiers',   accent:'azure' },
   importPlan: { label:'Importer planning',     icon:'plannings',   accent:'azure' },
   addDoc:     { label:'Ajouter document',      icon:'documents',   accent:'violet' },
@@ -329,18 +332,18 @@ var ROLES = {
     heroTitle:'Tableau de bord <span class="text-grad">administrateur</span>',
     lead:'Accès complet : tous les chantiers, entreprises, documents et plannings.',
     chantiersKicker:'Tous les chantiers',
-    nav:['dashboard','chantiers','entreprises','documents','plannings','cr','plans','notaire','users','settings'],
+    nav:['dashboard','chantiers','entreprises','documents','plannings','coherence','cr','plans','notaire','users','settings'],
     kpi:['chantiers','entreprises','documents','users'],
-    quick:['newProject','newPlanning','importPlan','addDoc','newCR','inviteCo'], canEdit:true
+    quick:['newProject','newPlanning','coherence','importPlan','addDoc','newCR','inviteCo'], canEdit:true
   },
   moe: {
     label:'Maître d’œuvre', pill:'moe', avatarGrad:'linear-gradient(135deg,#93C5FD,#2563EB)',
     heroTitle:'Tableau de bord <span class="text-grad">maître d’œuvre</span>',
     lead:'Vos opérations : pilotage du planning, des plans EXE, des comptes-rendus et des entreprises.',
     chantiersKicker:'Mes opérations',
-    nav:['dashboard','chantiers','entreprises','documents','plannings','cr','plans','notaire'],
+    nav:['dashboard','chantiers','entreprises','documents','plannings','coherence','cr','plans','notaire'],
     kpi:['chantiers','entreprises','documents','cr'],
-    quick:['newPlanning','importPlan','addDoc','newCR','inviteCo'], canEdit:true
+    quick:['coherence','newPlanning','importPlan','addDoc','newCR','inviteCo'], canEdit:true
   },
   moa: {
     label:'Maître d’ouvrage', pill:'moa', avatarGrad:'linear-gradient(135deg,#5EEAD4,#0D9488)',
