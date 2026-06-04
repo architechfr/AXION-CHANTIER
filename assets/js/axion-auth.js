@@ -52,17 +52,27 @@
     return base + hash;
   }
 
-  /* Redirige vers l'espace adapté au rôle. */
+  /* Normalise le rôle BDD vers le modèle courant (aligné sur app.html /
+     moe-coherence.html). Les anciens rôles sont remappés ; un rôle inconnu
+     ou absent renvoie null. */
+  function normRole(r) {
+    if (r === 'admin' || r === 'moe' || r === 'moa' || r === 'entreprise' || r === 'economiste') return r;
+    if (r === 'user' || r === 'partner' || r === 'viewer') return 'entreprise';
+    return null;
+  }
+
+  /* Redirige vers l'espace adapté au rôle. Tout rôle reconnu accède au
+     dashboard (app.html applique ensuite le filtrage par rôle + RLS).
+     Un rôle inconnu/absent → déconnexion + retour au login avec message. */
   function routeByRole(profile) {
-    // Seuls les rôles 'admin' (MOE, édition, publication, gestion users)
-    // et 'user' (entreprise, lecture seule, périmètre RLS) accèdent au dashboard.
-    // On garde la logique centralisée ici pour évoluer facilement.
-    if (profile.role === 'admin' || profile.role === 'user') {
+    var role = profile && normRole(profile.role);
+    if (role) {
       window.location.href = 'app.html';
     } else {
-      // rôle inconnu → on déconnecte par sécurité
+      // rôle inconnu → on déconnecte par sécurité, et on renvoie au LOGIN
+      // (et non à l'accueil) pour afficher un message explicite.
       signOut().finally(function () {
-        window.location.href = 'axion.html?error=role';
+        window.location.href = 'login.html?error=role';
       });
     }
   }
