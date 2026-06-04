@@ -96,6 +96,9 @@
   }
   #scrim { position:fixed; inset:0; background:rgba(5,8,18,.6); z-index:54; opacity:0; pointer-events:none; transition:opacity .3s; }
   #scrim.show { opacity:1; pointer-events:auto; }
+  #pointageModal { position:fixed; inset:0; z-index:70; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(5,8,18,.66); -webkit-backdrop-filter:blur(5px); backdrop-filter:blur(5px); }
+  #pointageModal.show { display:flex; }
+  #pointageModal .modal-card { max-width:520px; width:100%; border-radius:20px; }
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
 </style>
 </head>
@@ -104,6 +107,31 @@
 
 <div id="loadingScreen"><span class="spin"></span><span class="font-mono text-xs tracking-wider uppercase">Analyse de la cohérence planning…</span></div>
 <div id="scrim" onclick="toggleSidebar(false)"></div>
+
+<!-- Modale pédagogique : 1er pointage (consentement éclairé MOE) -->
+<div id="pointageModal" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+  <div class="modal-card glass-strong p-6 md:p-7">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-11 h-11 rounded-2xl grid place-items-center shrink-0" style="background:rgba(59,130,246,.12);border:1px solid rgba(96,165,250,.28)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="1.8" class="w-5 h-5"><path d="M12 8v5M12 16h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 id="pmTitle" class="font-display text-xl font-700 text-white">Pointer une tâche comme terminée</h3>
+    </div>
+    <p class="text-sm text-slate2-300 mb-4">Vous allez marquer <strong id="pmTaskName" class="text-white">cette tâche</strong> comme terminée. Avant votre premier pointage, l'essentiel à comprendre :</p>
+    <ul class="space-y-2.5 mb-5 text-sm text-slate2-300">
+      <li class="flex items-start gap-2.5"><span class="dot mt-1.5 shrink-0" style="width:7px;height:7px;background:#22C55E"></span><span><strong class="text-slate2-200">Cela enregistre l'avancement dans AXION uniquement.</strong> Votre planning ChantierFlow validé n'est <strong class="text-white">pas modifié</strong> — il reste votre source, que vous seul changez dans CADENCE Flow.</span></li>
+      <li class="flex items-start gap-2.5"><span class="dot mt-1.5 shrink-0" style="width:7px;height:7px;background:#60A5FA"></span><span><strong class="text-slate2-200">L'avancement « réel » et les retards se recalculent</strong> : la tâche quitte les dérives et la jauge progresse.</span></li>
+      <li class="flex items-start gap-2.5"><span class="dot mt-1.5 shrink-0" style="width:7px;height:7px;background:#F59E0B"></span><span><strong class="text-slate2-200">C'est réversible à tout moment</strong> via « Annuler » dans la section « Pointages AXION ».</span></li>
+      <li class="flex items-start gap-2.5"><span class="dot mt-1.5 shrink-0" style="width:7px;height:7px;background:#94A3B8"></span><span><strong class="text-slate2-200">Votre nom et la date sont enregistrés</strong> (traçabilité du pointage).</span></li>
+    </ul>
+    <div class="flex items-center justify-end gap-3">
+      <button id="pmCancel" class="btn-outline rounded-xl px-4 py-2.5 text-sm font-medium">Annuler</button>
+      <button id="pmConfirm" class="btn-azure rounded-xl px-4 py-2.5 text-sm font-medium inline-flex items-center gap-2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="w-4 h-4"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>J'ai compris, marquer terminée
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ============================ SIDEBAR ============================ -->
 <aside id="sidebar" class="fixed top-0 left-0 h-screen flex flex-col glass-strong" style="visibility:hidden; border-radius:0; border-right:1px solid rgba(255,255,255,.08)">
@@ -599,11 +627,34 @@ async function loadOverrides(projectId){
   } catch(e){ return { ok:false, missing:false, error:e }; }
 }
 
-/* Pointer une tâche « terminée » (avec garde-fou dépendances). */
+/* Consentement éclairé : montré une fois par utilisateur (puis clics directs). */
+function pointageAcked(){ try { return localStorage.getItem('axion_pointage_ack_'+CTX.userId)==='1'; } catch(e){ return false; } }
+function setPointageAcked(){ try { localStorage.setItem('axion_pointage_ack_'+CTX.userId,'1'); } catch(e){} }
+
+function showPointageIntro(taskName){
+  return new Promise(function(resolve){
+    var ov=document.getElementById('pointageModal');
+    document.getElementById('pmTaskName').textContent=taskName;
+    var btnOk=document.getElementById('pmConfirm'), btnNo=document.getElementById('pmCancel');
+    function cleanup(){ ov.classList.remove('show'); btnOk.removeEventListener('click',onOk); btnNo.removeEventListener('click',onNo); ov.removeEventListener('click',onBackdrop); document.removeEventListener('keydown',onKey); }
+    function onOk(){ setPointageAcked(); cleanup(); resolve(true); }
+    function onNo(){ cleanup(); resolve(false); }
+    function onBackdrop(e){ if(e.target===ov) onNo(); }
+    function onKey(e){ if(e.key==='Escape') onNo(); }
+    btnOk.addEventListener('click',onOk); btnNo.addEventListener('click',onNo); ov.addEventListener('click',onBackdrop); document.addEventListener('keydown',onKey);
+    ov.classList.add('show'); btnOk.focus();
+  });
+}
+
+/* Pointer une tâche « terminée » (consentement 1er clic + garde-fou dépendances). */
 async function markDone(uid){
   if(!CTX.canWrite) return;
   var task=(CTX.snap.tasks||[]).find(function(t){ return t.uid===uid; });
   if(!task) return;
+  if(!pointageAcked()){
+    var ok=await showPointageIntro(task.name);
+    if(!ok) return;
+  }
   var pend=predecessorsPending(CTX.snap, uid);
   if(pend.length){
     var names=pend.slice(0,3).map(function(p){ return p.name; }).join(', ');
