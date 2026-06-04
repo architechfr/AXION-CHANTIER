@@ -170,7 +170,9 @@
   document.getElementById('acName').textContent = profile.full_name || '—';
   document.getElementById('acEmail').textContent = profile.email;
   var rolePill = document.getElementById('acRole');
-  rolePill.textContent = profile.role === 'admin' ? 'Administrateur' : 'Entreprise';
+  var _r = AxionAuth.normRole ? AxionAuth.normRole(profile.role) : profile.role;
+  var _roleLabels = { admin:'Administrateur', moe:'Maître d\'œuvre', moa:'Maître d\'ouvrage', economiste:'Économiste', entreprise:'Entreprise' };
+  rolePill.textContent = _roleLabels[_r] || 'Utilisateur';
   if (profile.role !== 'admin') {
     rolePill.style.background = 'rgba(59,130,246,.08)';
     rolePill.style.borderColor = 'rgba(96,165,250,.35)';

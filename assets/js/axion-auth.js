@@ -85,6 +85,7 @@
     currentSession: currentSession,
     fetchProfile: fetchProfile,
     planningHandoffUrl: planningHandoffUrl,
-    routeByRole: routeByRole
+    routeByRole: routeByRole,
+    normRole: normRole
   };
 })();

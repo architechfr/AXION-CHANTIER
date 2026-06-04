@@ -531,16 +531,18 @@
   var profile;
   try { profile = await AxionAuth.fetchProfile(session.user.id); }
   catch (e) { window.location.href = 'login.html?error=role'; return; }
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'user')) {
+  var role = profile && AxionAuth.normRole(profile.role);
+  if (!role) {
     await AxionAuth.signOut(); window.location.href = 'login.html?error=role'; return;
   }
 
-  var isAdmin = profile.role === 'admin';
+  var isAdmin = role === 'admin';
+  var roleLabels = { admin:'Administrateur · CADENCE', moe:'Maître d\'œuvre · CADENCE', moa:'Maître d\'ouvrage', economiste:'Économiste', entreprise:'Entreprise' };
 
   // En-tête utilisateur
   var displayName = profile.full_name || profile.email;
   document.getElementById('userName').textContent = displayName;
-  document.getElementById('userRole').textContent = isAdmin ? 'Administrateur · CADENCE' : 'Entreprise';
+  document.getElementById('userRole').textContent = roleLabels[role] || 'Utilisateur';
   document.getElementById('userInitials').textContent = (displayName.match(/\b[A-Z]/g) || [displayName[0]]).slice(0,2).join('').toUpperCase();
   document.getElementById('userInitials').style.background = isAdmin ? '#C9A95C' : '#3B82F6';
 
