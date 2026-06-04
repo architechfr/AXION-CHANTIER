@@ -166,6 +166,8 @@ AXION-CHANTIER/
 - 3 comptes utilisateurs actifs (f.clarisse, c.havet, o.penarette)
 - Charte graphique formalisée (skill `axion-brand`)
 
+- **Atelier MOE — Cohérence planning** (`moe-coherence.html`) : lit le snapshot live ChantierFlow, dérives par phase, jalons. **+ Pointage interactif (04/06)** : le MOE peut marquer une tâche « terminée » depuis AXION (table `task_progress`, override par `task_uid`) sans toucher au planning. Bouton sur chaque dérive, garde-fou dépendances (confirm si un prédécesseur n'est pas fini), section « Pointages AXION » avec annulation, audit `updated_by`/`updated_at`. Statut effectif = override sinon `task.sts`. ⚠️ **Activation** : exécuter `supabase/task_progress.sql` dans le SQL Editor.
+
 ### ⏳ En cours / prochaine étape immédiate
 1. **Débloquer Didier Clarisse** : créer son compte Auth + insert profile (manuel pour l'instant)
 2. **Refonte modèle de rôles** : passer admin/user → admin/moe/partner/viewer
@@ -190,6 +192,7 @@ AXION-CHANTIER/
 | ✅ Hiérarchique strict pour invitations | 02/06 | admin invite tout · MOE Cadence invite entreprises/BET/MOA sur SES chantiers · les autres n'invitent personne. |
 | ✅ Lien d'invitation = page d'inscription dédiée | 02/06 | L'invité reçoit un lien → page où il définit son mot de passe → compte créé + affecté aux chantiers que l'inviteur a autorisés. La page d'accueil de l'invité s'adapte aux chantiers reçus. |
 | ✅ Planning live planning-lisa.vercel.app — **NON TOUCHÉ** | (depuis le début) | Le dépôt `architechfr/Planning-Lisa` reste à l'état d'origine. Le portail AXION ne pointe vers planning live qu'en lecture seule. |
+| ✅ Pointage = override AXION, pas modification du planning | 04/06 | Le pointage MOE vit dans `task_progress` (Supabase), keyé `(project_id, task_uid)`. La structure reste maître côté ChantierFlow. Statuts alignés sur ChantierFlow (`ns/dn/ec/bl`) pour fusion triviale. V1 n'écrit que `dn` (terminée). En cours/bloqué = itération suivante (moteur binaire aujourd'hui). |
 
 ---
 

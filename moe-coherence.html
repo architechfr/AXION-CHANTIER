@@ -190,6 +190,17 @@
       </div>
     </section>
 
+    <!-- ===== Bannière setup (table de pointage absente) ===== -->
+    <div id="axSetupBanner" class="hidden mb-6 glass rounded-2xl p-4 md:p-5" style="border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.06)">
+      <div class="flex items-start gap-3">
+        <span class="dot mt-1.5" style="width:10px;height:10px;background:#F59E0B"></span>
+        <div class="text-sm text-slate2-300">
+          <p class="font-display text-white mb-1">Pointage non encore activé</p>
+          La table de pointage <code class="font-mono text-azure-300">task_progress</code> n'existe pas encore en base. La lecture fonctionne, mais le bouton « Marquer terminée » est désactivé. Exécutez le script <code class="font-mono text-azure-300">supabase/task_progress.sql</code> dans le SQL Editor Supabase, puis rechargez cette page.
+        </div>
+      </div>
+    </div>
+
     <!-- ===== KPI ===== -->
     <section id="kpiRow" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></section>
 
@@ -200,6 +211,16 @@
         <span id="derivesCount" class="font-mono text-[11px] tracking-[0.2em] uppercase text-slate2-500"></span>
       </div>
       <div id="derivesPanel" class="space-y-3"></div>
+    </section>
+
+    <!-- ===== POINTAGES AXION ===== -->
+    <section id="axPointages" class="mb-6 hidden">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-display text-lg font-600 text-white">Pointages AXION</h2>
+        <span id="axPointagesCount" class="font-mono text-[11px] tracking-[0.2em] uppercase text-slate2-500"></span>
+      </div>
+      <p class="text-xs text-slate2-500 mb-3">Tâches que vous avez marquées terminées depuis AXION (le planning ChantierFlow n'est pas modifié). Annulable à tout moment.</p>
+      <div id="axPointagesList" class="space-y-2.5"></div>
     </section>
 
     <!-- ===== AVANCEMENT PAR PHASE ===== -->
@@ -252,6 +273,14 @@
    ========================================================================== */
 
 var SNAPSHOT_URL = 'https://planning-lisa.vercel.app/api/state';
+var LISA_SLUG    = 'jardins-de-lisa';
+
+/* État courant + pointages AXION (overrides de statut par task.uid).
+   OVERRIDES : { [uid]: { status, comment, updated_at, updated_by } }
+   Statut effectif d'une tâche = OVERRIDES[uid].status si présent, sinon t._sts0
+   (statut d'origine du snapshot ChantierFlow). */
+var CTX = { snap:null, today:new Date(), isDemo:false, projectId:null, userId:null, canWrite:false };
+var OVERRIDES = {};
 
 function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=document.getElementById('scrim'); var open=(force===undefined)?!s.classList.contains('open'):force; s.classList.toggle('open',open); sc.classList.toggle('show',open); }
 function normRole(r){ if(r==='admin'||r==='moe'||r==='moa'||r==='entreprise') return r; if(r==='user'||r==='partner'||r==='viewer') return 'entreprise'; return null; }
@@ -401,6 +430,12 @@ function render(a, isDemo){
           '</div>'+
           '<div class="text-sm text-slate2-400 mt-1.5">'+escapeHtml(reco)+'</div>'+
           '<div class="text-[11px] text-slate2-500 mt-1.5">Échéance planifiée '+fmtDate(d.end)+' · statut non terminé</div>'+
+          (CTX.canWrite ?
+            '<div class="mt-3 flex items-center gap-3 flex-wrap">'+
+              '<button onclick="__axMarkDone(\''+d.t.uid+'\')" class="btn-azure rounded-lg px-3 py-1.5 text-xs font-medium inline-flex items-center gap-1.5">'+
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="w-3.5 h-3.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Marquer terminée</button>'+
+              '<span class="text-[10px] text-slate2-500">Si faite sur le chantier mais pas encore pointée dans le planning</span>'+
+            '</div>' : '')+
         '</div>';
       dp.appendChild(el);
     });
@@ -454,6 +489,39 @@ function render(a, isDemo){
       '<div class="text-xs text-slate2-500 mt-1">'+fmtDate(m.date)+'</div>';
     mr.appendChild(el);
   });
+
+  /* Pointages AXION (overrides posés depuis cette interface) */
+  var apWrap=document.getElementById('axPointages');
+  if(apWrap){
+    var uids=Object.keys(OVERRIDES);
+    if(!isDemo && uids.length){
+      apWrap.classList.remove('hidden');
+      var apList=document.getElementById('axPointagesList'); apList.innerHTML='';
+      document.getElementById('axPointagesCount').textContent=uids.length+' tâche'+(uids.length>1?'s':'')+' pointée'+(uids.length>1?'s':'');
+      var byUid={}; (CTX.snap.tasks||[]).forEach(function(t){ byUid[t.uid]=t; });
+      uids.map(function(u){ return { uid:u, t:byUid[u], o:OVERRIDES[u] }; })
+          .filter(function(x){ return x.t; })
+          .sort(function(a,b){ return (b.o.updated_at||'').localeCompare(a.o.updated_at||''); })
+          .forEach(function(x){
+            var when=x.o.updated_at?new Date(x.o.updated_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'2-digit'}):'';
+            var who=(x.o.updated_by && x.o.updated_by===CTX.userId)?' · par vous':'';
+            var el=document.createElement('div');
+            el.className='flex items-center justify-between gap-3 rounded-xl p-3';
+            el.style.border='1px solid rgba(34,197,94,.22)'; el.style.background='rgba(34,197,94,.06)';
+            el.innerHTML=
+              '<div class="flex items-center gap-3 min-w-0">'+
+                '<span class="dot" style="width:9px;height:9px;background:#22C55E"></span>'+
+                '<div class="min-w-0"><div class="font-display text-white text-sm truncate">'+escapeHtml(x.t.name)+'</div>'+
+                '<div class="text-[11px] text-slate2-500">Terminée · pointé dans AXION'+(when?(' · '+when):'')+who+'</div></div>'+
+              '</div>'+
+              '<button onclick="__axRevert(\''+x.uid+'\')" class="btn-outline rounded-lg px-2.5 py-1 text-[11px] shrink-0">Annuler</button>';
+            apList.appendChild(el);
+          });
+    } else {
+      apWrap.classList.add('hidden');
+      document.getElementById('axPointagesList').innerHTML='';
+    }
+  }
 }
 
 /* ---- Snapshot de démonstration (repli hors-ligne / ?demo=1) ---- */
@@ -486,9 +554,90 @@ function demoSnapshot(){
     ], links:[] };
 }
 
+/* ===================== POINTAGE AXION (overrides) ===================== */
+/* Applique les overrides sur le snapshot : t.sts = override ou statut d'origine.
+   Idempotent (repart toujours de t._sts0 → l'annulation restaure l'original). */
+function applyOverrides(snap){
+  if(!snap||!snap.tasks) return;
+  snap.tasks.forEach(function(t){ var o=OVERRIDES[t.uid]; t.sts = (o&&o.status) ? o.status : t._sts0; });
+}
+
+/* Tâches antérieures (prédécesseurs via les liens) pas encore terminées. */
+function predecessorsPending(snap, uid){
+  var links=(snap&&snap.links)||[]; if(!links.length) return [];
+  var byUid={}; snap.tasks.forEach(function(t){ byUid[t.uid]=t; });
+  var preds=[];
+  links.forEach(function(l){ if(l.toUid===uid){ var p=byUid[l.fromUid]; if(p && p.sts!=='dn') preds.push(p); } });
+  return preds;
+}
+
+/* Recalcule + redessine à partir de l'état courant. */
+function rerender(){ applyOverrides(CTX.snap); render(analyze(CTX.snap, CTX.today), CTX.isDemo); }
+
+async function resolveProjectId(){
+  try {
+    var res = await AxionAuth.sb.from('projects').select('id').eq('slug', LISA_SLUG).single();
+    return (res.error || !res.data) ? null : res.data.id;
+  } catch(e){ return null; }
+}
+
+async function loadOverrides(projectId){
+  OVERRIDES = {};
+  if(!projectId) return { ok:false, missing:false };
+  try {
+    var res = await AxionAuth.sb.from('task_progress')
+      .select('task_uid,status,comment,updated_at,updated_by').eq('project_id', projectId);
+    if(res.error){
+      var msg=((res.error.message||'')+' '+(res.error.code||'')).toLowerCase();
+      var missing=/does not exist|could not find the table|42p01/.test(msg);
+      return { ok:false, missing:missing, error:res.error };
+    }
+    (res.data||[]).forEach(function(r){
+      OVERRIDES[r.task_uid]={ status:r.status, comment:r.comment, updated_at:r.updated_at, updated_by:r.updated_by };
+    });
+    return { ok:true };
+  } catch(e){ return { ok:false, missing:false, error:e }; }
+}
+
+/* Pointer une tâche « terminée » (avec garde-fou dépendances). */
+async function markDone(uid){
+  if(!CTX.canWrite) return;
+  var task=(CTX.snap.tasks||[]).find(function(t){ return t.uid===uid; });
+  if(!task) return;
+  var pend=predecessorsPending(CTX.snap, uid);
+  if(pend.length){
+    var names=pend.slice(0,3).map(function(p){ return p.name; }).join(', ');
+    if(!confirm('Des tâches antérieures ne sont pas encore terminées ('+names+(pend.length>3?', …':'')+').\n\nMarquer tout de même « '+task.name+' » comme terminée ?')) return;
+  }
+  await writeProgress(uid, 'dn');
+}
+
+async function writeProgress(uid, status){
+  try {
+    var row={ project_id:CTX.projectId, task_uid:uid, status:status, updated_by:CTX.userId, updated_at:new Date().toISOString() };
+    var res=await AxionAuth.sb.from('task_progress').upsert(row, { onConflict:'project_id,task_uid' });
+    if(res.error) throw res.error;
+    OVERRIDES[uid]={ status:status, updated_at:row.updated_at, updated_by:CTX.userId };
+    rerender();
+  } catch(e){ alert('Échec du pointage : '+(e.message||e)); }
+}
+
+async function revertProgress(uid){
+  try {
+    var res=await AxionAuth.sb.from('task_progress').delete().eq('project_id',CTX.projectId).eq('task_uid',uid);
+    if(res.error) throw res.error;
+    delete OVERRIDES[uid];
+    rerender();
+  } catch(e){ alert('Échec de l\'annulation : '+(e.message||e)); }
+}
+
+window.__axMarkDone = markDone;
+window.__axRevert   = revertProgress;
+
 /* ============================ BOOT ============================ */
 (async function(){
   var today = new Date();
+  CTX.today = today;
   var isPreview = /[?&]demo=1\b/.test(window.location.search);
 
   function reveal(){ document.getElementById('loadingScreen').style.display='none'; document.getElementById('sidebar').style.visibility='visible'; document.getElementById('content').style.visibility='visible'; }
@@ -515,6 +664,8 @@ function demoSnapshot(){
   if(role==='admin') av.style.background='linear-gradient(135deg,#FCD34D,#F59E0B)';
   document.getElementById('logoutBtn').addEventListener('click', async function(){ await AxionAuth.signOut(); window.location.href='login.html'; });
 
+  CTX.userId = session.user.id;
+
   /* Sélecteur chantier (1 chantier publié pour l'instant) */
   var sel=document.getElementById('projectSelect');
 
@@ -525,6 +676,20 @@ function demoSnapshot(){
       if(resp.ok){ var j=await resp.json(); if(j && j.ok && j.data && j.data.tasks){ snap=j.data; } }
     } catch(e){ /* offline / CORS */ }
     if(!snap){ snap=demoSnapshot(); isDemo=true; }
+
+    /* Mémorise le statut d'origine de chaque tâche (base de l'override). */
+    (snap.tasks||[]).forEach(function(t){ t._sts0 = t.sts; });
+    CTX.snap = snap; CTX.isDemo = isDemo;
+
+    /* Charge les pointages AXION (overrides) — sauf en démo. */
+    if(!isDemo){
+      CTX.projectId = await resolveProjectId();
+      var r = await loadOverrides(CTX.projectId);
+      CTX.canWrite = !!CTX.projectId && r.ok;
+      document.getElementById('axSetupBanner').classList.toggle('hidden', !r.missing);
+      applyOverrides(snap);
+    }
+
     /* option chantier */
     sel.innerHTML=''; var o=document.createElement('option'); o.textContent = snap.projet || 'Chantier'; sel.appendChild(o);
     render(analyze(snap, today), isDemo);
