@@ -498,12 +498,29 @@ function createProject(){
     tasks:result.tasks,
     created:new Date().toISOString()
   };
-  try{
-    localStorage.setItem('cf_proj_'+key,JSON.stringify(data));
-    window.location.href='chantierflow-lisa.html?projet='+key;
-  }catch(e){
-    alert('Erreur de sauvegarde : '+e.message+'\n\nVotre planning est trop volumineux ou le navigateur refuse l\'écriture.');
+  var payload=JSON.stringify(data);
+  // Purge les anciens plannings générés (et leurs snapshots) sauf le courant + la démo,
+  // pour éviter que le localStorage ne se remplisse au fil des essais (sinon setItem échoue
+  // silencieusement et « Ouvrir dans le planning » n'aboutit pas).
+  function purgeOld(keep){
+    var rm=[];
+    for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(!k)continue;
+      if((k.indexOf('cf_proj_')===0||k.indexOf('cf_status_')===0)&&k.indexOf(keep)<0)rm.push(k);}
+    for(var j=0;j<rm.length;j++){try{localStorage.removeItem(rm[j])}catch(_){}}
   }
+  function go(){
+    try{localStorage.setItem('cf_proj_'+key,payload);return true;}catch(e){return false;}
+  }
+  purgeOld(key);
+  if(!go()){
+    // dernier recours : on vide tout le stockage du site puis on réessaie
+    try{localStorage.clear();}catch(_){}
+    if(!go()){
+      alert('Stockage du navigateur saturé : impossible d\'enregistrer le planning.\nVidez les données du site (cache) puis réessayez.');
+      return;
+    }
+  }
+  window.location.href='chantierflow-lisa.html?projet='+key;
 }
 
 var CFG={ss:'general',seq:'cav',fen:'bt',liv:'uni',ssNiv:2,ssDur:7};
