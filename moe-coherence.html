@@ -243,11 +243,16 @@
 
     <!-- ===== POINTAGES AXION ===== -->
     <section id="axPointages" class="mb-6 hidden">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="font-display text-lg font-600 text-white">Pointages AXION</h2>
-        <span id="axPointagesCount" class="font-mono text-[11px] tracking-[0.2em] uppercase text-slate2-500"></span>
+      <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <div class="flex items-center gap-3">
+          <h2 class="font-display text-lg font-600 text-white">Pointages AXION</h2>
+          <span id="axPointagesCount" class="font-mono text-[11px] tracking-[0.2em] uppercase text-slate2-500"></span>
+        </div>
+        <button onclick="__axCopyPointages(this)" class="btn-outline rounded-lg px-3 py-1.5 text-xs font-medium inline-flex items-center gap-1.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="w-3.5 h-3.5"><path d="M9 9h10v10H9zM5 15V5h10" stroke-linecap="round" stroke-linejoin="round"/></svg>Copier pour le planning
+        </button>
       </div>
-      <p class="text-xs text-slate2-500 mb-3">Tâches que vous avez marquées terminées depuis AXION (le planning ChantierFlow n'est pas modifié). Annulable à tout moment.</p>
+      <p class="text-xs text-slate2-500 mb-3">Tâches marquées terminées depuis AXION (couche de pointage terrain — le planning officiel CADENCE Flow n'est pas modifié). Annulable à tout moment. <span class="text-slate2-400">Pour réaligner les deux : reportez ces tâches dans CADENCE Flow lors de votre prochaine mise à jour, puis « Publier ».</span></p>
       <div id="axPointagesList" class="space-y-2.5"></div>
     </section>
 
@@ -682,8 +687,24 @@ async function revertProgress(uid){
   } catch(e){ alert('Échec de l\'annulation : '+(e.message||e)); }
 }
 
+/* Réconciliation : liste des pointages AXION à reporter dans CADENCE Flow. */
+function copyPointages(btn){
+  var byUid={}; (CTX.snap.tasks||[]).forEach(function(t){ byUid[t.uid]=t; });
+  var lines=Object.keys(OVERRIDES).map(function(u){
+    var t=byUid[u]; if(!t) return null;
+    var when=OVERRIDES[u].updated_at ? new Date(OVERRIDES[u].updated_at).toLocaleDateString('fr-FR') : '';
+    return '• '+t.name+' — terminée'+(when?(' ('+when+')'):'');
+  }).filter(Boolean);
+  if(!lines.length) return;
+  var txt='Pointages AXION à reporter dans le planning CADENCE Flow :\n'+lines.join('\n');
+  function feedback(){ if(!btn) return; var old=btn.textContent; btn.textContent='Copié ✓'; setTimeout(function(){ btn.textContent=old; }, 1800); }
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(feedback, function(){ alert(txt); }); }
+  else { alert(txt); }
+}
+
 window.__axMarkDone = markDone;
 window.__axRevert   = revertProgress;
+window.__axCopyPointages = copyPointages;
 
 /* ============================ BOOT ============================ */
 (async function(){
