@@ -215,7 +215,7 @@ body.light .cad-logo-full{background-image:url("data:image/png;base64,iVBORw0KGg
   <input type="range" id="isl" min="0" max="60" value="27" oninput="setI(this.value)">
   <span class="v" id="iv">27</span><span>j</span>
   <span class="chip-sep"></span>
-  <span style="font-size:9px">MOA Soc: fin avr. 2027 | Acc: fin juin 2027</span>
+  <span style="font-size:9px" id="livInfo"></span>
 </div>
 
 <div class="tbar" id="toolbar"></div>
@@ -284,14 +284,14 @@ var INTEMP=27,DW=2.5;
 var GO_SHIFT={A:0,B:0,C:-17,D:-53,E:-66};
 var MIN_D=D('2025-06-01'),MAX_D=D('2027-12-01');
 
-var GC={TERR:'#78716c',GO:'#6366f1',ELEC:'#f59e0b',PLOMB:'#3b82f6',ETANCH:'#06b6d4',ECHAF:'#8b5cf6',BARD:'#7c3aed',MENUIS:'#10b981',PLAT:'#ec4899',CHAPE:'#f97316',RAVAL:'#a855f7',SERR:'#64748b',SERR_FAB:'#94a3b8',SERR_POSE:'#475569',PEINT:'#f472b6',CARREL:'#fb923c',SOL:'#a3e635',MENINT:'#2dd4bf',ASC:'#7c3aed',VMC:'#0ea5e9',CHAUF:'#dc2626',OPR:'#fbbf24',LIVR:'#22c55e',VRD:'#854d0e',MOTOR:'#64748b',PAYS:'#22c55e',NETT:'#6366f1',ESSAI:'#e11d48',FLOC:'#f97316'};
-var GN={TERR:'Terrassement',GO:'Gros Œuvre',ELEC:'Électricité',PLOMB:'Plomberie',ETANCH:'Étanchéité',ECHAF:'Échafaudage',MENUIS:'Menu. ext.',PLAT:'Plaquiste',CHAPE:'Chape',RAVAL:'Ravalement',SERR:'Serrurerie',SERR_FAB:'Serr. fab.',SERR_POSE:'Serr. pose',PEINT:'Peinture',CARREL:'Carrelage',SOL:'Sol souple',MENINT:'Menu. int.',OPR:'OPR',LIVR:'Livraison',VRD:'VRD',MOTOR:'Motorisation',ASC:'Ascenseur',VMC:'VMC',CHAUF:'Chauffage',BARD:'Bardage',FLOC:'Flocage',PAYS:'Paysagiste',NETT:'Nettoyage',ESSAI:'Essais/Concess.'};
-var GSHORT={PLAT:'Plaq',ELEC:'Élec',PLOMB:'Plb',PEINT:'Peint',CARREL:'Carr',SOL:'Sol',MENINT:'MInt',CHAPE:'Chape',ETANCH:'Étan',RAVAL:'Rav',MENUIS:'MExt',GO:'GO',SERR:'Serr',SERR_FAB:'SFab',SERR_POSE:'SPo',OPR:'OPR',LIVR:'Livr',TERR:'Terr',ASC:'Asc',VMC:'VMC',CHAUF:'Chauf',BARD:'Bard',FLOC:'Floc',PAYS:'Pay',NETT:'Nett',ESSAI:'Essai',VRD:'VRD',MOTOR:'Mot'};
+var GC={TERR:'#78716c',GO:'#6366f1',ELEC:'#f59e0b',PLOMB:'#3b82f6',ETANCH:'#06b6d4',ECHAF:'#8b5cf6',BARD:'#7c3aed',MENUIS:'#10b981',PLAT:'#ec4899',CHAPE:'#f97316',RAVAL:'#a855f7',SERR:'#64748b',SERR_FAB:'#94a3b8',SERR_POSE:'#475569',PEINT:'#f472b6',CARREL:'#fb923c',SOL:'#a3e635',MENINT:'#2dd4bf',ASC:'#7c3aed',VMC:'#0ea5e9',CHAUF:'#dc2626',OPR:'#fbbf24',LIVR:'#22c55e',VRD:'#854d0e',MOTOR:'#64748b',PAYS:'#22c55e',NETT:'#6366f1',ESSAI:'#e11d48',FLOC:'#f97316',INSTAL:'#14b8a6',CURAGE:'#92400e',DESAM:'#ef4444'};
+var GN={TERR:'Terrassement',GO:'Gros Œuvre',ELEC:'Électricité',PLOMB:'Plomberie',ETANCH:'Étanchéité',ECHAF:'Échafaudage',MENUIS:'Menu. ext.',PLAT:'Plaquiste',CHAPE:'Chape',RAVAL:'Ravalement',SERR:'Serrurerie',SERR_FAB:'Serr. fab.',SERR_POSE:'Serr. pose',PEINT:'Peinture',CARREL:'Carrelage',SOL:'Sol souple',MENINT:'Menu. int.',OPR:'OPR',LIVR:'Livraison',VRD:'VRD',MOTOR:'Motorisation',ASC:'Ascenseur',VMC:'VMC',CHAUF:'Chauffage',BARD:'Bardage',FLOC:'Flocage',PAYS:'Paysagiste',NETT:'Nettoyage',ESSAI:'Essais/Concess.',INSTAL:'Installation',CURAGE:'Curage/Démol.',DESAM:'Désamiantage'};
+var GSHORT={PLAT:'Plaq',ELEC:'Élec',PLOMB:'Plb',PEINT:'Peint',CARREL:'Carr',SOL:'Sol',MENINT:'MInt',CHAPE:'Chape',ETANCH:'Étan',RAVAL:'Rav',MENUIS:'MExt',GO:'GO',SERR:'Serr',SERR_FAB:'SFab',SERR_POSE:'SPo',OPR:'OPR',LIVR:'Livr',TERR:'Terr',ASC:'Asc',VMC:'VMC',CHAUF:'Chauf',BARD:'Bard',FLOC:'Floc',PAYS:'Pay',NETT:'Nett',ESSAI:'Essai',VRD:'VRD',MOTOR:'Mot',INSTAL:'Inst',CURAGE:'Curage',DESAM:'Désam'};
 /* Print legend */
 var _lH='';for(var _k in GC){if(GN[_k])_lH+='<span><span class="dot" style="background:'+GC[_k]+'"></span>'+GN[_k]+'</span>'}
 var _pl=document.getElementById('printLegend');if(_pl)_pl.innerHTML=_lH;
 var _pd=document.getElementById('printDate');if(_pd)_pd.textContent=new Date().toLocaleDateString('fr-FR');
-var GCODE={PLAT:'PL',ELEC:'EL',PLOMB:'PB',PEINT:'PE',CARREL:'CA',SOL:'SO',MENINT:'MI',CHAPE:'CH',ETANCH:'ET',RAVAL:'RA',MENUIS:'MX',GO:'GO',SERR:'SR',SERR_FAB:'SF',SERR_POSE:'SP',OPR:'OP',LIVR:'LV',TERR:'TR',ASC:'AS',VMC:'VM',CHAUF:'CF',BARD:'BD',FLOC:'FL',PAYS:'PA',NETT:'NT',ESSAI:'ES',VRD:'VR',MOTOR:'MO'};
+var GCODE={PLAT:'PL',ELEC:'EL',PLOMB:'PB',PEINT:'PE',CARREL:'CA',SOL:'SO',MENINT:'MI',CHAPE:'CH',ETANCH:'ET',RAVAL:'RA',MENUIS:'MX',GO:'GO',SERR:'SR',SERR_FAB:'SF',SERR_POSE:'SP',OPR:'OP',LIVR:'LV',TERR:'TR',ASC:'AS',VMC:'VM',CHAUF:'CF',BARD:'BD',FLOC:'FL',PAYS:'PA',NETT:'NT',ESSAI:'ES',VRD:'VR',MOTOR:'MO',INSTAL:'IN',CURAGE:'CU',DESAM:'DZ'};
 
 function getBarLabel(t,widthPx){
   if(widthPx>130) return t.name;
@@ -527,6 +527,9 @@ var PROJ_KEY=URL_PARAMS.get('projet')||'lisa';
 var STORAGE_KEY=PROJ_KEY==='lisa'?'cf_v5':'cf_status_'+PROJ_KEY;
 var PROJ_NAME='Les Jardins de Lisa';
 var PROJ_SUB='Ozoir-la-Ferrière — 141 logements';
+var CFG_BUILDINGS=null,CFG_LIVMODE='uni';
+// META = filtres bâtiments / groupes de livraison / jalons, calculés depuis le projet chargé
+var META={codes:[],groups:[],milestones:[]};
 
 function loadCustomProject(){
   if(PROJ_KEY==='lisa')return false;
@@ -542,6 +545,7 @@ function loadCustomProject(){
     nid=T.length;
     PROJ_NAME=data.config.name||'Projet';
     PROJ_SUB=(data.config.promoteur||'')+(data.config.addr?' · '+data.config.addr:'');
+    CFG_BUILDINGS=data.config.buildings||null;CFG_LIVMODE=data.config.livraison||'uni';
     var allS=T.map(function(t){return D(t.s)}).filter(function(d){return d}),
         allF=T.map(function(t){return D(t.f)}).filter(function(d){return d});
     if(allS.length){
@@ -563,6 +567,7 @@ forceSave=function(){try{localStorage.setItem(STORAGE_KEY,snap())}catch(e){}_mod
 
 if(PROJ_KEY==='lisa'){build();}else{loadCustomProject();}
 recalc();
+buildMeta();
 setTimeout(function(){
   var t=document.querySelector('.hdr h1');if(t&&PROJ_KEY!=='lisa')t.innerHTML='<span style="font-weight:300;letter-spacing:2px">'+PROJ_NAME+'</span>';
   var s=document.querySelector('.hdr-sub');if(s)s.textContent=PROJ_SUB;
@@ -572,13 +577,36 @@ for(var i=0;i<T.length;i++){if(T[i].grp)ST.expanded[T[i].grp]=true}
 // Initial undo snapshot
 HISTORY.push(snap());_lastSaveSnap=snap();updateUndoUI();
 
-function render(){renderTB();renderG();updateBS()}
+// Calcule les filtres/jalons réels du projet (repli démo « lisa »)
+function buildMeta(){
+  META={codes:[],groups:[],milestones:[]};
+  if(PROJ_KEY==='lisa'){
+    META.codes=['A','B','C','D','E'];
+    META.groups=[{key:'SOC',label:'Social',codes:['A','B','C']},{key:'ACC',label:'Acc.',codes:['D','E']}];
+    META.milestones=[{date:MOA_S,label:'MOA Soc.'},{date:MOA_A,label:'MOA Acc.'}];
+    return;
+  }
+  var codeset={};
+  for(var i=0;i<T.length;i++){var b=T[i].b;if(b&&b.length===1&&b>='A'&&b<='J')codeset[b]=true;}
+  META.codes=Object.keys(codeset).sort();
+  var GL={social:'Social',accession:'Accession',erp:'ERP',creche:'Crèche',tertiaire:'Tertiaire',reno:'Réno'};
+  if(CFG_BUILDINGS&&CFG_LIVMODE==='mix'){
+    var byG={},order=[];
+    CFG_BUILDINGS.forEach(function(b){var g=b.livraison||b.type;if(!byG[g]){byG[g]=[];order.push(g);}byG[g].push(b.code);});
+    order.forEach(function(g){META.groups.push({key:g.toUpperCase().slice(0,3),label:GL[g]||g,codes:byG[g]});});
+  }
+  for(var i=0;i<T.length;i++){var t=T[i];if(t.g==='LIVR'&&t.s){var lbl=t.name.replace(/^LIVRAISON\s*/,'').trim();META.milestones.push({date:D(t.s),label:'Livr.'+(lbl?' '+lbl:'')});}}
+}
+function updateLivInfo(){var el=document.getElementById('livInfo');if(!el)return;
+  if(!META.milestones.length){el.textContent='';return;}
+  el.textContent=META.milestones.map(function(m){return m.label+': '+MN[m.date.getMonth()]+' '+m.date.getFullYear();}).join(' | ');}
+
+function render(){renderTB();renderG();updateBS();updateLivInfo()}
 
 function renderTB(){
   var h='<button class="chip'+(ST.fB==='all'?' on':'')+'" onclick="flt(\'all\')">Tous</button>';
-  ['A','B','C','D','E'].forEach(function(b){h+='<button class="chip'+(ST.fB===b?' on':'')+'" onclick="flt(\''+b+'\')">'+b+'</button>'});
-  h+='<button class="chip'+(ST.fB==='SOC'?' on':'')+'" onclick="flt(\'SOC\')">Social</button>';
-  h+='<button class="chip'+(ST.fB==='ACC'?' on':'')+'" onclick="flt(\'ACC\')">Acc.</button>';
+  META.codes.forEach(function(b){h+='<button class="chip'+(ST.fB===b?' on':'')+'" onclick="flt(\''+b+'\')">'+b+'</button>'});
+  if(META.groups.length>1){META.groups.forEach(function(g){h+='<button class="chip'+(ST.fB===g.key?' on':'')+'" onclick="flt(\''+g.key+'\')">'+g.label+'</button>'});}
   h+='<span class="chip-sep"></span>';
   h+='<button class="chip" onclick="eA(1)">Déplier</button><button class="chip" onclick="eA(0)">Replier</button>';
   h+='<span class="chip-sep"></span>';
@@ -587,7 +615,9 @@ function renderTB(){
 }
 function flt(v){ST.fB=v;render()}
 function eA(o){for(var k in gs)ST.expanded[k]=!!o;render()}
-function bM(tb,f){if(f==='all')return true;if(f==='SOC')return'ABC'.indexOf(tb)>=0||tb==='ABC'||tb==='ALL'||!tb;if(f==='ACC')return'DE'.indexOf(tb)>=0||tb==='DE'||tb==='ALL'||!tb;return tb===f||tb==='ALL'||!tb}
+function bM(tb,f){if(f==='all')return true;if(!tb||tb==='ALL')return true;
+  for(var i=0;i<META.groups.length;i++){var g=META.groups[i];if(f===g.key){if(tb===g.key)return true;return tb.split('').every(function(ch){return g.codes.indexOf(ch)>=0})}}
+  return tb===f}
 function togG(g,e){if(e){e.stopPropagation()}ST.expanded[g]=!ST.expanded[g];render()}
 
 var gs={};
@@ -635,9 +665,8 @@ function renderG(){
   document.getElementById('gmini').innerHTML=miH;
 
   var msH='<div class="gtd" style="left:'+tdOff+'px"></div><div class="gtl" style="left:'+tdOff+'px">Auj.</div>';
-  var msS=dd(MIN_D,MOA_S)*DW,msA=dd(MIN_D,MOA_A)*DW;
-  msH+='<div class="gms" style="left:'+msS+'px"></div><div class="gmsl" style="left:'+msS+'px;top:1px">MOA Soc.</div>';
-  msH+='<div class="gms" style="left:'+msA+'px;opacity:.6"></div><div class="gmsl" style="left:'+msA+'px;top:12px;opacity:.6">MOA Acc.</div>';
+  for(var mi=0;mi<META.milestones.length;mi++){var ms=META.milestones[mi];var mx=dd(MIN_D,ms.date)*DW;var op=mi===0?'':';opacity:.6';var tp=(mi%2===0)?1:12;
+    msH+='<div class="gms" style="left:'+mx+'px'+op+'"></div><div class="gmsl" style="left:'+mx+'px;top:'+tp+'px'+op+'">'+ms.label+'</div>';}
 
   document.getElementById('gright').innerHTML='<div class="gba" style="width:'+totalW+'px">'+msH+bH+'</div>';
 
@@ -662,7 +691,7 @@ function updateBS(){var t=gT(ST.selId);if(!t){return}
 function saveBS(){var t=gT(ST.selId);if(!t)return;t.name=document.getElementById('bsNm').value;t.s=document.getElementById('bsS').value;t.f=document.getElementById('bsF').value;t.dur=dd(D(t.s),D(t.f));recalc();saveSt();render()}
 function saveBSDur(){var t=gT(ST.selId);if(!t)return;var d=parseInt(document.getElementById('bsDur').value)||1;t.f=iso(ad(D(t.s),d));t.dur=d;recalc();saveSt();render()}
 function setStsBS(s){var t=gT(ST.selId);if(!t)return;t.sts=s;recalc();saveSt();render()}
-function resetP(){if(!confirm('Remettre le planning initial ?'))return;localStorage.removeItem(STORAGE_KEY);ST.selId=-1;if(PROJ_KEY==='lisa'){build();}else{loadCustomProject();}recalc();render()}
+function resetP(){if(!confirm('Remettre le planning initial ?'))return;localStorage.removeItem(STORAGE_KEY);ST.selId=-1;if(PROJ_KEY==='lisa'){build();}else{loadCustomProject();}recalc();buildMeta();render()}
 
 function openDrawer(){document.getElementById('drawer').classList.add('open');document.getElementById('backdrop').classList.add('open')}
 function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('backdrop').classList.remove('open')}

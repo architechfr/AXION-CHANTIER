@@ -190,19 +190,48 @@ function _ad(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r}
 function _iso(d){return d.toISOString().slice(0,10)}
 function _dd(a,b){return Math.round((b-a)/864e5)}
 
+// ═══════════════════════════════════════
+// MODÈLE « MODE BÂTIMENT » — chaque type a sa logique propre
+//  build : 'neuf' = terrassement / GO superstructure | 'reno' = séquence réhabilitation
+//  coef  : modulation des durées de finition (accession soigné = + ; tertiaire brut = -)
+//  unit  : 'logts' (logements) ou 'm2' (surface) — pilote le dimensionnement
+//  fitout: nature du second œuvre ('logement' | 'erp' | 'tertiaire')
+//  bal   : jalons de commande BAL + organigramme (bailleurs sociaux / réno)
+//  tma   : travaux modificatifs acquéreurs (allonge peinture + cuisine équipée)
+// ═══════════════════════════════════════
+var BTYPES={
+  social   :{lbl:'Logement social',       ic:'🏘️',build:'neuf',coef:1.00,unit:'logts',fitout:'logement', deliv:'social',   bal:true, tma:false},
+  accession:{lbl:'Logement accession',    ic:'🔑', build:'neuf',coef:1.28,unit:'logts',fitout:'logement', deliv:'accession',bal:false,tma:true },
+  creche   :{lbl:'Crèche / centre loisir',ic:'🧸', build:'neuf',coef:0.95,unit:'m2',   fitout:'erp',      deliv:'erp',      bal:false,tma:false},
+  tertiaire:{lbl:'Tertiaire / commerce',  ic:'🏬', build:'neuf',coef:0.80,unit:'m2',   fitout:'tertiaire',deliv:'tertiaire',bal:false,tma:false},
+  reno     :{lbl:'Rénovation / réhab',    ic:'🛠️',build:'reno',coef:1.10,unit:'logts',fitout:'logement', deliv:'reno',     bal:true, tma:false}
+};
+var BTYPE_ORDER=['social','accession','creche','tertiaire','reno'];
+
+// Ratios métiers (j/logement) — réf. « Agent Planning » v0.2, moyenne pondérée
+var RATIO={ETANCH:0.25,CHARPENTE:0.14,COUVERTURE:0.21,MENUIS:0.30,RAVAL:0.25,SERR:0.16,
+  PLAT:0.53,CHAPE:0.25,PLOMB:0.30,ELEC:0.30,CARREL:0.24,PEINT:0.25,MENINT:0.20,SOL:0.20};
+// Jalons de commande (jours d'anticipation avant la pose) — réf. Agent Planning
+var JALONS={MENUIS:84,BAL:70,ORGA:70,DECO:56,SERR:56};
+
 function readBuildings(){
   var nb=parseInt(document.getElementById('cNb').value)||3;
   var letters='ABCDEFGHIJ',blds=[];
   for(var i=0;i<nb;i++){
-    var c=letters[i],liv='unique';
+    var c=letters[i];
+    var type=(document.getElementById('bType_'+i)||{}).value||'social';
+    var BT=BTYPES[type]||BTYPES.social;
+    var liv=BT.deliv;
     if(CFG.liv==='mix'){var el=document.getElementById('bLiv_'+i);if(el)liv=el.value}
     var partialCheckbox=document.querySelectorAll('#ssPartialBats input')[i];
     blds.push({
-      code:c,
-      etages:parseInt((document.getElementById('bEtg_'+i)||{}).value)||4,
+      code:c, type:type,
+      logts:parseInt((document.getElementById('bLog_'+i)||{}).value)||(BT.unit==='logts'?12:0),
+      surf :parseInt((document.getElementById('bSurf_'+i)||{}).value)||(BT.unit==='m2'?600:0),
+      etages:parseInt((document.getElementById('bEtg_'+i)||{}).value)||(BT.fitout==='logement'?4:1),
       toiture:(document.getElementById('bToit_'+i)||{}).value||'terrasse',
       livraison:liv,
-      hasSousSol:CFG.ss==='general'?true:CFG.ss==='partial'?(partialCheckbox?partialCheckbox.checked:true):false
+      hasSousSol:BT.build!=='neuf'?false:(CFG.ss==='general'?true:CFG.ss==='partial'?(partialCheckbox?partialCheckbox.checked:true):false)
     });
   }
   return blds;
@@ -213,8 +242,10 @@ function generatePlanning(){
   var blds=readBuildings();
   var dureeMois=parseInt(document.getElementById('cGO').value)||14;
   var interBat=20; // décalage inter-bâtiments par défaut
-  // Durées calibrées
-  var rdcDur=Math.max(20,Math.round(dureeMois*30/Math.max(blds.length,1)/8));
+  var neufBlds=blds.filter(function(b){return BTYPES[b.type].build==='neuf'});
+  var hasNeuf=neufBlds.length>0;
+  // Durées GO calibrées (réf. règles GO ~5 sem/niveau)
+  var rdcDur=Math.max(20,Math.round(dureeMois*30/Math.max(neufBlds.length||1,1)/8));
   var lvlDur=Math.round(rdcDur*1.8);
   var ssLag=Math.round(lvlDur*0.7);
   var ttDur=Math.round(rdcDur*1.6);
@@ -225,8 +256,8 @@ function generatePlanning(){
   var batsAvecSS=blds.filter(function(b){return b.hasSousSol});
   var rdcAvailable=new Date(dStart);
 
-  // ═══ PHASE 1 — SOUS-SOL ═══
-  if(CFG.ss==='general'){
+  // ═══ PHASE 1 — SOUS-SOL / TERRASSEMENT (bâtiments neufs uniquement) ═══
+  if(hasNeuf && CFG.ss==='general'){
     aT('TERRASSEMENT + SOUS-SOL','TERR','',dStart,_ad(dStart,CFG.ssDur*30),0,{sum:1,grp:'SS'});
     var c=new Date(dStart);
     aT('Terrassement général','TERR','ALL',c,_ad(c,30),1,{grp:'SS',sub:1});c=_ad(c,30);
@@ -238,7 +269,7 @@ function generatePlanning(){
     }
     aT('Dalle RDC (toutes zones)','GO','ALL',c,_ad(c,40),1,{grp:'SS',sub:1});
     rdcAvailable=_ad(c,40);
-  } else if(CFG.ss==='partial' && batsAvecSS.length>0){
+  } else if(hasNeuf && CFG.ss==='partial' && batsAvecSS.length>0){
     aT('SOUS-SOLS PARTIELS','TERR','',dStart,_ad(dStart,CFG.ssDur*30),0,{sum:1,grp:'SS'});
     var c=new Date(dStart),codes=batsAvecSS.map(function(b){return b.code}).join(',');
     aT('Terrassement zones SS ('+codes+')','TERR','SS',c,_ad(c,30),1,{grp:'SS',sub:1});c=_ad(c,30);
@@ -249,21 +280,142 @@ function generatePlanning(){
     }
     aT('Dalle RDC (zones SS)','GO','SS',c,_ad(c,30),1,{grp:'SS',sub:1});
     rdcAvailable=_ad(c,30);
-  } else {
+  } else if(hasNeuf){
     aT('TERRASSEMENT','TERR','',dStart,_ad(dStart,30),0,{grp:'SS'});
     aT('Installation grue','GO','ALL',_ad(dStart,15),_ad(dStart,30),0,{grp:'GRUE'});
     rdcAvailable=_ad(dStart,15);
   }
 
-  // ═══ PHASE 2 — GO superstructure par bâtiment ═══
-  var bldgGOEnd={};
-  for(var i=0;i<blds.length;i++){
-    var b=blds[i],batStart;
-    if(CFG.ss==='partial' && !b.hasSousSol){
-      batStart=_ad(dStart,15+i*interBat);
-    } else {
-      batStart=_ad(rdcAvailable,i*interBat);
+  // ═══ MOTEUR PAR BÂTIMENT — le « mode bâtiment » choisit la séquence ═══
+  // Facteur de taille (logements ou m²) borné, pour dimensionner le second œuvre
+  function sizeF(b){var t=BTYPES[b.type];
+    if(t.unit==='m2'){var s=b.surf||400;return Math.max(0.6,Math.min(2.2,0.6+s/800));}
+    var l=b.logts||10;return Math.max(0.6,Math.min(2.0,0.55+l*0.045));}
+
+  // Second œuvre LOGEMENT (réutilisé par neuf ET réno) — renvoie la date de fin
+  function secondOeuvreLogement(b,startSO,FF){
+    var coef=BTYPES[b.type].coef, tma=BTYPES[b.type].tma;
+    function D(x){return Math.max(1,Math.round(x*FF*coef))}
+    var c=new Date(startSO);
+    aT('PLAQUISTE '+b.code,'PLAT',b.code,c,_ad(c,D(30)),0,{sum:1,grp:'PLAT_'+b.code});
+    aT('Traçage rails '+b.code,'PLAT',b.code,c,_ad(c,D(2)),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,D(2));
+    aT('Doublages TGS '+b.code,'PLAT',b.code,c,_ad(c,D(8)),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,D(8));
+    aT('Cloisons plaques '+b.code,'PLAT',b.code,c,_ad(c,D(10)),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,D(10));
+    aT('Bandes 1ère couche '+b.code,'PLAT',b.code,c,_ad(c,D(3)),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,D(3));
+    aT('Bandes 2ème couche '+b.code,'PLAT',b.code,c,_ad(c,D(3)),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,D(3));
+    aT('Séchage + réception '+b.code,'PLAT',b.code,c,_ad(c,D(4)),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,D(4));
+    var plaqEnd=new Date(c);
+    aT('ÉLEC câblage '+b.code,'ELEC',b.code,plaqEnd,_ad(plaqEnd,D(5)),0,{sum:1,grp:'EL1_'+b.code});
+    aT('Tirage fils '+b.code,'ELEC',b.code,plaqEnd,_ad(plaqEnd,D(4)),1,{grp:'EL1_'+b.code,sub:1});
+    aT('Pose caches '+b.code,'ELEC',b.code,_ad(plaqEnd,D(4)),_ad(plaqEnd,D(5)),1,{grp:'EL1_'+b.code,sub:1});
+    aT('CHAPE '+b.code,'CHAPE',b.code,plaqEnd,_ad(plaqEnd,D(14)),0,{sum:1,grp:'CH_'+b.code});
+    aT('Coulage chape '+b.code,'CHAPE',b.code,plaqEnd,_ad(plaqEnd,D(5)),1,{grp:'CH_'+b.code,sub:1});
+    aT('Séchage chape '+b.code,'CHAPE',b.code,_ad(plaqEnd,D(5)),_ad(plaqEnd,D(14)),1,{grp:'CH_'+b.code,sub:1});
+    var chapeEnd=_ad(plaqEnd,D(14)),p1S=chapeEnd;
+    var peintTot=tma?D(60):D(50);
+    aT('PEINTURE '+b.code,'PEINT',b.code,p1S,_ad(p1S,peintTot),0,{sum:1,grp:'PE_'+b.code});
+    aT('Réception supports '+b.code,'PEINT',b.code,_ad(p1S,-1),p1S,1,{grp:'PE_'+b.code,sub:1});
+    aT('Peinture 1ère couche '+b.code,'PEINT',b.code,p1S,_ad(p1S,D(10)),1,{grp:'PE_'+b.code,sub:1});
+    var p1E=_ad(p1S,D(10));
+    aT('PLOMBIER '+b.code,'PLOMB',b.code,p1E,_ad(p1E,D(35)),0,{sum:1,grp:'PL_'+b.code});
+    aT('Baignoires + douches '+b.code,'PLOMB',b.code,p1E,_ad(p1E,D(3)),1,{grp:'PL_'+b.code,sub:1});
+    var caS=_ad(p1E,D(5));
+    aT('CARRELAGE '+b.code,'CARREL',b.code,caS,_ad(caS,D(14)),0,{sum:1,grp:'CA_'+b.code});
+    aT('Carrelage sols '+b.code,'CARREL',b.code,caS,_ad(caS,D(10)),1,{grp:'CA_'+b.code,sub:1});
+    aT('Faïence '+b.code,'CARREL',b.code,_ad(caS,D(10)),_ad(caS,D(14)),1,{grp:'CA_'+b.code,sub:1});
+    var caE=_ad(caS,D(14));
+    aT('WC '+b.code,'PLOMB',b.code,caE,_ad(caE,D(2)),1,{grp:'PL_'+b.code,sub:1});
+    aT('Peinture 2ème couche '+b.code,'PEINT',b.code,caE,_ad(caE,D(21)),1,{grp:'PE_'+b.code,sub:1});
+    var p2E=_ad(caE,D(21));
+    aT('ÉLEC équipements '+b.code,'ELEC',b.code,p2E,_ad(p2E,D(5)),0,{sum:1,grp:'EL2_'+b.code});
+    aT('Prises + inters '+b.code,'ELEC',b.code,p2E,_ad(p2E,D(5)),1,{grp:'EL2_'+b.code,sub:1});
+    aT('Éviers + vasques '+b.code,'PLOMB',b.code,p2E,_ad(p2E,D(3)),1,{grp:'PL_'+b.code,sub:1});
+    aT('Radiateurs '+b.code,'PLOMB',b.code,p2E,_ad(p2E,D(4)),1,{grp:'PL_'+b.code,sub:1});
+    var prE=_ad(p2E,D(5));
+    aT('SOL SOUPLE '+b.code,'SOL',b.code,prE,_ad(prE,D(12)),0,{grp:'SO_'+b.code});
+    var solE=_ad(prE,D(12));
+    aT('MENU. INT. '+b.code,'MENINT',b.code,solE,_ad(solE,D(15)),0,{sum:1,grp:'MI_'+b.code});
+    aT('Portes palières '+b.code,'MENINT',b.code,caE,_ad(caE,D(3)),1,{grp:'MI_'+b.code,sub:1});
+    aT('Portes distribution '+b.code,'MENINT',b.code,solE,_ad(solE,D(10)),1,{grp:'MI_'+b.code,sub:1});
+    var end=_ad(solE,D(15));
+    if(tma){ // accession : cuisine équipée + finitions soignées
+      aT('Cuisine équipée + dressings '+b.code,'MENINT',b.code,end,_ad(end,D(6)),1,{grp:'MI_'+b.code,sub:1});
+      end=_ad(end,D(6));
     }
+    return end;
+  }
+
+  // Aménagement ERP — crèche / centre de loisir
+  function fitoutERP(b,startSO,FF){
+    var coef=BTYPES[b.type].coef;function D(x){return Math.max(1,Math.round(x*FF*coef))}
+    var c=new Date(startSO);
+    aT('CLOISONS / FAUX-PLAFONDS '+b.code,'PLAT',b.code,c,_ad(c,D(22)),0,{sum:1,grp:'PLAT_'+b.code});
+    aT('Doublages + cloisons '+b.code,'PLAT',b.code,c,_ad(c,D(14)),1,{grp:'PLAT_'+b.code,sub:1});
+    aT('Faux-plafonds '+b.code,'PLAT',b.code,_ad(c,D(10)),_ad(c,D(22)),1,{grp:'PLAT_'+b.code,sub:1});
+    var c2=_ad(c,D(22));
+    aT('CVC / ventilation '+b.code,'VMC',b.code,c2,_ad(c2,D(18)),0,{grp:'VMC_'+b.code});
+    aT('Élec + courants faibles '+b.code,'ELEC',b.code,c2,_ad(c2,D(15)),0,{grp:'EL_'+b.code});
+    aT('Plomberie / sanitaires enfants '+b.code,'PLOMB',b.code,c2,_ad(c2,D(15)),0,{grp:'PL_'+b.code});
+    var c3=_ad(c2,D(18));
+    aT('Chape '+b.code,'CHAPE',b.code,c3,_ad(c3,D(12)),0,{grp:'CH_'+b.code});
+    var c4=_ad(c3,D(12));
+    aT('Peinture '+b.code,'PEINT',b.code,c4,_ad(c4,D(18)),0,{grp:'PE_'+b.code});
+    var c5=_ad(c4,D(18));
+    aT('Sols souples PVC ERP '+b.code,'SOL',b.code,c5,_ad(c5,D(12)),0,{grp:'SO_'+b.code});
+    var c6=_ad(c5,D(12));
+    aT('Menuiseries int. + agencement '+b.code,'MENINT',b.code,c6,_ad(c6,D(12)),0,{grp:'MI_'+b.code});
+    var c7=_ad(c6,D(12));
+    aT('Sécurité incendie ERP + SSI '+b.code,'ELEC',b.code,c7,_ad(c7,D(8)),0,{grp:'SSI_'+b.code});
+    return _ad(c7,D(8));
+  }
+
+  // Aménagement TERTIAIRE / commerce — plateau + lots techniques
+  function fitoutTertiaire(b,startSO,FF){
+    var coef=BTYPES[b.type].coef;function D(x){return Math.max(1,Math.round(x*FF*coef))}
+    var c=new Date(startSO);
+    aT('PLATEAU TECHNIQUE '+b.code,'VMC',b.code,c,_ad(c,D(25)),0,{sum:1,grp:'TECH_'+b.code});
+    aT('CVC (gaines, CTA) '+b.code,'VMC',b.code,c,_ad(c,D(18)),1,{grp:'TECH_'+b.code,sub:1});
+    aT('Élec + courants faibles '+b.code,'ELEC',b.code,c,_ad(c,D(18)),1,{grp:'TECH_'+b.code,sub:1});
+    aT('Plomberie / sanitaires '+b.code,'PLOMB',b.code,c,_ad(c,D(12)),1,{grp:'TECH_'+b.code,sub:1});
+    var c2=_ad(c,D(25));
+    aT('Cloisons + faux-plafonds '+b.code,'PLAT',b.code,c2,_ad(c2,D(18)),0,{grp:'PLAT_'+b.code});
+    var c3=_ad(c2,D(18));
+    aT('Faux-planchers techniques '+b.code,'SOL',b.code,c3,_ad(c3,D(8)),0,{grp:'FP_'+b.code});
+    var c4=_ad(c3,D(8));
+    aT('Peinture plateau '+b.code,'PEINT',b.code,c4,_ad(c4,D(15)),0,{grp:'PE_'+b.code});
+    var c5=_ad(c4,D(15));
+    aT('Revêtements de sol '+b.code,'SOL',b.code,c5,_ad(c5,D(12)),0,{grp:'SO_'+b.code});
+    return _ad(c5,D(12));
+  }
+
+  var bldgEnd={}, bldgGOEnd={};
+
+  // ═══ PHASE 2 — CONSTRUCTION PAR BÂTIMENT ═══
+  for(var i=0;i<blds.length;i++){
+    var b=blds[i],BT=BTYPES[b.type],FF=sizeF(b);
+
+    // ---- RÉNOVATION / RÉHAB : séquence dédiée (pas de terrassement / GO superstructure) ----
+    if(BT.build==='reno'){
+      var Dr=function(x){return Math.max(1,Math.round(x*FF))};
+      var rs=_ad(dStart,i*interBat);
+      aT('Bât '+b.code+' — RÉHABILITATION','CURAGE',b.code,rs,rs,0,{sum:1,grp:'RENO_'+b.code});
+      aT('Diagnostics amiante / plomb '+b.code,'DESAM',b.code,_ad(rs,-21),rs,1,{grp:'RENO_'+b.code,sub:1,sts:'dn'});
+      var c=new Date(rs);
+      aT('Installation + protections '+b.code,'INSTAL',b.code,c,_ad(c,Dr(8)),1,{grp:'RENO_'+b.code,sub:1});c=_ad(c,Dr(8));
+      aT('Désamiantage / déplombage '+b.code,'DESAM',b.code,c,_ad(c,Dr(25)),1,{grp:'RENO_'+b.code,sub:1});c=_ad(c,Dr(25));
+      aT('Curage / dépose intérieure '+b.code,'CURAGE',b.code,c,_ad(c,Dr(20)),1,{grp:'RENO_'+b.code,sub:1});c=_ad(c,Dr(20));
+      aT('Démolitions / ouvertures '+b.code,'CURAGE',b.code,c,_ad(c,Dr(12)),1,{grp:'RENO_'+b.code,sub:1});c=_ad(c,Dr(12));
+      aT('Reprises structure / planchers '+b.code,'GO',b.code,c,_ad(c,Dr(18)),1,{grp:'RENO_'+b.code,sub:1});c=_ad(c,Dr(18));
+      aT('Menuiseries ext. (remplacement) '+b.code,'MENUIS',b.code,c,_ad(c,Dr(12)),1,{grp:'RENO_'+b.code,sub:1});
+      aT('Création réseaux (attentes) '+b.code,'ELEC',b.code,c,_ad(c,Dr(15)),1,{grp:'RENO_'+b.code,sub:1});c=_ad(c,Dr(15));
+      bldgEnd[b.code]=secondOeuvreLogement(b,c,FF);
+      continue;
+    }
+
+    // ---- NEUF : superstructure gros œuvre ----
+    var batStart;
+    if(CFG.ss==='partial' && !b.hasSousSol){batStart=_ad(dStart,15+i*interBat);}
+    else{batStart=_ad(rdcAvailable,i*interBat);}
     var levels=[{n:'RDC',s:batStart,f:_ad(batStart,rdcDur)}];
     for(var lvl=1;lvl<=b.etages;lvl++){
       var ls=_ad(levels[lvl-1].s,lvl===1?7:Math.round(ssLag));
@@ -274,125 +426,55 @@ function generatePlanning(){
     var ttName=b.toiture==='terrasse'?'Toit. Terrasse':b.toiture==='charpente'?'Charpente couverture':'Toiture';
     levels.push({n:ttName,s:ttS,f:_ad(ttS,ttDur)});
     bldgGOEnd[b.code]=levels[levels.length-1].f;
-    aT('Bat '+b.code+' — Superstructure','GO',b.code,levels[0].s,levels[levels.length-1].f,0,{sum:1,grp:'GO_'+b.code});
+    aT('Bât '+b.code+' ('+BT.lbl+') — Superstructure','GO',b.code,levels[0].s,levels[levels.length-1].f,0,{sum:1,grp:'GO_'+b.code});
     for(var l=0;l<levels.length;l++)aT(b.code+' — '+levels[l].n,'GO',b.code,levels[l].s,levels[l].f,1,{grp:'GO_'+b.code,sub:1});
+
+    // fitout selon le type de bâtiment
+    var startSO=b.toiture==='terrasse'?_ad(bldgGOEnd[b.code],28):_ad(bldgGOEnd[b.code],14);
+    var soEnd=BT.fitout==='erp'?fitoutERP(b,startSO,FF):BT.fitout==='tertiaire'?fitoutTertiaire(b,startSO,FF):secondOeuvreLogement(b,startSO,FF);
+    bldgEnd[b.code]=soEnd;
   }
 
-  // ═══ PHASE 3 — ÉTANCHÉITÉ par bâtiment ═══
-  if(blds.some(function(b){return b.toiture==='terrasse'})){
+  // ═══ PHASE 3 — ÉTANCHÉITÉ (neuf, toiture terrasse) ═══
+  var terr=neufBlds.filter(function(b){return b.toiture==='terrasse'});
+  if(terr.length){
     aT('ÉTANCHÉITÉ','ETANCH','',dStart,dStart,0,{sum:1,grp:'ETANCH'});
-    for(var i=0;i<blds.length;i++){
-      var b=blds[i];
-      if(b.toiture==='terrasse'){
-        var s=bldgGOEnd[b.code];
-        aT('Étanchéité '+b.code,'ETANCH',b.code,s,_ad(s,28),1,{grp:'ETANCH',sub:1});
-      }
+    for(var i=0;i<terr.length;i++){var b=terr[i],s=bldgGOEnd[b.code];aT('Étanchéité '+b.code,'ETANCH',b.code,s,_ad(s,28),1,{grp:'ETANCH',sub:1});}
+  }
+
+  // ═══ PHASE 4 — MENUISERIES EXT. (+ jalon commande J-84) ═══
+  if(neufBlds.length){
+    aT('MENUISERIES EXT.','MENUIS','',dStart,dStart,0,{sum:1,grp:'MENUIS'});
+    for(var i=0;i<neufBlds.length;i++){var b=neufBlds[i];
+      var fenStart=CFG.fen==='bt'?bldgGOEnd[b.code]:_ad(bldgGOEnd[b.code],-30);
+      aT('Cde menuiseries '+b.code+' (J-'+JALONS.MENUIS+')','MENUIS',b.code,_ad(fenStart,-JALONS.MENUIS),_ad(fenStart,-JALONS.MENUIS+5),1,{grp:'MENUIS',sub:1,sts:'dn'});
+      aT('Menu. ext. '+b.code,'MENUIS',b.code,fenStart,_ad(fenStart,14),1,{grp:'MENUIS',sub:1});
     }
   }
 
-  // ═══ PHASE 4 — MENUISERIES EXT ═══
-  aT('MENUISERIES EXT.','MENUIS','',dStart,dStart,0,{sum:1,grp:'MENUIS'});
-  for(var i=0;i<blds.length;i++){
-    var b=blds[i],s=bldgGOEnd[b.code];
-    var fenStart=CFG.fen==='bt'?s:_ad(bldgGOEnd[b.code],-30);
-    aT('Menu. ext. '+b.code,'MENUIS',b.code,fenStart,_ad(fenStart,12),1,{grp:'MENUIS',sub:1});
-  }
-
-  // ═══ PHASE 5 — RAVALEMENT séquentiel ═══
+  // ═══ PHASE 5 — RAVALEMENT ═══
   aT('RAVALEMENT','RAVAL','',dStart,dStart,0,{sum:1,grp:'RAVAL'});
   var ravStart=null;
-  for(var i=0;i<blds.length;i++){
-    var b=blds[i];
-    var s=ravStart||_ad(bldgGOEnd[b.code],10);
-    aT('Ravalement '+b.code,'RAVAL',b.code,s,_ad(s,25),1,{grp:'RAVAL',sub:1});
-    ravStart=_ad(s,25);
-  }
-  aT('SERRURERIE EXT.','SERR','ALL',_ad(bldgGOEnd[blds[0].code],10),ravStart,0,{grp:'SERR'});
+  for(var i=0;i<neufBlds.length;i++){var b=neufBlds[i];var s=ravStart||_ad(bldgGOEnd[b.code]||dStart,10);aT('Ravalement '+b.code,'RAVAL',b.code,s,_ad(s,25),1,{grp:'RAVAL',sub:1});ravStart=_ad(s,25);}
+  for(var i=0;i<blds.length;i++){var b=blds[i];if(BTYPES[b.type].build!=='reno')continue;var re=bldgEnd[b.code];if(!re)continue;aT('Ravalement / ITE '+b.code,'RAVAL',b.code,_ad(re,-35),_ad(re,-5),1,{grp:'RAVAL',sub:1});}
 
-  // ═══ PHASE 6 — SECOND ŒUVRE INTÉRIEUR par bâtiment ═══
-  for(var i=0;i<blds.length;i++){
-    var b=blds[i];
-    var startSO=b.toiture==='terrasse'?_ad(bldgGOEnd[b.code],28):_ad(bldgGOEnd[b.code],14);
-    var c=new Date(startSO);
-    // PLAQUISTE
-    aT('PLAQUISTE '+b.code,'PLAT',b.code,c,_ad(c,30),0,{sum:1,grp:'PLAT_'+b.code});
-    aT('Traçage rails '+b.code,'PLAT',b.code,c,_ad(c,2),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,2);
-    aT('Doublages TGS '+b.code,'PLAT',b.code,c,_ad(c,8),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,8);
-    aT('Cloisons plaques '+b.code,'PLAT',b.code,c,_ad(c,10),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,10);
-    aT('Bandes 1ère couche '+b.code,'PLAT',b.code,c,_ad(c,3),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,3);
-    aT('Bandes 2ème couche '+b.code,'PLAT',b.code,c,_ad(c,3),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,3);
-    aT('Séchage + réception '+b.code,'PLAT',b.code,c,_ad(c,4),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,4);
-    var plaqEnd=new Date(c);
-    // ÉLEC câblage
-    aT('ÉLEC câblage '+b.code,'ELEC',b.code,plaqEnd,_ad(plaqEnd,5),0,{sum:1,grp:'EL1_'+b.code});
-    aT('Tirage fils '+b.code,'ELEC',b.code,plaqEnd,_ad(plaqEnd,4),1,{grp:'EL1_'+b.code,sub:1});
-    aT('Pose caches '+b.code,'ELEC',b.code,_ad(plaqEnd,4),_ad(plaqEnd,5),1,{grp:'EL1_'+b.code,sub:1});
-    // CHAPE
-    aT('CHAPE '+b.code,'CHAPE',b.code,plaqEnd,_ad(plaqEnd,14),0,{sum:1,grp:'CH_'+b.code});
-    aT('Coulage chape '+b.code,'CHAPE',b.code,plaqEnd,_ad(plaqEnd,5),1,{grp:'CH_'+b.code,sub:1});
-    aT('Séchage chape '+b.code,'CHAPE',b.code,_ad(plaqEnd,5),_ad(plaqEnd,14),1,{grp:'CH_'+b.code,sub:1});
-    var chapeEnd=_ad(plaqEnd,14),p1S=chapeEnd;
-    // PEINTURE
-    aT('PEINTURE '+b.code,'PEINT',b.code,p1S,_ad(p1S,50),0,{sum:1,grp:'PE_'+b.code});
-    aT('Réception supports '+b.code,'PEINT',b.code,_ad(p1S,-1),p1S,1,{grp:'PE_'+b.code,sub:1});
-    aT('Peinture 1ère couche '+b.code,'PEINT',b.code,p1S,_ad(p1S,10),1,{grp:'PE_'+b.code,sub:1});
-    var p1E=_ad(p1S,10);
-    // PLOMBIER avant carrelage
-    aT('PLOMBIER '+b.code,'PLOMB',b.code,p1E,_ad(p1E,35),0,{sum:1,grp:'PL_'+b.code});
-    aT('Baignoires + douches '+b.code,'PLOMB',b.code,p1E,_ad(p1E,3),1,{grp:'PL_'+b.code,sub:1});
-    // CARRELAGE entre 2 peintures
-    var caS=_ad(p1E,5);
-    aT('CARRELAGE '+b.code,'CARREL',b.code,caS,_ad(caS,14),0,{sum:1,grp:'CA_'+b.code});
-    aT('Carrelage sols '+b.code,'CARREL',b.code,caS,_ad(caS,10),1,{grp:'CA_'+b.code,sub:1});
-    aT('Faïence '+b.code,'CARREL',b.code,_ad(caS,10),_ad(caS,14),1,{grp:'CA_'+b.code,sub:1});
-    var caE=_ad(caS,14);
-    // WC après carrelage
-    aT('WC '+b.code,'PLOMB',b.code,caE,_ad(caE,2),1,{grp:'PL_'+b.code,sub:1});
-    // Peinture 2
-    aT('Peinture 2ème couche '+b.code,'PEINT',b.code,caE,_ad(caE,21),1,{grp:'PE_'+b.code,sub:1});
-    var p2E=_ad(caE,21);
-    // ÉLEC équipements
-    aT('ÉLEC équipements '+b.code,'ELEC',b.code,p2E,_ad(p2E,5),0,{sum:1,grp:'EL2_'+b.code});
-    aT('Prises + inters '+b.code,'ELEC',b.code,p2E,_ad(p2E,5),1,{grp:'EL2_'+b.code,sub:1});
-    // Plomb finitions après peinture 2
-    aT('Éviers + vasques '+b.code,'PLOMB',b.code,p2E,_ad(p2E,3),1,{grp:'PL_'+b.code,sub:1});
-    aT('Radiateurs '+b.code,'PLOMB',b.code,p2E,_ad(p2E,4),1,{grp:'PL_'+b.code,sub:1});
-    var prE=_ad(p2E,5);
-    // Sol souple
-    aT('SOL SOUPLE '+b.code,'SOL',b.code,prE,_ad(prE,12),0,{grp:'SO_'+b.code});
-    var solE=_ad(prE,12);
-    // Menuiseries int
-    aT('MENU. INT. '+b.code,'MENINT',b.code,solE,_ad(solE,15),0,{sum:1,grp:'MI_'+b.code});
-    aT('Portes palières '+b.code,'MENINT',b.code,caE,_ad(caE,3),1,{grp:'MI_'+b.code,sub:1});
-    aT('Portes distribution '+b.code,'MENINT',b.code,solE,_ad(solE,10),1,{grp:'MI_'+b.code,sub:1});
+  // ═══ PHASE 6 — JALONS COMMANDE (BAL + organigramme : social / réno) ═══
+  var balB=blds.filter(function(b){return BTYPES[b.type].bal});
+  if(balB.length){
+    aT('COMMANDES ANTICIPÉES','SERR','',dStart,dStart,0,{sum:1,grp:'CMD'});
+    for(var i=0;i<balB.length;i++){var b=balB[i],e=bldgEnd[b.code];if(!e)continue;
+      aT('Cde BAL '+b.code+' (J-'+JALONS.BAL+')','SERR',b.code,_ad(e,-JALONS.BAL),_ad(e,-JALONS.BAL+5),1,{grp:'CMD',sub:1,sts:'dn'});
+      aT('Cde organigramme '+b.code+' (J-'+JALONS.ORGA+')','SERR',b.code,_ad(e,-JALONS.ORGA),_ad(e,-JALONS.ORGA+5),1,{grp:'CMD',sub:1,sts:'dn'});
+    }
   }
 
-  // ═══ PHASE 7 — OPR + LIVRAISONS ═══
-  if(CFG.liv==='mix'){
-    var socEnd=new Date(2020,0,1),accEnd=new Date(2020,0,1);
-    for(var i=0;i<T.length;i++){var t=T[i];if(t.sum||!t.f)continue;
-      if(t.g==='MENINT'){
-        var bldg=blds.filter(function(b){return b.code===t.b})[0];if(!bldg)continue;
-        var f=new Date(t.f);
-        if(bldg.livraison==='social'&&f>socEnd)socEnd=f;
-        if(bldg.livraison==='accession'&&f>accEnd)accEnd=f;
-      }
-    }
-    if(socEnd>new Date(2021,0,1)){
-      aT('OPR SOCIAL','OPR','SOC',_ad(socEnd,-28),socEnd,0,{grp:'OPR'});
-      aT('LIVRAISON SOCIAL','LIVR','SOC',socEnd,_ad(socEnd,20),0,{grp:'LIVR'});
-    }
-    if(accEnd>new Date(2021,0,1)){
-      aT('OPR ACCESSION','OPR','ACC',_ad(accEnd,-28),accEnd,0,{grp:'OPR'});
-      aT('LIVRAISON ACCESSION','LIVR','ACC',accEnd,_ad(accEnd,20),0,{grp:'LIVR'});
-    }
-  } else {
-    var allEnd=new Date(2020,0,1);
-    for(var i=0;i<T.length;i++){var t=T[i];if(t.sum||!t.f)continue;if(t.g==='MENINT'){var f=new Date(t.f);if(f>allEnd)allEnd=f}}
-    if(allEnd>new Date(2021,0,1)){
-      aT('OPR','OPR','ALL',_ad(allEnd,-28),allEnd,0,{grp:'OPR'});
-      aT('LIVRAISON','LIVR','ALL',allEnd,_ad(allEnd,20),0,{grp:'LIVR'});
-    }
+  // ═══ PHASE 7 — OPR + LIVRAISONS (par groupe de livraison) ═══
+  var groups={};
+  for(var i=0;i<blds.length;i++){var b=blds[i];var key=CFG.liv==='mix'?(b.livraison||b.type):'ALL';var e=bldgEnd[b.code];if(!e)continue;if(!groups[key]||e>groups[key])groups[key]=e;}
+  var GLABEL={social:'SOCIAL',accession:'ACCESSION',erp:'ERP',creche:'CRÈCHE',tertiaire:'TERTIAIRE',reno:'RÉNOVATION',ALL:''};
+  for(var k in groups){var e=groups[k];var suf=(GLABEL[k]!==undefined?GLABEL[k]:k.toUpperCase());var bb=(k==='ALL'?'ALL':k.toUpperCase().slice(0,3));
+    aT('OPR'+(suf?' '+suf:''),'OPR',bb,_ad(e,-28),e,0,{grp:'OPR'});
+    aT('LIVRAISON'+(suf?' '+suf:''),'LIVR',bb,e,_ad(e,20),0,{grp:'LIVR'});
   }
 
   return {tasks:T,buildings:blds};
@@ -466,50 +548,58 @@ function genBldgConf(){
   var letters='ABCDEFGHIJ',h='<div class="bldg-cards">';
   for(var i=0;i<nb;i++){
     var c=letters[i];
+    var topts='';for(var k=0;k<BTYPE_ORDER.length;k++){var tk=BTYPE_ORDER[k];topts+='<option value="'+tk+'">'+BTYPES[tk].ic+' '+BTYPES[tk].lbl+'</option>';}
     h+='<div class="bldg-card"><h4><span class="code">'+c+'</span> Bâtiment '+c+'</h4>';
-    h+='<div class="fg"><label>Étages habitables</label><input type="number" value="4" min="1" max="20" id="bEtg_'+i+'"></div>';
+    h+='<div class="fg"><label>Type de bâtiment</label><select id="bType_'+i+'" onchange="onBType('+i+')">'+topts+'</select></div>';
+    h+='<div class="fg" id="bLogWrap_'+i+'"><label>Nombre de logements</label><input type="number" value="12" min="1" max="120" id="bLog_'+i+'"></div>';
+    h+='<div class="fg" id="bSurfWrap_'+i+'" style="display:none"><label>Surface (m²)</label><input type="number" value="600" min="50" max="20000" id="bSurf_'+i+'"></div>';
+    h+='<div class="fg"><label>Niveaux (R+n)</label><input type="number" value="4" min="0" max="20" id="bEtg_'+i+'"></div>';
     h+='<div class="fg"><label>Toiture</label><select id="bToit_'+i+'"><option value="terrasse">Toiture terrasse</option><option value="charpente">Charpente couverture</option><option value="mixte">Mixte</option></select></div>';
-    if(CFG.liv==='mix')h+='<div class="fg"><label>Livraison</label><select id="bLiv_'+i+'"><option value="social">Social</option><option value="accession">Accession</option></select></div>';
+    if(CFG.liv==='mix')h+='<div class="fg"><label>Livraison</label><select id="bLiv_'+i+'"><option value="social">Social</option><option value="accession">Accession</option><option value="erp">ERP / Crèche</option><option value="tertiaire">Tertiaire</option><option value="reno">Rénovation</option></select></div>';
     h+='</div>'}
   h+='</div>';
-  document.getElementById('bldgConf').innerHTML=h}
+  document.getElementById('bldgConf').innerHTML=h;
+  for(var i=0;i<nb;i++)onBType(i);}
+
+function onBType(i){
+  var t=(document.getElementById('bType_'+i)||{}).value||'social';var BT=BTYPES[t]||BTYPES.social;
+  var lw=document.getElementById('bLogWrap_'+i),sw=document.getElementById('bSurfWrap_'+i);
+  if(lw)lw.style.display=BT.unit==='logts'?'block':'none';
+  if(sw)sw.style.display=BT.unit==='m2'?'block':'none';}
 
 function generate(){
-  var nb=parseInt(document.getElementById('cNb').value)||3;
-  var goMois=parseInt(document.getElementById('cGO').value)||16;
   var name=document.getElementById('cName').value||'Nouveau projet';
-  var letters='ABCDEFGHIJ';
+  var goMois=parseInt(document.getElementById('cGO').value)||16;
+  var res=generatePlanning();
+  var blds=res.buildings, nbTasks=res.tasks.length;
+  var totLog=0;for(var i=0;i<blds.length;i++)if(BTYPES[blds[i].type].unit==='logts')totLog+=blds[i].logts;
 
-  var ssLabel=CFG.ss==='general'?'Général ('+CFG.ssNiv+' niveaux, ~'+CFG.ssDur+' mois)':CFG.ss==='partial'?'Partiel':'Aucun';
+  var ssLabel=CFG.ss==='general'?'Général ('+CFG.ssNiv+' niv., ~'+CFG.ssDur+' mois)':CFG.ss==='partial'?'Partiel':'Aucun';
   var seqLabel=CFG.seq==='cav'?'Cloison avant chape':'Chape avant cloison';
   var fenLabel=CFG.fen==='bt'?'Bâtiment terminé':'En montée';
 
-  var nbTasks=0;
-  // GO: sous-sol + per building
-  if(CFG.ss==='general') nbTasks+=3+CFG.ssNiv*2+1; // terr+grue+voiles + (dalle+elev)*niv + dalle RDC
-  for(var i=0;i<nb;i++) nbTasks+=6+20; // 6 GO levels + ~20 CES sub-tasks per building
-  nbTasks+=4; // OPR+livraisons
-
   var h='<h3>'+name+'</h3>';
   h+='<div class="stat">';
-  h+='<div class="st"><div class="v">'+nb+'</div><div class="l">Bâtiments</div></div>';
+  h+='<div class="st"><div class="v">'+blds.length+'</div><div class="l">Bâtiments</div></div>';
+  h+='<div class="st"><div class="v">'+totLog+'</div><div class="l">Logements</div></div>';
   h+='<div class="st"><div class="v">'+goMois+'</div><div class="l">Mois GO</div></div>';
-  h+='<div class="st"><div class="v">~'+nbTasks+'</div><div class="l">Tâches générées</div></div>';
+  h+='<div class="st"><div class="v">'+nbTasks+'</div><div class="l">Tâches générées</div></div>';
   h+='</div>';
 
   h+='<div class="seq">';
-  h+='<b>Sous-sol :</b> '+ssLabel+'<br>';
-  if(CFG.ss==='general'){
-    h+='<b>Séquence sous-sol :</b> Terrassement → Voiles contre terre';
-    for(var n=CFG.ssNiv;n>=1;n--) h+=' → Dalle SS-'+n+' → Élév. SS-'+n;
-    h+=' → Dalle RDC → <i>puis bâtiments</i><br>';}
-  h+='<b>Bâtiments :</b> ';
-  for(var i=0;i<nb;i++) h+=letters[i]+(i<nb-1?' → ':'');
-  h+=' (décalage séquentiel)<br>';
-  h+='<b>Séquence intérieure :</b> '+seqLabel+'<br>';
-  h+='<b>Pose fenêtres :</b> '+fenLabel+'<br>';
-  h+='<b>Par bâtiment (second œuvre) :</b><br>';
-  h+='Plaquiste (traçage→doublages→cloisons→bandes→réception) → Élec câblage → Chape → Peinture 1 → Baignoires/douches → Carrelage → WC+faïence → Peinture 2 → Élec équipements + Éviers/vasques + Radiateurs → Sol souple → Portes distribution → OPR';
+  h+='<b>Mode bâtiment :</b><br>';
+  for(var i=0;i<blds.length;i++){var b=blds[i],BT=BTYPES[b.type];
+    h+='&nbsp;&nbsp;'+BT.ic+' <b>Bât '+b.code+'</b> — '+BT.lbl+' · '+(BT.unit==='logts'?b.logts+' logts':b.surf+' m²')+' · R+'+b.etages+(BT.build==='reno'?' · <span class="chain">séquence réhabilitation</span>':'')+(BT.tma?' · <span class="chain">finitions soignées + TMA</span>':'')+'<br>';}
+  h+='<br><b>Sous-sol :</b> '+ssLabel+'<br>';
+  h+='<b>Séquence intérieure :</b> '+seqLabel+' &nbsp;·&nbsp; <b>Fenêtres :</b> '+fenLabel+'<br>';
+  h+='<b>Jalons de commande intégrés :</b> menuiseries J-'+JALONS.MENUIS+' · BAL/organigramme J-'+JALONS.BAL+'<br>';
   h+='</div>';
 
-  document.get
+  document.getElementById('resultBox').innerHTML=h;
+  showStep(5);
+}
+
+updateProg();
+</script>
+</body>
+</html>
