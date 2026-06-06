@@ -440,6 +440,10 @@
             Ouvrir le planning (lecture seule)
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg>
           </a>
+          <a class="btn btn-glass" id="planningCreate" href="#" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+            Créer le planning
+          </a>
           <p id="planningSoon" style="display:none; opacity:.7">Planning en préparation pour ce chantier.</p>
         </div>
       </section>
@@ -624,16 +628,28 @@
   // Évite le lien Lisa codé en dur : chaque chantier ouvre SON planning.
   // Forward-compatible Piste 2 : planning_url pourra pointer vers le visualiseur
   // multi-chantier (handoff SSO + ?project=<slug>) une fois déployé.
+  // 3 états : planning existant → ouvrir · pas de planning + MOE/admin → créer
+  // (point d'entrée Flux 1, cf. ARCHITECTURE-PLANNING.md) · sinon → en préparation.
   var planningLink = document.getElementById('planningLink');
+  var planningCreate = document.getElementById('planningCreate');
   var planningSoon = document.getElementById('planningSoon');
   var planningUrl = project.planning_url || '';
+  var canCreatePlanning = (role === 'admin' || role === 'moe');
+  function setPlanningState(link, create, soon) {
+    planningLink.style.display = link ? '' : 'none';
+    if (planningCreate) planningCreate.style.display = create ? '' : 'none';
+    if (planningSoon) planningSoon.style.display = soon ? '' : 'none';
+  }
   if (planningUrl) {
     planningLink.href = planningUrl;
-    planningLink.style.display = '';
-    if (planningSoon) planningSoon.style.display = 'none';
+    setPlanningState(true, false, false);
+  } else if (canCreatePlanning) {
+    // Le configurateur reçoit le contexte projet (attache en Phase 2c).
+    planningCreate.href = 'configurateur.html?project=' + encodeURIComponent(project.id) +
+                          '&slug=' + encodeURIComponent(project.slug || '');
+    setPlanningState(false, true, false);
   } else {
-    planningLink.style.display = 'none';
-    if (planningSoon) planningSoon.style.display = '';
+    setPlanningState(false, false, true);
   }
 
   // Actions de la cover : retour aux chantiers (tous) + gérer les accès (admin)
