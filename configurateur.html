@@ -486,6 +486,38 @@ function generatePlanning(){
   return {tasks:T,buildings:blds};
 }
 
+// ── Reclassement « façon Lisa » : corps d'état (dossier) → bâtiments (feuilles)
+// Prend la sortie plate (par bâtiment) et la regroupe par corps d'état (champ g).
+// Chaque couple (corps, bâtiment) est aplati en UNE feuille couvrant sa durée.
+function reclassToLisa(flat){
+  var ORDER=['CURAGE','TERR','SS','GRUE','GO','CHARPENTE','COUVERTURE','ETANCH','MENUIS','RAVAL','VMC','PLAT','ELEC','PLOMB','CHAPE','CARREL','PEINT','SOL','MENINT','SSI','SERR'];
+  var LBL={CURAGE:'CURAGE / DÉMOLITION',TERR:'TERRASSEMENT / SOUS-SOL',SS:'TERRASSEMENT / SOUS-SOL',GRUE:'GRUE',GO:'GROS ŒUVRE',CHARPENTE:'CHARPENTE',COUVERTURE:'COUVERTURE',ETANCH:'ÉTANCHÉITÉ',MENUIS:'MENUISERIES EXT.',RAVAL:'RAVALEMENT / FAÇADE',VMC:'CVC / VMC',PLAT:'CLOISON / DOUBLAGE / PLÂTRERIE',ELEC:'ÉLECTRICITÉ',PLOMB:'PLOMBERIE',CHAPE:'CHAPE',CARREL:'CARRELAGE / FAÏENCE',PEINT:'PEINTURE',SOL:'SOLS SOUPLES',MENINT:'MENUISERIES INT.',SSI:'SÉCURITÉ INCENDIE',SERR:'COMMANDES ANTICIPÉES'};
+  function minS(a){return a.map(function(x){return x.s;}).filter(Boolean).sort()[0];}
+  function maxF(a){var f=a.map(function(x){return x.f;}).filter(Boolean).sort();return f[f.length-1];}
+  var byG={}, gorder=[];
+  flat.forEach(function(t){var g=t.g||'AUTRE';if(!(g in byG)){byG[g]=[];gorder.push(g);}byG[g].push(t);});
+  var keys=ORDER.filter(function(g){return byG[g];}).concat(gorder.filter(function(g){return ORDER.indexOf(g)<0;}));
+  var out=[];
+  keys.forEach(function(g){
+    var arr=byG[g]; if(!arr.length) return;
+    var byB={}, border=[];
+    arr.forEach(function(t){var b=t.b||'';if(!(b in byB)){byB[b]=[];border.push(b);}byB[b].push(t);});
+    var leaves=border.map(function(b){
+      var ts=byB[b], sumT=null;
+      for(var i=0;i<ts.length;i++){if(ts[i].sum){sumT=ts[i];break;}}
+      var done=ts.every(function(x){return x.sts==='dn';});
+      return {name:(sumT?sumT.name:ts[0].name), s:minS(ts), f:maxF(ts), sum:false, sub:true, grp:'CE_'+g, b:b, g:g, sts:done?'dn':'ns'};
+    });
+    if(leaves.length===1){ // un seul (souvent b vide) → feuille simple, pas de faux dossier
+      var l=leaves[0]; out.push({name:(LBL[g]||l.name), s:l.s, f:l.f, sum:false, sub:false, grp:'', b:l.b, g:g, sts:l.sts});
+    } else {
+      out.push({name:(LBL[g]||g), s:minS(arr), f:maxF(arr), sum:true, sub:false, grp:'CE_'+g, b:'', g:g, sts:'ns'});
+      leaves.forEach(function(l){out.push(l);});
+    }
+  });
+  return out;
+}
+
 function createProject(){
   var result=generatePlanning();
   var key='proj_'+Date.now();
@@ -513,10 +545,14 @@ function createProject(){
     var snapshot={
       format:'chantierflow-snapshot', appVersion:'configurateur',
       exportedAt:new Date().toISOString(), projet:data.config.name,
-      tasks:(result.tasks||[]).map(function(t){
-        return {name:t.name, start:t.s, end:t.f, dur:t.dur, sts:t.sts||'ns',
-          sum:!!t.sum, sub:!!t.sub, group:t.grp||'', bat:t.b||'', color:t.g||'', vis:'visible'};
-      }),
+      tasks:(function(){
+        var src=result.tasks||[];
+        try{ src=reclassToLisa(src); }catch(e){ console.warn('[reclassToLisa] repli sur la sortie brute :', e); src=result.tasks||[]; }
+        return src.map(function(t){
+          return {name:t.name, start:t.s, end:t.f, dur:t.dur, sts:t.sts||'ns',
+            sum:!!t.sum, sub:!!t.sub, group:t.grp||'', bat:t.b||'', color:t.g||'', vis:'visible'};
+        });
+      })(),
       links:[], cadences:{}
     };
     var planningUrl='planning.html?project='+encodeURIComponent(AX_PROJECT_ID);
