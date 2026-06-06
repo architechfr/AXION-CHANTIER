@@ -253,8 +253,7 @@ function readBuildings(){
     var c=letters[i];
     var type=(document.getElementById('bType_'+i)||{}).value||'social';
     var BT=BTYPES[type]||BTYPES.social;
-    var liv=BT.deliv;
-    if(CFG.liv==='mix'){var el=document.getElementById('bLiv_'+i);if(el)liv=el.value}
+    var liv=BT.deliv;   // RÈGLE : la livraison découle du type (social→social, accession→accession)
     var partialCheckbox=document.querySelectorAll('#ssPartialBats input')[i];
     blds.push({
       code:c, type:type,
@@ -701,7 +700,7 @@ function genBldgConf(){
     h+='<div class="fg" id="bSurfWrap_'+i+'" style="display:none"><label>Surface (m²)</label><input type="number" value="600" min="50" max="20000" id="bSurf_'+i+'"></div>';
     h+='<div class="fg"><label>Niveaux (R+n)</label><input type="number" value="4" min="0" max="20" id="bEtg_'+i+'"></div>';
     h+='<div class="fg"><label>Toiture</label><select id="bToit_'+i+'"><option value="terrasse">Toiture terrasse</option><option value="charpente">Charpente couverture</option><option value="mixte">Mixte</option></select></div>';
-    if(CFG.liv==='mix')h+='<div class="fg"><label>Livraison</label><select id="bLiv_'+i+'"><option value="social">Social</option><option value="accession">Accession</option><option value="erp">ERP / Crèche</option><option value="tertiaire">Tertiaire</option><option value="reno">Rénovation</option></select></div>';
+    // Pas de champ « Livraison » manuel : elle est déduite du type (évite social + livraison accession).
     h+='</div>'}
   h+='</div>';
   document.getElementById('bldgConf').innerHTML=h;
@@ -714,8 +713,7 @@ function genBldgConf(){
       var ty=document.getElementById('bType_'+j); if(ty&&b.type)ty.value=b.type;
       var et=document.getElementById('bEtg_'+j); if(et&&b.etages!=null)et.value=b.etages;
       var to=document.getElementById('bToit_'+j); if(to&&b.toiture)to.value=b.toiture;
-      var lv=document.getElementById('bLiv_'+j); if(lv&&b.livraison)lv.value=b.livraison;
-      onBType(j);   // ajuste l'affichage logements/surface selon le type
+      onBType(j);   // ajuste l'affichage logements/surface selon le type ; livraison déduite du type
       var lg=document.getElementById('bLog_'+j); if(lg&&b.logts!=null)lg.value=b.logts;
       var sf=document.getElementById('bSurf_'+j); if(sf&&b.surf!=null)sf.value=b.surf;
     }
