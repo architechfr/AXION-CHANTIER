@@ -180,7 +180,13 @@ body.light .cad-logo-full{background-image:url("data:image/png;base64,iVBORw0KGg
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/axion-auth.js"></script>
 <script>
+// Contexte projet transmis par AXION (chantier.html → « Créer le planning »)
+var AX_PROJECT_ID=(function(){var m=location.search.match(/[?&]project=([^&]+)/);return m?decodeURIComponent(m[1]):null;})();
+var AX_PROJECT_SLUG=(function(){var m=location.search.match(/[?&]slug=([^&]+)/);return m?decodeURIComponent(m[1]):'';})();
 // ═══════════════════════════════════════
 // MOTEUR DE GÉNÉRATION DE PLANNING
 // Génère un planning TCE complet inspiré du Lisa
@@ -498,6 +504,43 @@ function createProject(){
     tasks:result.tasks,
     created:new Date().toISOString()
   };
+
+  // ── Mode AXION : rattacher le planning au projet (Supabase) ─────────────
+  // Convertit la sortie du configurateur en snapshot chantierflow (lu par
+  // planning.html → buildFromSnapshot), l'enregistre dans planning_snapshots,
+  // renseigne projects.planning_url, puis ouvre le planning du chantier.
+  if(AX_PROJECT_ID && typeof window.getAxionSupabase==='function'){
+    var snapshot={
+      format:'chantierflow-snapshot', appVersion:'configurateur',
+      exportedAt:new Date().toISOString(), projet:data.config.name,
+      tasks:(result.tasks||[]).map(function(t){
+        return {name:t.name, start:t.s, end:t.f, dur:t.dur, sts:t.sts||'ns',
+          sum:!!t.sum, sub:!!t.sub, group:t.grp||'', bat:t.b||'', color:t.g||'', vis:'visible'};
+      }),
+      links:[], cadences:{}
+    };
+    var planningUrl='planning.html?project='+encodeURIComponent(AX_PROJECT_ID);
+    var btn=(function(){var bs=document.querySelectorAll('.btn-p');for(var i=0;i<bs.length;i++){if(/planning/i.test(bs[i].textContent))return bs[i];}return null;})(); if(btn){btn.disabled=true;btn.textContent='Enregistrement…';}
+    var sb=window.getAxionSupabase();
+    sb.auth.getSession().then(function(r){
+      var uid=(r&&r.data&&r.data.session&&r.data.session.user)?r.data.session.user.id:null;
+      return sb.from('planning_snapshots').upsert(
+        {project_id:AX_PROJECT_ID, snapshot:snapshot, source_url:location.href, updated_by:uid, updated_at:new Date().toISOString()},
+        {onConflict:'project_id'});
+    }).then(function(res){
+      if(res && res.error) throw res.error;
+      return sb.from('projects').update({planning_url:planningUrl}).eq('id',AX_PROJECT_ID);
+    }).then(function(res){
+      if(res && res.error) console.warn('[configurateur] planning_url non mis à jour :', res.error);
+      window.location.href=planningUrl;
+    }).catch(function(e){
+      console.warn('[configurateur] échec enregistrement Supabase :', e);
+      alert('Échec de l\'enregistrement du planning en base : '+(e.message||e)+'\n\nVérifiez votre connexion / vos droits.');
+      if(btn){btn.disabled=false;btn.textContent='Ouvrir dans le planning →';}
+    });
+    return;
+  }
+
   var payload=JSON.stringify(data);
   // Purge les anciens plannings générés (et leurs snapshots) sauf le courant + la démo,
   // pour éviter que le localStorage ne se remplisse au fil des essais (sinon setItem échoue
