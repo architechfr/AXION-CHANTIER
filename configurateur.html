@@ -203,14 +203,23 @@ function prefillBasics(cfg){
 }
 if(AX_PROJECT_ID && typeof window.getAxionSupabase==='function'){
   document.addEventListener('DOMContentLoaded',function(){
-    try{
-      window.getAxionSupabase().from('planning_snapshots').select('snapshot').eq('project_id',AX_PROJECT_ID).maybeSingle().then(function(r){
-        if(r&&r.data&&r.data.snapshot&&r.data.snapshot.config){
-          prefillBasics(r.data.snapshot.config);
-          var sub=document.querySelector('.hdr-sub'); if(sub)sub.textContent='Modifier le planning — config pré-remplie';
-        }
-      });
-    }catch(e){ console.warn('[prefill]',e); }
+    var sb=window.getAxionSupabase();
+    var sub=document.querySelector('.hdr-sub');
+    // Nom de l'opération = nom du chantier (toujours, même sans config sauvegardée)
+    sb.from('projects').select('name').eq('id',AX_PROJECT_ID).maybeSingle().then(function(pr){
+      var nm=pr&&pr.data&&pr.data.name, e=document.getElementById('cName');
+      if(nm&&e&&!e.value) e.value=nm;
+    }).catch(function(){});
+    // Config complète si le chantier a déjà un planning généré
+    sb.from('planning_snapshots').select('snapshot').eq('project_id',AX_PROJECT_ID).maybeSingle().then(function(r){
+      var snap=r&&r.data&&r.data.snapshot;
+      if(snap&&snap.config){
+        prefillBasics(snap.config);
+        if(sub)sub.textContent='Modifier le planning — config pré-remplie';
+      } else if(snap){
+        if(sub)sub.textContent='Planning existant (ancienne version sans config) — re-saisir une fois, ce sera mémorisé ensuite';
+      }
+    }).catch(function(e){ console.warn('[prefill]',e); });
   });
 }
 // ═══════════════════════════════════════
