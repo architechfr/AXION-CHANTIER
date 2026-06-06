@@ -120,6 +120,12 @@ documents
 | Notice | Notices descriptives | Notice notaire |
 | Vente | Plans de vente | Plan de vente |
 
+### Intervenants Les Jardins de Lisa (22 sociétés — extraits du CR n°49 du 03/06/2026)
+- **Bootstrap** : `supabase/bootstrap-entreprises-jardins-lisa.sql` (idempotent). Enrichit `companies` avec `type · lot · contact_name · email · phone`, insère 7 partenaires (MOA France Pierre 2, bailleur Plurial Novilia, MOE Cadence, contrôle Socotec, SPS C2-Immobilier, BET sol Igeotex, BET thermique CGP) + 15 entreprises de travaux (lots 00→16), et les lie à `jardins-de-lisa`.
+- **Méthode « CR → entreprises »** : le tableau des intervenants en tête de chaque CR (`.docx`/PDF SharePoint) est la source de vérité ; on extrait le texte du `.docx` (ElementTree sur `word/document.xml`) → un bootstrap SQL par chantier. Le dernier CR fait foi.
+- **Page** : `entreprises.html` affiche désormais lot, interlocuteur, e-mail (mailto) et téléphone (tel), + badge de type pour les non-entreprises. Repli automatique si les colonnes contact ne sont pas encore migrées.
+- ⚠️ **Écart données projet** : le CR n°49 indique **141 logements dont 79 sociaux · 8 750,50 m² SDP** (≠ 150/83/9 150 m² actuellement en base). À trancher avec la MOA avant de corriger la fiche projet.
+
 ---
 
 ## 7. Structure du repo `AXION-CHANTIER`
