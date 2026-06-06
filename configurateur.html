@@ -557,24 +557,27 @@ function createProject(){
   // planning.html → buildFromSnapshot), l'enregistre dans planning_snapshots,
   // renseigne projects.planning_url, puis ouvre le planning du chantier.
   if(AX_PROJECT_ID && typeof window.getAxionSupabase==='function'){
-    var snapshot={
-      format:'chantierflow-snapshot', appVersion:'configurateur',
-      exportedAt:new Date().toISOString(), projet:data.config.name,
-      tasks:(function(){
-        var src=result.tasks||[];
-        try{ src=reclassToLisa(src); }catch(e){ console.warn('[reclassToLisa] repli sur la sortie brute :', e); src=result.tasks||[]; }
-        return src.map(function(t){
-          return {name:t.name, start:t.s, end:t.f, dur:t.dur, sts:t.sts||'ns',
-            sum:!!t.sum, sub:!!t.sub, group:t.grp||'', bat:t.b||'', color:t.g||'', vis:'visible'};
-        });
-      })(),
-      links:[], cadences:{}
-    };
     var planningUrl='planning.html?project='+encodeURIComponent(AX_PROJECT_ID);
     var btn=(function(){var bs=document.querySelectorAll('.btn-p');for(var i=0;i<bs.length;i++){if(/planning/i.test(bs[i].textContent))return bs[i];}return null;})(); if(btn){btn.disabled=true;btn.textContent='Enregistrement…';}
-    var sb=window.getAxionSupabase();
+    var sb=window.getAxionSupabase(); var uid=null;
     sb.auth.getSession().then(function(r){
-      var uid=(r&&r.data&&r.data.session&&r.data.session.user)?r.data.session.user.id:null;
+      uid=(r&&r.data&&r.data.session&&r.data.session.user)?r.data.session.user.id:null;
+      return sb.from('projects').select('name').eq('id',AX_PROJECT_ID).maybeSingle();   // nom du chantier
+    }).then(function(pr){
+      var chantierName=(pr&&pr.data&&pr.data.name)||data.config.name||AX_PROJECT_SLUG||'Planning';
+      var snapshot={
+        format:'chantierflow-snapshot', appVersion:'configurateur',
+        exportedAt:new Date().toISOString(), projet:chantierName,
+        tasks:(function(){
+          var src=result.tasks||[];
+          try{ src=reclassToLisa(src); }catch(e){ console.warn('[reclassToLisa] repli sur la sortie brute :', e); src=result.tasks||[]; }
+          return src.map(function(t){
+            return {name:t.name, start:t.s, end:t.f, dur:t.dur, sts:t.sts||'ns',
+              sum:!!t.sum, sub:!!t.sub, group:t.grp||'', bat:t.b||'', color:t.g||'', vis:'visible'};
+          });
+        })(),
+        links:[], cadences:{}
+      };
       return sb.from('planning_snapshots').upsert(
         {project_id:AX_PROJECT_ID, snapshot:snapshot, source_url:location.href, updated_by:uid, updated_at:new Date().toISOString()},
         {onConflict:'project_id'});
