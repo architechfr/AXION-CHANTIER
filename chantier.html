@@ -436,10 +436,11 @@
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
           <h3>Planning Gantt</h3>
           <p>Le planning officiel est tenu dans le module CADENCE Flow. <br/>Chaque entreprise y accède en lecture seule : ses interventions, jalons et dépendances.</p>
-          <a class="btn btn-glass" href="https://planning-lisa.vercel.app/?mode=lecteur" target="_blank" rel="noopener">
+          <a class="btn btn-glass" id="planningLink" href="#" target="_blank" rel="noopener" style="display:none">
             Ouvrir le planning (lecture seule)
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg>
           </a>
+          <p id="planningSoon" style="display:none; opacity:.7">Planning en préparation pour ce chantier.</p>
         </div>
       </section>
 
@@ -621,6 +622,22 @@
                     (f.sub ? ' <small>' + escapeHtml(f.sub) + '</small>' : '') + '</div>';
     factsEl.appendChild(div);
   });
+
+  // Planning : lien PAR CHANTIER (project.planning_url) — sinon « en préparation ».
+  // Évite le lien Lisa codé en dur : chaque chantier ouvre SON planning.
+  // Forward-compatible Piste 2 : planning_url pourra pointer vers le visualiseur
+  // multi-chantier (handoff SSO + ?project=<slug>) une fois déployé.
+  var planningLink = document.getElementById('planningLink');
+  var planningSoon = document.getElementById('planningSoon');
+  var planningUrl = project.planning_url || '';
+  if (planningUrl) {
+    planningLink.href = planningUrl;
+    planningLink.style.display = '';
+    if (planningSoon) planningSoon.style.display = 'none';
+  } else {
+    planningLink.style.display = 'none';
+    if (planningSoon) planningSoon.style.display = '';
+  }
 
   // Actions de la cover : retour aux chantiers (tous) + gérer les accès (admin)
   var actions = document.getElementById('coverActions');

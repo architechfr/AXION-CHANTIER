@@ -199,6 +199,8 @@ AXION-CHANTIER/
 | ✅ Lien d'invitation = page d'inscription dédiée | 02/06 | L'invité reçoit un lien → page où il définit son mot de passe → compte créé + affecté aux chantiers que l'inviteur a autorisés. La page d'accueil de l'invité s'adapte aux chantiers reçus. |
 | ✅ Planning live planning-lisa.vercel.app — **NON TOUCHÉ** | (depuis le début) | Le dépôt `architechfr/Planning-Lisa` reste à l'état d'origine. Le portail AXION ne pointe vers planning live qu'en lecture seule. |
 | ✅ Pointage = override AXION, pas modification du planning | 04/06 | Le pointage MOE vit dans `task_progress` (Supabase), keyé `(project_id, task_uid)`. La structure reste maître côté ChantierFlow. Statuts alignés sur ChantierFlow (`ns/dn/ec/bl`) pour fusion triviale. V1 n'écrit que `dn` (terminée). En cours/bloqué = itération suivante (moteur binaire aujourd'hui). |
+| ✅ Planning multi-chantier = visualiseur unique gardé (Piste 2) | 06/06 | Un seul visualiseur (repo `Planning`) param. par `?project=<slug>`, protégé par la session AXION ; l'accès est garanti par RLS Supabase (`planning_snapshots` keyé `project_id`), pas par masquage d'URL. CADENCE Flow **reste l'éditeur** (snapshot `/api/state` publié dans `planning_snapshots`). Écarte la Piste 1 (tout migrer dans Supabase) qui réécrirait l'app live et inverserait la décision du 04/06. |
+| ✅ Lien planning PAR chantier (`projects.planning_url`) | 06/06 | **Phase 1 livrée** : `chantier.html` ne pointe plus Lisa en dur. Lien piloté par `projects.planning_url` (Lisa = lien live actuel ; autres = NULL → « Planning en préparation »). Voir `supabase/planning-url.sql`. Schéma Phase 2 prêt : `supabase/planning-snapshots.sql`. |
 
 ---
 
