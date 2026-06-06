@@ -486,18 +486,33 @@ function generatePlanning(){
   return {tasks:T,buildings:blds};
 }
 
-// ── Reclassement « façon Lisa » : corps d'état (dossier) → bâtiments (feuilles)
-// Prend la sortie plate (par bâtiment) et la regroupe par corps d'état (champ g).
-// Chaque couple (corps, bâtiment) est aplati en UNE feuille couvrant sa durée.
+// ── Reclassement « façon Lisa » (v2) :
+//   • STRUCTUREL (terrassement, sous-sol, GO, grue) → conservé tel quel, PAR BÂTIMENT,
+//     avec suppression des faux dossiers (un dossier sans enfant devient une feuille).
+//   • FINITIONS + CLOS/COUVERT → regroupés PAR CORPS D'ÉTAT (dossier) → bâtiments (feuilles).
 function reclassToLisa(flat){
-  var ORDER=['CURAGE','TERR','SS','GRUE','GO','CHARPENTE','COUVERTURE','ETANCH','MENUIS','RAVAL','VMC','PLAT','ELEC','PLOMB','CHAPE','CARREL','PEINT','SOL','MENINT','SSI','SERR'];
-  var LBL={CURAGE:'CURAGE / DÉMOLITION',TERR:'TERRASSEMENT / SOUS-SOL',SS:'TERRASSEMENT / SOUS-SOL',GRUE:'GRUE',GO:'GROS ŒUVRE',CHARPENTE:'CHARPENTE',COUVERTURE:'COUVERTURE',ETANCH:'ÉTANCHÉITÉ',MENUIS:'MENUISERIES EXT.',RAVAL:'RAVALEMENT / FAÇADE',VMC:'CVC / VMC',PLAT:'CLOISON / DOUBLAGE / PLÂTRERIE',ELEC:'ÉLECTRICITÉ',PLOMB:'PLOMBERIE',CHAPE:'CHAPE',CARREL:'CARRELAGE / FAÏENCE',PEINT:'PEINTURE',SOL:'SOLS SOUPLES',MENINT:'MENUISERIES INT.',SSI:'SÉCURITÉ INCENDIE',SERR:'COMMANDES ANTICIPÉES'};
+  var STRUCT={TERR:1,SS:1,GO:1,GRUE:1,CURAGE:1};
+  var ORDER=['ETANCH','COUVERTURE','CHARPENTE','MENUIS','RAVAL','VMC','PLAT','ELEC','PLOMB','CHAPE','CARREL','PEINT','SOL','MENINT','SSI','SERR'];
+  var LBL={ETANCH:'ÉTANCHÉITÉ',COUVERTURE:'COUVERTURE',CHARPENTE:'CHARPENTE',MENUIS:'MENUISERIES EXT.',RAVAL:'RAVALEMENT / FAÇADE',VMC:'CVC / VMC',PLAT:'CLOISON / DOUBLAGE / PLÂTRERIE',ELEC:'ÉLECTRICITÉ',PLOMB:'PLOMBERIE',CHAPE:'CHAPE',CARREL:'CARRELAGE / FAÏENCE',PEINT:'PEINTURE',SOL:'SOLS SOUPLES',MENINT:'MENUISERIES INT.',SSI:'SÉCURITÉ INCENDIE',SERR:'COMMANDES ANTICIPÉES'};
   function minS(a){return a.map(function(x){return x.s;}).filter(Boolean).sort()[0];}
   function maxF(a){var f=a.map(function(x){return x.f;}).filter(Boolean).sort();return f[f.length-1];}
-  var byG={}, gorder=[];
-  flat.forEach(function(t){var g=t.g||'AUTRE';if(!(g in byG)){byG[g]=[];gorder.push(g);}byG[g].push(t);});
-  var keys=ORDER.filter(function(g){return byG[g];}).concat(gorder.filter(function(g){return ORDER.indexOf(g)<0;}));
   var out=[];
+
+  // 1) STRUCTUREL — passe-plat, mais on retire les faux dossiers (sum sans enfant)
+  var structural=flat.filter(function(t){return STRUCT[t.g];});
+  var childCount={};
+  structural.forEach(function(t){ if(t.sub&&t.grp) childCount[t.grp]=(childCount[t.grp]||0)+1; });
+  structural.forEach(function(t){
+    var o={name:t.name, s:t.s, f:t.f, sum:!!t.sum, sub:!!t.sub, grp:t.grp||'', g:t.g, b:t.b||'', sts:t.sts||'ns'};
+    if(o.sum && !(childCount[o.grp]>0)){ o.sum=false; o.grp=''; } // faux dossier → feuille
+    out.push(o);
+  });
+
+  // 2) FINITIONS + CLOS/COUVERT — regroupés par corps d'état → bâtiments
+  var trades=flat.filter(function(t){return !STRUCT[t.g];});
+  var byG={}, gorder=[];
+  trades.forEach(function(t){var g=t.g||'AUTRE';if(!(g in byG)){byG[g]=[];gorder.push(g);}byG[g].push(t);});
+  var keys=ORDER.filter(function(g){return byG[g];}).concat(gorder.filter(function(g){return ORDER.indexOf(g)<0;}));
   keys.forEach(function(g){
     var arr=byG[g]; if(!arr.length) return;
     var byB={}, border=[];
