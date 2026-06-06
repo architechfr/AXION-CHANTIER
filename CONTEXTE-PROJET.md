@@ -120,10 +120,10 @@ documents
 | Notice | Notices descriptives | Notice notaire |
 | Vente | Plans de vente | Plan de vente |
 
-### Intervenants Les Jardins de Lisa (22 sociétés — extraits du CR n°49 du 03/06/2026)
-- **Bootstrap** : `supabase/bootstrap-entreprises-jardins-lisa.sql` (idempotent). Enrichit `companies` avec `type · lot · contact_name · email · phone`, insère 7 partenaires (MOA France Pierre 2, bailleur Plurial Novilia, MOE Cadence, contrôle Socotec, SPS C2-Immobilier, BET sol Igeotex, BET thermique CGP) + 15 entreprises de travaux (lots 00→16), et les lie à `jardins-de-lisa`.
-- **Méthode « CR → entreprises »** : le tableau des intervenants en tête de chaque CR (`.docx`/PDF SharePoint) est la source de vérité ; on extrait le texte du `.docx` (ElementTree sur `word/document.xml`) → un bootstrap SQL par chantier. Le dernier CR fait foi.
-- **Page** : `entreprises.html` affiche désormais lot, interlocuteur, e-mail (mailto) et téléphone (tel), + badge de type pour les non-entreprises. Repli automatique si les colonnes contact ne sont pas encore migrées.
+### Intervenants — SOURCE UNIQUE = table `project_contacts` (décision 06/06/2026)
+> ⚠️ **DÉCISION (F. Clarisse, 06/06)** : deux sessions Claude ont traité les intervenants en parallèle → doublon. Tranché : la **table `project_contacts`** (annuaire PAR CHANTIER : `role, lot, company, address, full_name, email, phone, sort_order`) est la **seule source de vérité**. **NE PAS exécuter** `bootstrap-entreprises-jardins-lisa.sql` (enrichissement de `companies` = approche abandonnée — un même prestataire peut avoir lot/contact différents selon le chantier, donc ça ne peut pas vivre dans la table `companies` globale). Les colonnes `companies.lot/contact_name/email/phone` n'ont jamais été créées : ne pas les créer.
+- **Affichage** : `chantier.html` onglet **Membres** (`loadAnnuaire`, groupé par rôle puis par société) + `entreprises.html` (fusionne les contacts depuis `project_contacts` par nom de société). RLS `project_contacts_moe_all` (admin+moe).
+- **Méthode « CR → annuaire »** : tableau d'intervenants en tête de CR (`.docx` OU PDF) → extraction (`.docx` via regex `<w:t...>` sur `word/document.xml` ; PDF via PyMuPDF `fitz`) → bootstrap SQL `project_contacts` par chantier (`delete`+`insert`, idempotent). Données en base : Iris 21 contacts, Lisa 27. Fichiers : `bootstrap-jardins-iris.sql`, `bootstrap-jardins-lisa-contacts.sql` (NON committés — PII).
 - ⚠️ **Écart données projet** : le CR n°49 indique **141 logements dont 79 sociaux · 8 750,50 m² SDP** (≠ 150/83/9 150 m² actuellement en base). À trancher avec la MOA avant de corriger la fiche projet.
 
 ---
