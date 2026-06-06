@@ -9610,6 +9610,8 @@ function installQrCopy(){
       if(snap.links)for(var i=0;i<snap.links.length;i++){var l=snap.links[i],f=by[l.fromUid],t=by[l.toUid];if(f&&t)LINKS.push({from:f.id,to:t.id,type:l.type||'FS',lag:l.lag||0});}
     }
     if(snap.cadences&&typeof CADENCES!=='undefined')CADENCES=snap.cadences;
+    // Nom du chantier dans l'entête (sinon reste « Les Jardins de Lisa »)
+    try{ var nm=snap.projet||''; if(nm){ var hs=document.querySelector('.hdr-sub'); if(hs)hs.textContent=nm; var ms=document.getElementById('mobSubtitle'); if(ms)ms.textContent=nm; document.title='Planning — '+nm; } }catch(e){}
     // Plage de dates du Gantt = bornes du chantier
     try{ if(typeof MIN_D!=='undefined'){ var ss=[],ff=[]; for(var i=0;i<T.length;i++){var ds=D(T[i].start),de=D(T[i].end); if(ds)ss.push(+ds); if(de)ff.push(+de);}
       if(ss.length){ var lo=new Date(Math.min.apply(null,ss)),hi=new Date(Math.max.apply(null,ff)); MIN_D=(typeof ad==='function')?ad(lo,-30):lo; MAX_D=(typeof ad==='function')?ad(hi,30):hi; } } }catch(e){}
