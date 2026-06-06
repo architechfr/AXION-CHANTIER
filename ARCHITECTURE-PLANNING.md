@@ -46,7 +46,7 @@ Fiche chantier (chantier.html) · onglet Planning · projet sans planning
    └─ rôle MOE/admin       → bouton « Créer le planning »
                                 │  ouvre le configurateur AVEC le project_id
                                 ▼
-        configurateur (« Nouveau planning ») — repo Planning
+        configurateur (« Nouveau planning ») — dans axion-chantier
           • s'adapte à project.status :
               - étude / DCE        → planning prévisionnel macro
               - démarrage chantier → planning d'exécution détaillé
@@ -103,13 +103,25 @@ Le contrôle d'accès est **serveur (RLS)**, jamais par masquage d'URL.
 
 ## 6. Repo `Planning` — point de départ
 
-- **Base** : `chantierflow-lisa.html` (l'éditeur ChantierFlow actuel, 729 l.).
-- **À faire évoluer** :
-  1. Multi-projet : charger par `?project=<slug>` au lieu du Lisa codé en dur.
+> ⚠️ **CORRECTION (06/06, F. Clarisse)** : la base n'est **PAS** `chantierflow-lisa.html`
+> (copie dans `axion-chantier` — à ignorer, voire supprimer). La base est le planning
+> **exploitable déployé sur `planning-lisa.vercel.app`** (repo **`Planning-Lisa`**) :
+> le code est bon, il faut le **généraliser et le renommer** (nom neutre, plus « lisa »)
+> dans le repo **`Planning`**.
+
+- **Modèle (à copier)** : repo `Planning-Lisa` → `planning-lisa.vercel.app`.
+- **Cible** : repo `Planning` (app générique multi-chantier, déploiement + nom neutres).
+- **À faire évoluer** (dans le repo `Planning`) :
+  1. Multi-projet : charger par `?project=<id|slug>` au lieu du Lisa codé en dur.
   2. Persistance : lire/écrire `planning_snapshots` (Supabase) au lieu du localStorage.
-  3. Garde d'accès : restaurer la session via le handoff, appliquer les droits par rôle.
-  4. Brancher le configurateur (`configurateur.html`) pour qu'il attache au projet.
-- **Lisa = exception** : reste sur `planning-lisa.vercel.app` tant qu'on n'a pas migré son planning dans `planning_snapshots`. Les **nouveaux** plannings naissent directement dans le repo `Planning`.
+  3. Garde d'accès : session Supabase + droits par rôle (lecture seule vs édition).
+  4. Brancher le configurateur (`configurateur.html`, **resté dans axion-chantier**).
+  5. Afficher les intervenants du chantier via `project_contacts` (cf. §8).
+- **Lisa = exception** : reste sur `planning-lisa.vercel.app` tant qu'on ne l'a pas migré dans `planning_snapshots`. Les **nouveaux** plannings naissent dans le repo `Planning`.
+
+> 💡 **Note hébergement** : si un jour l'app planning était servie depuis le **même domaine**
+> que le portail, le handoff SSO par hash deviendrait inutile (session Supabase déjà partagée).
+> Décision actuelle = app séparée (repo `Planning`), donc handoff conservé.
 
 ---
 
@@ -123,4 +135,31 @@ Le contrôle d'accès est **serveur (RLS)**, jamais par masquage d'URL.
 | **2d** | Finaliser la RLS `planning_snapshots` avec la refonte des rôles | Supabase |
 | **2e** | (optionnel) Migrer Lisa de planning-lisa → `planning_snapshots` | Supabase |
 
-⚠️ Les étapes touchant le repo `Planning` nécessitent de **l'ajouter au périmètre de la session**.
+⚠️ Les étapes touchant le repo `Planning` nécessitent de **l'ajouter au périmètre de la session** (ainsi que `Planning-Lisa` comme modèle à copier).
+
+---
+
+## 8. Intervenants — découplage (décidé 06/06)
+
+Les chantiers ont des **intervenants différents** (sociétés/lots propres à chacun).
+
+**Décision** : le planning généré reste **générique** (lots A/B/C…, corps d'état). Les
+intervenants **ne sont PAS figés dans le planning**. Ils sont :
+- rattachés au chantier via **`project_contacts`** (annuaire par chantier — cf. CONTEXTE §6),
+- **affichés par l'app planning** en joignant `tâche → lot → project_contacts`.
+
+Conséquence : **un même modèle de planning sert tous les chantiers** ; seuls les intervenants
+varient, sans dupliquer la structure ni mélanger les données d'un chantier à l'autre.
+
+---
+
+## 9. Statut & reprise
+
+- **Fait (axion-chantier, en prod)** : lien planning par chantier (`projects.planning_url`),
+  état « Planning en préparation ».
+- **Prêt, non mergé** : bouton « Créer le planning » pour MOE/admin (PR #4) — à fusionner
+  **avec** la boucle complète (sinon il ouvre un configurateur qui ne persiste pas encore).
+- **Décidé, à attaquer dans une session avec les bons repos** : généralisation de l'app
+  planning (`Planning-Lisa` → `Planning`), persistance Supabase, droits, intervenants.
+- **Repos à mettre dans le périmètre de la prochaine session** : `axion-chantier`,
+  `Planning` (cible), `Planning-Lisa` (modèle).
