@@ -158,6 +158,7 @@ function initials(n){ var p=(n||'').trim().split(/\s+/); return (((p[0]||'')[0]|
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function toast(msg, ok){ var t=document.getElementById('toast'); t.firstElementChild.textContent=msg; t.firstElementChild.style.color=ok===false?'#FCA5A5':'#86EFAC'; t.classList.add('show'); clearTimeout(window.__tt); window.__tt=setTimeout(function(){t.classList.remove('show');},2600); }
 var ROLE_LABEL={admin:'Administrateur',moe:'Maître d’œuvre',moa:'Maître d’ouvrage',entreprise:'Entreprise',economiste:'Économiste'};
+var TYPE_LABEL={moa:'Maîtrise d’ouvrage',bailleur:'Bailleur social',moe:'Maîtrise d’œuvre',controle:'Bureau de contrôle',sps:'Coordonnateur SPS',bet:'Bureau d’études',entreprise:'Entreprise'};
 
 /* Couleur d'avatar par corps d'état détecté */
 function tradeColor(trade){
@@ -178,7 +179,7 @@ function chantiersOf(cid){ return STATE.links.filter(function(l){return l.compan
 function render(){
   var rows=STATE.companies.filter(function(c){
     if(STATE.proj && !STATE.links.some(function(l){return l.company_id===c.id&&l.project_id===STATE.proj;})) return false;
-    if(STATE.q){ var hay=((c.name||'')+' '+(c.trade||'')).toLowerCase(); if(hay.indexOf(STATE.q)<0) return false; }
+    if(STATE.q){ var hay=((c.name||'')+' '+(c.trade||'')+' '+(c.lot?'lot '+c.lot:'')+' '+(c.contact_name||'')+' '+(c.email||'')).toLowerCase(); if(hay.indexOf(STATE.q)<0) return false; }
     return true;
   });
 
@@ -202,13 +203,23 @@ function render(){
   list.innerHTML=rows.map(function(c){
     var col=tradeColor(c.trade); var chs=chantiersOf(c.id);
     var chips = chs.length ? chs.map(function(n){return '<span class="chip">'+escapeHtml(n)+'</span>';}).join('') : '<span class="text-[11px] text-slate2-500">Non affectée</span>';
-    return '<div class="glass card-hover rounded-2xl p-5">'+
-      '<div class="flex items-center gap-3 mb-3">'+
-        '<div class="w-11 h-11 rounded-xl grid place-items-center font-display font-600 text-sm" style="background:'+col+'1f;border:1px solid '+col+'55;color:'+col+'">'+escapeHtml(initials(c.name).toUpperCase())+'</div>'+
-        '<div class="min-w-0"><div class="font-display text-white text-base truncate">'+escapeHtml(c.name||'Société')+'</div>'+
+    var lotBadge = c.lot ? '<span class="chip font-mono" style="color:'+col+';border-color:'+col+'55;background:'+col+'14">Lot '+escapeHtml(c.lot)+'</span>' : (c.type&&c.type!=='entreprise'?'<span class="chip" style="color:#5EEAD4;border-color:rgba(45,212,191,.35);background:rgba(45,212,191,.08)">'+escapeHtml(TYPE_LABEL[c.type]||c.type)+'</span>':'');
+    var contact='';
+    if(c.contact_name||c.email||c.phone){
+      contact='<div class="pt-3 mt-3 border-t border-white/5 space-y-1.5">'+
+        (c.contact_name?'<div class="flex items-center gap-2 text-[13px] text-slate2-300"><svg class="w-3.5 h-3.5 text-slate2-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke-linecap="round" stroke-linejoin="round"/></svg>'+escapeHtml(c.contact_name)+'</div>':'')+
+        (c.email?'<a href="mailto:'+escapeHtml(c.email)+'" class="flex items-center gap-2 text-[13px] text-azure-300 hover:text-azure-400 transition-colors truncate" style="text-decoration:none"><svg class="w-3.5 h-3.5 flex-none text-slate2-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7l9 6 9-6M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="truncate">'+escapeHtml(c.email)+'</span></a>':'')+
+        (c.phone?'<a href="tel:'+escapeHtml(c.phone.replace(/\s+/g,''))+'" class="flex items-center gap-2 text-[13px] text-slate2-300 hover:text-white transition-colors" style="text-decoration:none"><svg class="w-3.5 h-3.5 text-slate2-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.5 2.1L8 9.6a16 16 0 006 6l1.2-1.1a2 2 0 012.1-.5c.8.3 1.7.5 2.6.6a2 2 0 011.7 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>'+escapeHtml(c.phone)+'</a>':'')+
+      '</div>';
+    }
+    return '<div class="glass card-hover rounded-2xl p-5 flex flex-col">'+
+      '<div class="flex items-start gap-3 mb-3">'+
+        '<div class="w-11 h-11 flex-none rounded-xl grid place-items-center font-display font-600 text-sm" style="background:'+col+'1f;border:1px solid '+col+'55;color:'+col+'">'+escapeHtml(initials(c.name).toUpperCase())+'</div>'+
+        '<div class="min-w-0 flex-1"><div class="flex items-center gap-2 flex-wrap"><span class="font-display text-white text-base truncate">'+escapeHtml(c.name||'Société')+'</span>'+lotBadge+'</div>'+
           (c.trade?'<div class="text-xs mt-0.5" style="color:'+col+'">'+escapeHtml(c.trade)+'</div>':'<div class="text-xs text-slate2-500 mt-0.5">Corps d\'état non précisé</div>')+'</div>'+
       '</div>'+
-      '<div class="pt-3 border-t border-white/5">'+
+      contact+
+      '<div class="pt-3 mt-3 border-t border-white/5">'+
         '<p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500 mb-2">Chantiers</p>'+
         '<div class="flex items-center gap-1.5 flex-wrap">'+chips+'</div>'+
       '</div>'+
@@ -218,11 +229,14 @@ function render(){
 
 function demoData(){
   return { companies:[
-      {id:'c1',name:'BatiPro',trade:'Gros œuvre'},{id:'c2',name:'ToituRe',trade:'Charpente · couverture'},
-      {id:'c3',name:'AluVitre',trade:'Menuiseries extérieures'},{id:'c4',name:'AquaFlux',trade:'Plomberie · CVC'},
-      {id:'c5',name:'ElecVolt',trade:'Électricité'},{id:'c6',name:'ColorFin',trade:'Peinture · finitions'},
-      {id:'c7',name:'Véritas',trade:'Bureau de contrôle'} ],
-    links:[{company_id:'c1',project_id:'p1'},{company_id:'c2',project_id:'p1'},{company_id:'c3',project_id:'p1'},{company_id:'c4',project_id:'p1'},{company_id:'c1',project_id:'p2'},{company_id:'c7',project_id:'p1'}],
+      {id:'c0',name:'FRANCE PIERRE 2',trade:'Maîtrise d’ouvrage',type:'moa',contact_name:'Dany De Olivera',email:'dany.deoliveira@france-pierre.fr',phone:'06 23 45 07 92'},
+      {id:'c1',name:'AGZ',trade:'Gros-œuvre',type:'entreprise',lot:'01',contact_name:'Daniel Pires',email:'d.pires@agz-construction.com',phone:'06 48 96 53 32'},
+      {id:'c2',name:'LES TOITS D’ORIVANA',trade:'Étanchéité',type:'entreprise',lot:'02',contact_name:'Guillaume Zamo',email:'g.zamo@lestoitsdorivana.com',phone:'06 70 53 03 52'},
+      {id:'c3',name:'LCI CONCEPT',trade:'Menuiseries extérieures',type:'entreprise',lot:'05',contact_name:'Igor Cerjak',email:'lci-concept@hotmail.com',phone:'06 68 71 42 65'},
+      {id:'c4',name:'APM',trade:'Plomberie · CVC',type:'entreprise',lot:'15',contact_name:'Jacques Dos Santos',email:'j.dossantos@apm7.fr',phone:'06 03 87 32 93'},
+      {id:'c5',name:'LED',trade:'Électricité',type:'entreprise',lot:'14',contact_name:'Cristiano Cardoso',email:'cardoso@led77.fr',phone:'06 34 25 01 78'},
+      {id:'c7',name:'SOCOTEC',trade:'Bureau de contrôle',type:'controle',contact_name:'Lucia Pestana Abreu',email:'lucia.pestanaabreu@socotec.com',phone:'06 17 98 52 20'} ],
+    links:[{company_id:'c0',project_id:'p1'},{company_id:'c1',project_id:'p1'},{company_id:'c2',project_id:'p1'},{company_id:'c3',project_id:'p1'},{company_id:'c4',project_id:'p1'},{company_id:'c1',project_id:'p2'},{company_id:'c7',project_id:'p1'}],
     projects:{p1:'Les Jardins de Lisa',p2:'Domaine des Gueules Cassées'},
     projList:[{id:'p1',name:'Les Jardins de Lisa'},{id:'p2',name:'Domaine des Gueules Cassées'}] };
 }
@@ -261,7 +275,11 @@ function demoData(){
   document.getElementById('logoutBtn').addEventListener('click', async function(){ await AxionAuth.signOut(); window.location.href='login.html'; });
 
   try { var pr=await AxionAuth.sb.from('projects').select('id,name,slug').order('name'); if(!pr.error){ STATE.projList=pr.data||[]; STATE.projList.forEach(function(p){ STATE.projects[p.id]=p.name||p.slug; }); } }catch(e){}
-  try { var co=await AxionAuth.sb.from('companies').select('id,name,trade').order('name'); if(!co.error) STATE.companies=co.data||[]; }catch(e){ console.warn('companies',e); }
+  try {
+    var co=await AxionAuth.sb.from('companies').select('id,name,trade,type,lot,contact_name,email,phone').order('name');
+    if(co.error){ co=await AxionAuth.sb.from('companies').select('id,name,trade').order('name'); } // repli si colonnes contact pas encore migrées
+    if(!co.error) STATE.companies=co.data||[];
+  }catch(e){ console.warn('companies',e); }
   try { var lk=await AxionAuth.sb.from('project_companies').select('project_id,company_id'); if(!lk.error) STATE.links=lk.data||[]; }catch(e){ console.warn('project_companies',e); }
   setupFilters();
 
