@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AXION — Ma carte de visite</title>
+<meta name="theme-color" content="#0A1628">
+<link rel="icon" type="image/png" href="assets/img/logo-axion-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    fontFamily: { display:['"Space Grotesk"','ui-sans-serif','system-ui'], sans:['Inter','ui-sans-serif','system-ui'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    colors: { ink:{900:'#070A12',800:'#0A1628',700:'#0F2447',600:'#111827',500:'#1A2233'},
+      azure:{300:'#93C5FD',400:'#60A5FA',500:'#3B82F6',600:'#2563EB'}, cyan:{400:'#38BDF8'},
+      gold:{400:'#D4A946',500:'#C9A95C'}, slate2:{300:'#CBD5E1',400:'#94A3B8',500:'#64748B'} },
+  } } };
+</script>
+<style>
+  :root { color-scheme:dark; --bg:#0A1628; --surface:#0F1B30; --glass:rgba(255,255,255,.04);
+    --border:rgba(125,165,225,.16); --azure:#3B82F6; --gold:#C9A95C; --text:#E2E8F0; --text-dim:#94A3B8; --text-faint:#64748B; }
+  *,*::before,*::after{box-sizing:border-box;}
+  html,body{background:var(--bg);margin:0;min-height:100vh;}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;}
+  .font-display{font-family:'Space Grotesk',sans-serif;} .font-mono{font-family:'JetBrains Mono',monospace;}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(900px 500px at 85% -8%, rgba(59,130,246,.10), transparent 60%);}
+
+  .appbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:16px;padding:12px 24px;
+    background:color-mix(in oklab,var(--bg) 80%,transparent);backdrop-filter:blur(16px) saturate(140%);border-bottom:1px solid var(--border);}
+  .appbar .brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text)}
+  .appbar .brand img{width:36px;height:36px;border-radius:10px;}
+  .appbar .brand .word{font-family:'Space Grotesk';font-weight:700;letter-spacing:.22em;font-size:17px;}
+  .spacer{flex:1;}
+  .icon-btn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--glass);border:1px solid var(--border);color:var(--text-dim);transition:.15s;text-decoration:none;cursor:pointer}
+  .icon-btn:hover{color:var(--text);} .icon-btn svg{width:18px;height:18px;}
+
+  .layout{max-width:560px;margin:0 auto;padding:34px 20px 70px;position:relative;z-index:1;}
+  .kicker{font-family:'JetBrains Mono';font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--azure);margin:0 0 8px;}
+  h1{font-family:'Space Grotesk';font-size:26px;font-weight:700;margin:0 0 6px;letter-spacing:-.02em;}
+  .lead{color:var(--text-dim);font-size:14px;margin:0 0 26px;}
+
+  /* ── Carte ── */
+  .card{background:linear-gradient(160deg,#0F1B30,#0B1424);border:1px solid var(--border);border-radius:22px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+  .banner{height:108px;position:relative;overflow:hidden;background:radial-gradient(120% 150% at 82% -30%, rgba(96,165,250,.5), transparent 58%),linear-gradient(120deg,#1E3A8A,#0f2447 55%,#0a1628);}
+  .banner::before{content:"";position:absolute;inset:0;opacity:.5;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:26px 26px;}
+  .body{padding:0 24px 24px;margin-top:-46px;position:relative;z-index:2;}
+  .avatar{width:92px;height:92px;border-radius:50%;border:3px solid #0F1B30;background:linear-gradient(160deg,#16233a,#0b1222) center/cover no-repeat;
+    display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';font-weight:700;font-size:32px;color:#fff;box-shadow:0 0 0 2px var(--gold),0 10px 24px rgba(0,0,0,.45);}
+  .nm{font-family:'Space Grotesk';font-size:24px;font-weight:700;margin-top:15px;letter-spacing:-.4px;position:relative;padding-bottom:11px;}
+  .nm::after{content:"";position:absolute;left:0;bottom:0;width:46px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--gold),transparent);}
+  .ti{color:var(--gold);font-weight:600;font-size:14px;margin-top:10px;}
+  .co{color:var(--text-dim);font-size:13px;margin-top:3px;}
+  .bi{color:var(--text-dim);font-size:13px;margin-top:12px;}
+  .rows{margin-top:18px;display:flex;flex-direction:column;gap:2px;}
+  .row{display:flex;align-items:center;gap:12px;padding:9px 6px;border-radius:10px;color:var(--text);text-decoration:none;font-size:14px;transition:background .12s;}
+  .row:hover{background:rgba(255,255,255,.04);}
+  .row .ic{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(201,169,92,.10);border:1px solid rgba(201,169,92,.28);color:var(--gold);}
+  .row .ic svg{width:18px;height:18px;} .row .vv{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .actions{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:10px;font-family:'Space Grotesk';font-weight:600;font-size:13.5px;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:transform .18s,background .18s;}
+  .btn-azure{background:linear-gradient(135deg,#3B82F6,#2563EB);color:#fff;box-shadow:0 8px 24px -10px rgba(59,130,246,.6);}
+  .btn-azure:hover{transform:translateY(-2px);}
+  .btn-glass{background:var(--glass);border:1px solid var(--border);color:var(--text);}
+  .btn-glass:hover{background:rgba(255,255,255,.06);}
+  .btn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+
+  /* ── Éditeur ── */
+  .editor{margin-top:18px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;display:none;}
+  .editor.open{display:block;}
+  .editor h3{font-family:'Space Grotesk';font-size:16px;font-weight:700;margin:0 0 4px;}
+  .editor .hint{color:var(--text-faint);font-size:12px;margin:0 0 16px;}
+  label{display:block;font-size:12px;color:var(--text-dim);margin:0 0 6px;font-weight:500;}
+  .fld{margin-bottom:13px;}
+  input,textarea{width:100%;background:rgba(10,22,40,.7);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:var(--text);padding:11px 13px;font-size:14px;font-family:inherit;outline:none;transition:border .15s,box-shadow .15s;}
+  input:focus,textarea:focus{border-color:#60A5FA;box-shadow:0 0 0 3px rgba(96,165,250,.15);}
+  textarea{resize:vertical;min-height:60px;}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:480px){.two{grid-template-columns:1fr;}}
+  .msg{margin-top:12px;padding:10px 13px;border-radius:10px;font-size:13px;display:none;}
+  .msg.err{display:block;background:rgba(239,68,68,.12);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);}
+  .msg.ok{display:block;background:rgba(34,197,94,.10);color:#86EFAC;border:1px solid rgba(34,197,94,.3);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading{text-align:center;color:var(--text-faint);padding:60px 0;font-size:14px;}
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <a class="brand" href="app.html"><img src="assets/img/logo-axion-icon.png" alt="" /><span class="word hidden sm:inline">AXION</span></a>
+  <div class="spacer"></div>
+  <a href="compte.html" class="icon-btn" title="Mon compte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></a>
+  <a href="app.html" class="icon-btn" title="Tableau de bord"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></a>
+  <button id="logoutBtn" class="icon-btn" title="Déconnexion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+</header>
+
+<main class="layout">
+  <p class="kicker">Carte de visite</p>
+  <h1 id="pageTitle">Ma carte</h1>
+  <p class="lead">Votre carte de visite numérique Cadence — partagez-la, exportez le contact.</p>
+
+  <div id="loading" class="loading">Chargement…</div>
+
+  <div id="cardWrap" style="display:none">
+    <div class="card">
+      <div class="banner"></div>
+      <div class="body">
+        <div class="avatar" id="avatar">?</div>
+        <div class="nm" id="cName">—</div>
+        <div class="ti" id="cTitle"></div>
+        <div class="co" id="cCompany"></div>
+        <div class="bi" id="cBio"></div>
+        <div class="rows" id="cRows"></div>
+        <div class="actions">
+          <button class="btn btn-azure" id="vcardBtn">📇 Enregistrer le contact</button>
+          <button class="btn btn-glass" id="editBtn">✎ Éditer ma carte</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor" id="editor">
+      <h3>Éditer ma carte</h3>
+      <p class="hint">Laissez « Site » et « Adresse » vides pour hériter des coordonnées de l'agence.</p>
+      <div class="fld"><label>Fonction</label><input id="f-title" placeholder="Maître d'œuvre · Associé"></div>
+      <div class="two">
+        <div class="fld"><label>Mobile</label><input id="f-mobile" placeholder="06 12 34 56 78"></div>
+        <div class="fld"><label>E-mail affiché</label><input id="f-contact" placeholder="prenom.nom@cadence-architectes.fr"></div>
+      </div>
+      <div class="fld"><label>Présentation</label><textarea id="f-bio" placeholder="Quelques mots…"></textarea></div>
+      <div class="two">
+        <div class="fld"><label>Site (option)</label><input id="f-website" placeholder="hérite de l'agence si vide"></div>
+        <div class="fld"><label>Adresse (option)</label><input id="f-address" placeholder="hérite de l'agence si vide"></div>
+      </div>
+      <div class="fld"><label>Photo (URL)</label><input id="f-photo" placeholder="https://…/photo.jpg"></div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-azure" id="saveBtn">Enregistrer</button>
+        <button class="btn btn-glass" id="cancelBtn">Annuler</button>
+      </div>
+      <div id="saveMsg" class="msg"></div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/axion-auth.js"></script>
+<script>
+(async function () {
+  "use strict";
+  var sb = AxionAuth.sb;
+  var sess = await AxionAuth.currentSession();
+  if (!sess) { window.location.href = 'login.html'; return; }
+
+  var meId = sess.user.id;
+  // ?id=<uuid> permet à un admin de voir/éditer la carte d'un autre (RLS arbitre).
+  var params = new URLSearchParams(location.search);
+  var targetId = params.get('id') || meId;
+
+  var PROFILE_COLS = 'id, email, full_name, role, company_id, title, mobile, contact_email, website, address, bio, photo_url, links, associe';
+  var profile = null, company = null, view = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s||'').replace(/[<>&"]/g, function (c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); };
+
+  var ICONS = {
+    phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
+    globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+    pin:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'
+  };
+  function svg(n){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICONS[n]+'</svg>'; }
+
+  function buildView(p, c) {
+    c = c || {};
+    return {
+      name: p.full_name || '',
+      title: p.title || '',
+      company: c.name || '',
+      bio: p.bio || '',
+      mobile: p.mobile || '',
+      fixe: c.phone || '',
+      email: p.contact_email || p.email || '',
+      website: p.website || c.website || '',
+      address: p.address || c.address || '',
+      photo: p.photo_url || ''
+    };
+  }
+
+  function row(parent, icon, val, href, ext) {
+    if (!val) return;
+    var a = document.createElement(href ? 'a' : 'div');
+    a.className = 'row';
+    if (href) { a.href = href; if (ext) { a.target = '_blank'; a.rel = 'noopener'; } }
+    a.innerHTML = '<span class="ic">'+svg(icon)+'</span><span class="vv">'+esc(val)+'</span>';
+    parent.appendChild(a);
+  }
+
+  function render() {
+    view = buildView(profile, company);
+    $('cName').textContent = view.name || 'Votre nom';
+    $('cTitle').textContent = view.title || '';
+    $('cCompany').textContent = view.company || '';
+    $('cBio').textContent = view.bio || '';
+    var av = $('avatar');
+    if (view.photo) { av.style.backgroundImage = 'url('+view.photo+')'; av.textContent=''; }
+    else { av.style.backgroundImage=''; av.textContent = (view.name||'').trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase() || '?'; }
+    var r = $('cRows'); r.innerHTML='';
+    row(r,'phone',view.mobile,'tel:'+view.mobile.replace(/\s/g,''));
+    row(r,'phone',view.fixe,'tel:'+view.fixe.replace(/\s/g,''));
+    row(r,'mail',view.email,'mailto:'+view.email);
+    row(r,'globe',view.website, /^https?:/i.test(view.website)?view.website:'https://'+view.website, true);
+    row(r,'pin',view.address, view.address?'https://maps.google.com/?q='+encodeURIComponent(view.address):'', true);
+  }
+
+  function buildVCard() {
+    var v = view, parts = ['BEGIN:VCARD','VERSION:3.0'];
+    var sp = (v.name||'').trim().split(/\s+/); var last = sp.length>1?sp.pop():''; var first = sp.join(' ');
+    parts.push('N:'+last+';'+first+';;;'); parts.push('FN:'+(v.name||''));
+    if (v.company) parts.push('ORG:'+v.company);
+    if (v.title) parts.push('TITLE:'+v.title);
+    if (v.mobile) parts.push('TEL;TYPE=CELL:'+v.mobile);
+    if (v.fixe) parts.push('TEL;TYPE=WORK:'+v.fixe);
+    if (v.email) parts.push('EMAIL;TYPE=INTERNET:'+v.email);
+    if (v.website) parts.push('URL:'+(/^https?:/i.test(v.website)?v.website:'https://'+v.website));
+    if (v.address) parts.push('ADR;TYPE=WORK:;;'+v.address.replace(/,/g,'\\,')+';;;;');
+    if (v.bio) parts.push('NOTE:'+v.bio.replace(/\n/g,'\\n'));
+    parts.push('END:VCARD'); return parts.join('\r\n');
+  }
+  function downloadVCard() {
+    var blob = new Blob([buildVCard()], {type:'text/vcard;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href=url; a.download=((view.name||'contact').replace(/\s+/g,'-'))+'.vcf';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  }
+
+  function openEditor() {
+    $('f-title').value = profile.title || '';
+    $('f-mobile').value = profile.mobile || '';
+    $('f-contact').value = profile.contact_email || '';
+    $('f-bio').value = profile.bio || '';
+    $('f-website').value = profile.website || '';
+    $('f-address').value = profile.address || '';
+    $('f-photo').value = profile.photo_url || '';
+    $('editor').classList.add('open');
+    $('editor').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  async function save() {
+    var patch = {
+      title: $('f-title').value.trim() || null,
+      mobile: $('f-mobile').value.trim() || null,
+      contact_email: $('f-contact').value.trim() || null,
+      bio: $('f-bio').value.trim() || null,
+      website: $('f-website').value.trim() || null,
+      address: $('f-address').value.trim() || null,
+      photo_url: $('f-photo').value.trim() || null
+    };
+    var msg = $('saveMsg');
+    var btn = $('saveBtn'); btn.disabled = true; var prev = btn.innerHTML;
+    btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite"></span> Enregistrement…';
+    try {
+      var res = await sb.from('user_profiles').update(patch).eq('id', targetId).select(PROFILE_COLS).single();
+      if (res.error) throw res.error;
+      profile = res.data; render();
+      msg.textContent = 'Carte enregistrée ✓'; msg.className = 'msg ok';
+      setTimeout(function(){ $('editor').classList.remove('open'); msg.className='msg'; }, 900);
+    } catch (e) {
+      msg.textContent = (e && e.message) || 'Erreur lors de l\'enregistrement.'; msg.className = 'msg err';
+    } finally { btn.disabled = false; btn.innerHTML = prev; }
+  }
+
+  // ── Chargement ──
+  try {
+    var pr = await sb.from('user_profiles').select(PROFILE_COLS).eq('id', targetId).single();
+    if (pr.error) throw pr.error;
+    profile = pr.data;
+    if (profile.company_id) {
+      var co = await sb.from('companies').select('name, phone, website, address').eq('id', profile.company_id).single();
+      if (!co.error) company = co.data;
+    }
+  } catch (e) {
+    $('loading').textContent = 'Carte introuvable ou accès refusé.';
+    return;
+  }
+
+  $('loading').style.display = 'none';
+  $('cardWrap').style.display = 'block';
+  if (targetId !== meId) { $('pageTitle').textContent = profile.full_name || 'Carte'; }
+  render();
+
+  $('vcardBtn').addEventListener('click', downloadVCard);
+  $('editBtn').addEventListener('click', openEditor);
+  $('cancelBtn').addEventListener('click', function(){ $('editor').classList.remove('open'); });
+  $('saveBtn').addEventListener('click', save);
+  $('logoutBtn').addEventListener('click', async function(){ await AxionAuth.signOut(); window.location.href='login.html'; });
+})();
+</script>
+</body>
+</html>
