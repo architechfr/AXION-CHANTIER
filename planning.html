@@ -827,6 +827,11 @@ body.mobile-view-on .mob-exit-fab{display:block}
   <span style="font-weight:400;opacity:.7;margin-left:8px;font-size:11px">— Aucune modification possible</span>
 </div>
 <script>
+/* AXION — namespace par chantier : permet plusieurs plannings isolés.
+   ?project=<slug> définit l'espace de stockage ; défaut 'lisa' (rétro-compat). */
+var PROJECT_KEY=(function(){try{var m=window.location.search.match(/[?&]project=([^&]+)/);return m?decodeURIComponent(m[1]).replace(/[^a-zA-Z0-9_-]/g,'').toLowerCase():'lisa';}catch(e){return 'lisa';}})();
+var NS_BASE='cf_'+PROJECT_KEY+'_';
+
 // v104-staging — Détection automatique de l'environnement
 // Le bandeau apparaît si l'URL contient "staging", "git-v104", ou n'est pas
 // l'host de prod (planning-lisa.vercel.app). En localhost / file:// il n'apparaît pas.
@@ -1712,7 +1717,7 @@ var GC_DEFAULT={TERR:'#92400e',GO:'#6366f1',ECHAF:'#8b5cf6',BARD:'#7c3aed',MENUI
   OPR:'#fbbf24',LIVR:'#22c55e'};
 var GC=JSON.parse(JSON.stringify(GC_DEFAULT));
 // Charger les couleurs custom si présentes
-try{var gcSaved=localStorage.getItem('cf_lisa_colors');if(gcSaved){var sv=JSON.parse(gcSaved);for(var k in sv)if(GC_DEFAULT[k])GC[k]=sv[k]}}catch(e){}
+try{var gcSaved=localStorage.getItem(NS_BASE+'colors');if(gcSaved){var sv=JSON.parse(gcSaved);for(var k in sv)if(GC_DEFAULT[k])GC[k]=sv[k]}}catch(e){}
 var GN={TERR:'Terrassement/SS',GO:'Gros Œuvre',ECHAF:'Échafaudage',BARD:'Bardage ext.',MENUIS_E:'Menuis. ext.',
   ETANCH:'Étanchéité',PGAR:'Porte garage',RAVAL:'Ravalement',RAVAL_PREP:'Prépa ravalement',SERR:'Serrurerie',
   CLOIS:'Cloison/Doublage',CHAPE:'Chape',PEINT:'Peinture',CARREL:'Carrelage',SOL:'Sol souple',MENUIS_I:'Menuis. int.',
@@ -2128,7 +2133,7 @@ function loadLinks(){
     // Migration : ancien format numérique (v67 et avant)
     var oldRaw=null;
     for(var v=67;v>=60;v--){
-      oldRaw=localStorage.getItem('cf_lisa_links_v'+v);
+      oldRaw=localStorage.getItem(NS_BASE+'links_v'+v);
       if(oldRaw)break;
     }
     if(!oldRaw)return;
@@ -2782,7 +2787,7 @@ var APP_MODE=(function(){
   return 'moe';
 })();
 // Namespace localStorage : le MOA a son propre espace pour ne JAMAIS toucher au planning MOE
-var STORE_NS=(APP_MODE==='moa')?'cf_lisa_moa_':'cf_lisa_';
+var STORE_NS=(APP_MODE==='moa')?NS_BASE+'moa_':NS_BASE+'';
 var STORAGE_KEY=STORE_NS+'state'; // v77 — clé STABLE (ne dépend plus de la version → plus de perte à chaque MAJ)
 var READONLY=(APP_MODE==='lecteur');
 
@@ -2902,9 +2907,9 @@ function saveSt(){
 // Camille prompt 17 : sécuriser la sauvegarde, traçabilité maximum.
 // À chaque modif utilisateur (saveSt), on capture un snapshot complet via
 // exportPlanningState() et on le pousse dans un ring buffer de 10 entrées.
-// Stocké dans localStorage clé 'cf_lisa_autosnap'. Visible dans le panneau
+// Stocké dans localStorage clé NS_BASE+'autosnap'. Visible dans le panneau
 // Historique de versions existant via renderVersionList (réutilise SNAP_KEY).
-var AUTO_SNAP_KEY = (typeof STORE_NS!=='undefined'?STORE_NS:'cf_lisa_')+'autosnap';
+var AUTO_SNAP_KEY = (typeof STORE_NS!=='undefined'?STORE_NS:NS_BASE+'')+'autosnap';
 var __autoSnapTimer=null;
 function __autoSnapDebounced(){
   if(__autoSnapTimer)clearTimeout(__autoSnapTimer);
@@ -3050,7 +3055,7 @@ function updatePdfDensityHint(){
 // Permet à l'utilisateur d'ajuster la police, les tailles de texte, l'opacité
 // des liaisons, l'épaisseur des traits, la hauteur des barres avant export PDF.
 // Persisté dans localStorage cf_lisa_pdf_settings et appliqué au PDF via cfg.
-var PDF_SETTINGS_KEY = (typeof STORE_NS!=='undefined'?STORE_NS:'cf_lisa_')+'pdf_settings';
+var PDF_SETTINGS_KEY = (typeof STORE_NS!=='undefined'?STORE_NS:NS_BASE+'')+'pdf_settings';
 var PDF_SETTINGS_DEFAULTS = {
   fontFamily:        'helvetica',
   globalFontScale:   1.0,    // multiplicateur global (0.7 - 1.5)
@@ -3287,7 +3292,7 @@ function loadCadences(){
     // Migration depuis versions précédentes
     if(!raw){
       for(var v=68;v>=67;v--){
-        var k='cf_lisa_cadences_v'+v;
+        var k=NS_BASE+'cadences_v'+v;
         var oldRaw=localStorage.getItem(k);
         if(oldRaw){CADENCES=JSON.parse(oldRaw)||{};saveCadences();break;}
       }
@@ -3485,13 +3490,13 @@ function updateColor(k,v){
   GC[k]=v;
   var s=document.getElementById('sample_'+k);if(s)s.style.background=v;
   var hx=document.getElementById('hex_'+k);if(hx)hx.textContent=v.toUpperCase();
-  try{localStorage.setItem('cf_lisa_colors',JSON.stringify(GC))}catch(e){}
+  try{localStorage.setItem(NS_BASE+'colors',JSON.stringify(GC))}catch(e){}
   render();
 }
 function resetColors(){
   if(!confirm('Réinitialiser toutes les couleurs aux valeurs par défaut ?'))return;
   for(var k in GC_DEFAULT)GC[k]=GC_DEFAULT[k];
-  try{localStorage.removeItem('cf_lisa_colors')}catch(e){}
+  try{localStorage.removeItem(NS_BASE+'colors')}catch(e){}
   closeColorModal();openColorModal();render();toast('Couleurs réinitialisées');
 }
 
@@ -3530,7 +3535,7 @@ function updateZoomUI(){var el=document.getElementById('zoomLvl');if(el)el.textC
 // max 60% de la largeur de l'écran (pour ne pas écraser le Gantt).
 // Largeur persistée dans localStorage (cf_lisa_left_w_px) et restaurée au boot.
 (function(){
-  var SB_KEY = 'cf_lisa_left_w_px';
+  var SB_KEY = NS_BASE+'left_w_px';
   var MIN_W = 50;   // min : on doit toujours voir au moins N° + dot
   function maxW(){ return Math.round(window.innerWidth * 0.6); }
 
@@ -3696,7 +3701,7 @@ function toggleRelCols(){ /* obsolète depuis v83 — conservé pour compat. */ 
 (function(){
   try{
     document.body.setAttribute('data-rel','1');
-    localStorage.removeItem('cf_lisa_rel_cols');
+    localStorage.removeItem(NS_BASE+'rel_cols');
   }catch(e){}
 })();
 
@@ -3718,7 +3723,7 @@ function setFS(s){
   var btn=document.getElementById(s==='normal'?'fsN':(s==='big'?'fsB':'fsH'));
   if(btn)btn.classList.add('on');
   // Persister la préférence
-  try{localStorage.setItem('cf_lisa_fs',s);}catch(e){}
+  try{localStorage.setItem(NS_BASE+'fs',s);}catch(e){}
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -6796,8 +6801,8 @@ function applyPlanningState(state){
 // Auto-push à chaque saveSt() (debounce 3s) + push immédiat sur forceSave,
 // import, publish, drag, doMoveAfter. Reset facile, restauration sélective.
 var UnifiedStore = (function(){
-  var KEY      = (typeof STORE_NS!=='undefined'?STORE_NS:'cf_lisa_')+'unified_v1';
-  var HIST_KEY = (typeof STORE_NS!=='undefined'?STORE_NS:'cf_lisa_')+'unified_history';
+  var KEY      = (typeof STORE_NS!=='undefined'?STORE_NS:NS_BASE+'')+'unified_v1';
+  var HIST_KEY = (typeof STORE_NS!=='undefined'?STORE_NS:NS_BASE+'')+'unified_history';
   var MAX_HIST = 20;
 
   // FNV-1a 32-bit (rapide, suffisant pour détecter corruption)
@@ -6979,7 +6984,7 @@ function inspectLocalStorageKey(key){
   return r;
 }
 function buildDiagnosticReport(){
-  var NS = (typeof STORE_NS!=='undefined')?STORE_NS:'cf_lisa_';
+  var NS = (typeof STORE_NS!=='undefined')?STORE_NS:NS_BASE+'';
   var KEYS = [
     {k:NS+'state',     desc:'Snapshot principal (cf_lisa_state) — utilisé pour reload de session'},
     {k:NS+'links',     desc:'Liens entre tâches (UID-based)'},
@@ -6995,7 +7000,7 @@ function buildDiagnosticReport(){
     {k:NS+'endConv',   desc:'Flag migration v94 (convention end inclusive)'},
     {k:NS+'normDates', desc:'Flag migration v98 (normalisation dates)'},
     {k:NS+'sb_collapsed', desc:'(obsolète) Toggle sidebar v104 ancien'},
-    {k:'cf_lisa_left_w_px', desc:'Largeur sauvegardée de la colonne tâches (v104)'},
+    {k:NS_BASE+'left_w_px', desc:'Largeur sauvegardée de la colonne tâches (v104)'},
     {k:NS+'workcal_extra', desc:'Calendrier de travail enrichi par utilisateur'}
   ];
   var rows = KEYS.map(function(K){
@@ -7859,7 +7864,7 @@ function handleImportFile(file){
   document.getElementById('importFileInput').value='';
 }
 // ── Historique de versions (localStorage) ──
-var SNAP_KEY='cf_lisa_snapshots';
+var SNAP_KEY=NS_BASE+'snapshots';
 function loadSnapshots(){
   try{var r=localStorage.getItem(SNAP_KEY);return r?JSON.parse(r):[];}catch(e){return [];}
 }
@@ -8624,7 +8629,7 @@ function resetLayout(){
 // Restaurer la préférence taille typo (accessibilité)
 (function(){
   try{
-    var saved=localStorage.getItem('cf_lisa_fs');
+    var saved=localStorage.getItem(NS_BASE+'fs');
     if(saved&&['normal','big','huge'].indexOf(saved)>=0&&typeof setFS==='function')setFS(saved);
   }catch(e){}
 })();
@@ -9116,7 +9121,7 @@ function mobileRenderGantt(){
   // Sidebar width : depuis state ou localStorage ou défaut 130
   if(typeof MOBILE_VIEW.sidebarW !== 'number'){
     try{
-      var saved = parseInt(localStorage.getItem('cf_lisa_mob_sidebar_w'), 10);
+      var saved = parseInt(localStorage.getItem(NS_BASE+'mob_sidebar_w'), 10);
       MOBILE_VIEW.sidebarW = (saved && saved>=70 && saved<=320) ? saved : 130;
     }catch(_){ MOBILE_VIEW.sidebarW = 130; }
   }
@@ -9266,7 +9271,7 @@ function mobileCollapseAll(){
   document.addEventListener('pointerup', function(e){
     if(!captured) return;
     captured = false;
-    try{ localStorage.setItem('cf_lisa_mob_sidebar_w', MOBILE_VIEW.sidebarW); }catch(_){}
+    try{ localStorage.setItem(NS_BASE+'mob_sidebar_w', MOBILE_VIEW.sidebarW); }catch(_){}
     // Full re-render pour positionner correctement la ligne "Auj." et tout
     if(MOBILE_VIEW.tab === 'gantt') mobileRenderGantt();
   });
@@ -9390,7 +9395,7 @@ function maybeShowInstallBanner(){
   // v128 — Ne pas inciter à installer en mode lecteur (visite ponctuelle, pas d'install)
   if(document.body.getAttribute('data-ro') === '1') return;
   try{
-    if(localStorage.getItem('cf_lisa_install_banner_dismissed') === '1') return;
+    if(localStorage.getItem(NS_BASE+'install_banner_dismissed') === '1') return;
   }catch(_){}
   // Attendre 3s pour ne pas être intrusif au boot
   setTimeout(function(){
@@ -9402,7 +9407,7 @@ function maybeShowInstallBanner(){
   }, 3000);
 }
 function dismissInstallBanner(){
-  try{ localStorage.setItem('cf_lisa_install_banner_dismissed','1'); }catch(_){}
+  try{ localStorage.setItem(NS_BASE+'install_banner_dismissed','1'); }catch(_){}
   var b = document.getElementById('pwaInstallBanner');
   if(b) b.style.display = 'none';
   document.body.classList.remove('has-pwa-banner');
