@@ -281,6 +281,29 @@ function demoData(){
     if(!co.error) STATE.companies=co.data||[];
   }catch(e){ console.warn('companies',e); }
   try { var lk=await AxionAuth.sb.from('project_companies').select('project_id,company_id'); if(!lk.error) STATE.links=lk.data||[]; }catch(e){ console.warn('project_companies',e); }
+
+  /* Source unique des contacts = project_contacts (annuaire par chantier).
+     On fusionne ici sur chaque société (par nom) lot/contact/email/tél/rôle. */
+  try {
+    var pc=await AxionAuth.sb.from('project_contacts').select('company,lot,role,full_name,email,phone');
+    if(!pc.error && pc.data){
+      var ROLE_TYPE={'MOA':'moa','MOE':'moe','Entreprise':'entreprise','Bureau de contrôle':'controle','AMO':'amo','SPS':'sps','BET':'bet','Bailleur social':'bailleur'};
+      var byName={};
+      pc.data.forEach(function(r){
+        var k=(r.company||'').trim().toLowerCase(); if(!k) return;
+        var cur=byName[k];
+        if(!cur || ((!cur.email&&r.email)||(!cur.phone&&r.phone)||(!cur.full_name&&r.full_name))) byName[k]=r;
+      });
+      STATE.companies.forEach(function(c){
+        var m=byName[(c.name||'').trim().toLowerCase()]; if(!m) return;
+        if(!c.contact_name) c.contact_name=m.full_name;
+        if(!c.email) c.email=m.email;
+        if(!c.phone) c.phone=m.phone;
+        if(!c.lot && m.lot) c.lot=m.lot;
+        if(!c.type && m.role) c.type=ROLE_TYPE[m.role]||'entreprise';
+      });
+    }
+  }catch(e){ console.warn('project_contacts',e); }
   setupFilters();
 
   if(STATE.canEdit){
