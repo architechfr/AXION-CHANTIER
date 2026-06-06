@@ -1115,7 +1115,7 @@ async function loadAnnuaire(projectId) {
     if (res.error) throw res.error;
     var rows = res.data || [];
     if (!rows.length) { mount.innerHTML = ''; return; }
-    var order = ['MOA', 'MOE', 'Bureau de contrôle', 'SPS', 'Entreprise'];
+    var order = ['MOA', 'Bailleur social', 'MOE', 'Bureau de contrôle', 'AMO', 'SPS', 'BET', 'Entreprise'];
     var groups = {};
     rows.forEach(function (r) { (groups[r.role || 'Autre'] = groups[r.role || 'Autre'] || []).push(r); });
     var keys = Object.keys(groups).sort(function (a, b) {
