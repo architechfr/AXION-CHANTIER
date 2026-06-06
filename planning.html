@@ -784,8 +784,13 @@ body.mobile-view-on #mob-tabs{display:none !important} /* v127 — seul Gantt re
 }
 body.mobile-view-on .mob-exit-fab{display:block}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/axion-auth.js"></script>
 </head>
 <body data-rel="1" class="light">
+<div id="axOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0A1628;color:#E2E8F0;font-family:Inter,system-ui,sans-serif;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:24px"><div id="axOverlayMsg" style="font-size:15px;max-width:440px;line-height:1.55">Chargement du planning…</div></div>
+<script>(function(){try{var m=location.search.match(/[?&]project=([^&]+)/);if(m&&decodeURIComponent(m[1]).toLowerCase()!=='lisa'){var o=document.getElementById('axOverlay');if(o)o.style.display='flex';}}catch(e){}})();</script>
 <!-- v120-staging CHANTIER 16 — Bannière incitant à installer la PWA (cachée si déjà installée) -->
 <div id="pwaInstallBanner" onclick="openInstallModal()">
   <span class="lbl">📲 <b>Installer l'app</b> — cache la barre d'adresse, plein écran, accès rapide en 1 tap</span>
@@ -9569,5 +9574,81 @@ function installQrCopy(){
 </div>
 
 
+<script>
+/* ============================================================
+   AXION — Planning multi-chantier piloté par les données.
+   Si ?project=<project_id> (≠ lisa) : la session Supabase est
+   exigée, et les tâches sont CONSTRUITES depuis le snapshot
+   planning_snapshots (sortie configurateur), puis sauvegardées.
+   Sans paramètre / project=lisa : v131 d'origine, intact.
+   ============================================================ */
+(function(){
+  var PID=(function(){var m=location.search.match(/[?&]project=([^&]+)/);if(!m)return null;var v=decodeURIComponent(m[1]).replace(/[^a-zA-Z0-9_-]/g,'').toLowerCase();return (v&&v!=='lisa')?v:null;})();
+  var ov=document.getElementById('axOverlay'), ovm=document.getElementById('axOverlayMsg');
+  function setMsg(html,login){ if(ovm)ovm.innerHTML=html+(login?'<br><a href="login.html" style="color:#3B82F6">Se connecter</a>':''); if(ov)ov.style.display='flex'; }
+  function hide(){ if(ov)ov.style.display='none'; }
+  if(!PID){ hide(); return; }                       // mode Lisa/local : ne rien faire
+  if(typeof window.getAxionSupabase!=='function'){ console.warn('[planning] SDK Supabase absent'); hide(); return; }
+  var sb=window.getAxionSupabase(); var userId=null, loading=true, pushTimer=null;
 
+  // Reconstruit T / LINKS / CADENCES depuis un snapshot chantierflow (data-driven)
+  function buildFromSnapshot(snap){
+    if(!snap||!snap.tasks||typeof T==='undefined')return false;
+    T.length=0; nid=0;
+    for(var i=0;i<snap.tasks.length;i++){
+      var s=snap.tasks[i];
+      T.push({id:nid++, uid:s.uid||(typeof makeUid==='function'?makeUid(s.name,s.group,s.bat,s.start):'tk_'+i),
+        name:s.name||'', color:s.color||'', bat:s.bat||'', start:s.start, end:s.end,
+        dur:(s.dur!=null?s.dur:((typeof dd==='function'&&typeof D==='function')?dd(D(s.start),D(s.end)):0)),
+        sum:!!s.sum, group:s.group||'', parent:s.parent||'', sub:!!s.sub, sts:s.sts||'ns',
+        util:!!s.util, jalon:!!s.jalon, crit:!!s.crit, locked:!!s.locked, vis:s.vis||'visible',
+        customColor:s.customColor||null, durInput:s.durInput||null,
+        info:(typeof INFO_MAP!=='undefined'&&INFO_MAP[s.name])||''});
+    }
+    if(typeof LINKS!=='undefined'){
+      LINKS.length=0; var by={}; for(var i=0;i<T.length;i++)by[T[i].uid]=T[i];
+      if(snap.links)for(var i=0;i<snap.links.length;i++){var l=snap.links[i],f=by[l.fromUid],t=by[l.toUid];if(f&&t)LINKS.push({from:f.id,to:t.id,type:l.type||'FS',lag:l.lag||0});}
+    }
+    if(snap.cadences&&typeof CADENCES!=='undefined')CADENCES=snap.cadences;
+    // Plage de dates du Gantt = bornes du chantier
+    try{ if(typeof MIN_D!=='undefined'){ var ss=[],ff=[]; for(var i=0;i<T.length;i++){var ds=D(T[i].start),de=D(T[i].end); if(ds)ss.push(+ds); if(de)ff.push(+de);}
+      if(ss.length){ var lo=new Date(Math.min.apply(null,ss)),hi=new Date(Math.max.apply(null,ff)); MIN_D=(typeof ad==='function')?ad(lo,-30):lo; MAX_D=(typeof ad==='function')?ad(hi,30):hi; } } }catch(e){}
+    return true;
+  }
+  function refresh(){ try{ if(typeof recalc==='function')recalc(); if(typeof buildMeta==='function')buildMeta(); if(typeof render==='function')render(); }catch(e){console.warn('[planning.refresh]',e);} }
+
+  function loadFromSupabase(){
+    return sb.from('planning_snapshots').select('snapshot').eq('project_id',PID).maybeSingle().then(function(r){
+      if(r.error){ console.warn('[planning.load]',r.error); setMsg('Accès au planning refusé ou indisponible.'); return; }
+      if(r.data&&r.data.snapshot){ if(buildFromSnapshot(r.data.snapshot)){ refresh(); hide(); } else { setMsg('Planning illisible.'); } }
+      else { setMsg('Aucun planning enregistré pour ce chantier.<br>Générez-le via le configurateur.'); }
+    });
+  }
+  function pushToSupabase(){
+    if(loading)return; if(typeof READONLY!=='undefined'&&READONLY)return; if(typeof exportPlanningState!=='function')return;
+    var st; try{st=exportPlanningState();}catch(e){return;}
+    sb.from('planning_snapshots').upsert({project_id:PID,snapshot:st,source_url:location.href,updated_by:userId,updated_at:new Date().toISOString()},{onConflict:'project_id'}).then(function(r){
+      if(r.error){console.warn('[planning.push]',r.error); if(typeof toast==='function')toast('⚠ Sauvegarde cloud échouée');}
+    });
+  }
+  function schedulePush(){ if(pushTimer)clearTimeout(pushTimer); pushTimer=setTimeout(pushToSupabase,2500); }
+  function hookSaves(){ if(typeof UnifiedStore==='undefined')return;
+    if(UnifiedStore.save){var s=UnifiedStore.save;UnifiedStore.save=function(){var r=s.apply(this,arguments);schedulePush();return r;};}
+    if(UnifiedStore.saveDebounced){var d=UnifiedStore.saveDebounced;UnifiedStore.saveDebounced=function(){var r=d.apply(this,arguments);schedulePush();return r;};}
+  }
+  function waitApp(cb){var n=0;(function chk(){ if((typeof T!=='undefined'&&typeof render==='function')||n>50){cb();return;} n++; setTimeout(chk,100);})();}
+
+  function start(){
+    setMsg('Chargement du planning…');
+    sb.auth.getSession().then(function(r){
+      var session=r&&r.data&&r.data.session;
+      if(!session){ setMsg('Connectez-vous pour accéder à ce planning.',true); return; }
+      userId=session.user?session.user.id:null;
+      hookSaves();
+      waitApp(function(){ loadFromSupabase().then(function(){loading=false;}); });
+    }).catch(function(e){ console.warn('[planning.boot]',e); setMsg('Erreur de chargement du planning.'); });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
+})();
+</script>
 </body></html>
