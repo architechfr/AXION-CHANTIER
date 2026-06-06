@@ -484,7 +484,10 @@
         <div class="placeholder">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
           <h3>Membres &amp; accès</h3>
-          <p>Entreprises rattachées à ce chantier, lue depuis la liaison <code>project_companies</code>.</p>
+          <p>Annuaire des intervenants du chantier (MOA, MOE, contrôle, SPS, entreprises) avec contacts.</p>
+          <div id="annuaireMount" style="margin-top:24px;text-align:left"></div>
+          <h3 style="margin-top:32px">Entreprises rattachées</h3>
+          <p>Liaison <code>project_companies</code>.</p>
           <div id="membresMount" style="margin-top:24px"></div>
         </div>
       </section>
@@ -659,6 +662,7 @@
   } else {
     // Chantier en travaux → onglets documentaires classiques
     await loadDocuments(projectId);
+    await loadAnnuaire(projectId);
     await loadMembres(projectId);
   }
 
@@ -1095,6 +1099,53 @@ async function loadMembres(projectId) {
   } catch (e) {
     console.warn('[chantier] membres:', e.message);
     mount.innerHTML = '<p class="text-xs" style="color:var(--text-faint)">Impossible de charger la liste des entreprises.</p>';
+  }
+}
+
+// ─── Annuaire détaillé des intervenants (table project_contacts) ───
+async function loadAnnuaire(projectId) {
+  var mount = document.getElementById('annuaireMount');
+  if (!mount) return;
+  try {
+    var res = await AxionAuth.sb
+      .from('project_contacts')
+      .select('role,lot,company,address,full_name,email,phone,sort_order')
+      .eq('project_id', projectId)
+      .order('sort_order', { ascending: true });
+    if (res.error) throw res.error;
+    var rows = res.data || [];
+    if (!rows.length) { mount.innerHTML = ''; return; }
+    var order = ['MOA', 'MOE', 'Bureau de contrôle', 'SPS', 'Entreprise'];
+    var groups = {};
+    rows.forEach(function (r) { (groups[r.role || 'Autre'] = groups[r.role || 'Autre'] || []).push(r); });
+    var keys = Object.keys(groups).sort(function (a, b) {
+      var ia = order.indexOf(a), ib = order.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    });
+    var chip = 'display:inline-block;font:600 11px/1.4 ui-monospace,monospace;padding:2px 7px;border-radius:6px;background:rgba(96,165,250,.15);color:#60A5FA;margin-right:7px';
+    var lk = 'color:#60A5FA;text-decoration:none';
+    mount.innerHTML = keys.map(function (role) {
+      var items = groups[role].map(function (c) {
+        var lot = c.lot ? '<span style="' + chip + '">' + escapeHtml(c.lot) + '</span>' : '';
+        var email = c.email ? '<a style="' + lk + '" href="mailto:' + escapeHtml(c.email) + '">' + escapeHtml(c.email) + '</a>' : '';
+        var phone = c.phone ? '<a style="' + lk + '" href="tel:' + escapeHtml(c.phone.replace(/\s/g, '')) + '">' + escapeHtml(c.phone) + '</a>' : '';
+        var contact = [email, phone].filter(Boolean).join(' &nbsp;·&nbsp; ');
+        return '<div class="doc-row" style="cursor:default;align-items:flex-start">' +
+          '<div class="doc-meta">' +
+            '<div class="nm">' + lot + escapeHtml(c.company || '') + '</div>' +
+            (c.full_name ? '<div class="sub">' + escapeHtml(c.full_name) + '</div>' : '') +
+            (contact ? '<div class="sub">' + contact + '</div>' : '') +
+            (c.address ? '<div class="sub" style="color:var(--text-faint)">' + escapeHtml(c.address) + '</div>' : '') +
+          '</div>' +
+        '</div>';
+      }).join('');
+      return '<h5 style="margin:20px 0 8px;text-transform:uppercase;letter-spacing:.08em">' + escapeHtml(role) +
+        ' <span class="mono" style="color:var(--text-faint)">' + groups[role].length + '</span></h5>' +
+        '<div class="doc-list">' + items + '</div>';
+    }).join('');
+  } catch (e) {
+    console.warn('[chantier] annuaire:', e.message);
+    mount.innerHTML = '<p class="text-xs" style="color:var(--text-faint)">Annuaire indisponible.</p>';
   }
 }
 
