@@ -187,6 +187,32 @@ body.light .cad-logo-full{background-image:url("data:image/png;base64,iVBORw0KGg
 // Contexte projet transmis par AXION (chantier.html → « Créer le planning »)
 var AX_PROJECT_ID=(function(){var m=location.search.match(/[?&]project=([^&]+)/);return m?decodeURIComponent(m[1]):null;})();
 var AX_PROJECT_SLUG=(function(){var m=location.search.match(/[?&]slug=([^&]+)/);return m?decodeURIComponent(m[1]):'';})();
+
+// Pré-remplissage : si le chantier a déjà un planning, on recharge sa config.
+var PREFILL_CFG=null;
+function prefillBasics(cfg){
+  if(!cfg) return;
+  function setv(id,v){var e=document.getElementById(id); if(e&&v!=null&&v!=='')e.value=v;}
+  setv('cName',cfg.name); setv('cProm',cfg.promoteur); setv('cDate',cfg.dateStart);
+  setv('cGO',cfg.dureeMois); setv('cNb',cfg.nbBat); setv('cSSNiv',cfg.ssNiv); setv('cSSDur',cfg.ssDur);
+  if(typeof CFG!=='undefined'){
+    if(cfg.sousSolType)CFG.ss=cfg.sousSolType; if(cfg.ssNiv)CFG.ssNiv=cfg.ssNiv; if(cfg.ssDur)CFG.ssDur=cfg.ssDur;
+    if(cfg.sequence)CFG.seq=cfg.sequence; if(cfg.poseFenetres)CFG.fen=cfg.poseFenetres; if(cfg.livraison)CFG.liv=cfg.livraison;
+  }
+  PREFILL_CFG=cfg;   // les bâtiments seront réappliqués par genBldgConf()
+}
+if(AX_PROJECT_ID && typeof window.getAxionSupabase==='function'){
+  document.addEventListener('DOMContentLoaded',function(){
+    try{
+      window.getAxionSupabase().from('planning_snapshots').select('snapshot').eq('project_id',AX_PROJECT_ID).maybeSingle().then(function(r){
+        if(r&&r.data&&r.data.snapshot&&r.data.snapshot.config){
+          prefillBasics(r.data.snapshot.config);
+          var sub=document.querySelector('.hdr-sub'); if(sub)sub.textContent='Modifier le planning — config pré-remplie';
+        }
+      });
+    }catch(e){ console.warn('[prefill]',e); }
+  });
+}
 // ═══════════════════════════════════════
 // MOTEUR DE GÉNÉRATION DE PLANNING
 // Génère un planning TCE complet inspiré du Lisa
@@ -573,6 +599,7 @@ function createProject(){
       var snapshot={
         format:'chantierflow-snapshot', appVersion:'configurateur',
         exportedAt:new Date().toISOString(), projet:chantierName,
+        config:data.config,   // mémorise la saisie → pré-remplissage à la régénération
         tasks:(function(){
           var src=result.tasks||[];
           try{ src=reclassToLisa(src); }catch(e){ console.warn('[reclassToLisa] repli sur la sortie brute :', e); src=result.tasks||[]; }
@@ -678,7 +705,23 @@ function genBldgConf(){
     h+='</div>'}
   h+='</div>';
   document.getElementById('bldgConf').innerHTML=h;
-  for(var i=0;i<nb;i++)onBType(i);}
+  for(var i=0;i<nb;i++)onBType(i);
+  // Pré-remplissage depuis un planning existant (appliqué une seule fois)
+  if(PREFILL_CFG && PREFILL_CFG.buildings){
+    var bs=PREFILL_CFG.buildings;
+    for(var j=0;j<bs.length;j++){
+      var b=bs[j];
+      var ty=document.getElementById('bType_'+j); if(ty&&b.type)ty.value=b.type;
+      var et=document.getElementById('bEtg_'+j); if(et&&b.etages!=null)et.value=b.etages;
+      var to=document.getElementById('bToit_'+j); if(to&&b.toiture)to.value=b.toiture;
+      var lv=document.getElementById('bLiv_'+j); if(lv&&b.livraison)lv.value=b.livraison;
+      onBType(j);   // ajuste l'affichage logements/surface selon le type
+      var lg=document.getElementById('bLog_'+j); if(lg&&b.logts!=null)lg.value=b.logts;
+      var sf=document.getElementById('bSurf_'+j); if(sf&&b.surf!=null)sf.value=b.surf;
+    }
+    PREFILL_CFG=null;
+  }
+}
 
 function onBType(i){
   var t=(document.getElementById('bType_'+i)||{}).value||'social';var BT=BTYPES[t]||BTYPES.social;
