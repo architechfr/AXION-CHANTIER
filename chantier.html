@@ -487,9 +487,6 @@
           <h3>Membres &amp; accès</h3>
           <p>Annuaire des intervenants du chantier (MOA, MOE, contrôle, SPS, entreprises) avec contacts.</p>
           <div id="annuaireMount" style="margin-top:24px;text-align:left"></div>
-          <h3 style="margin-top:32px">Entreprises rattachées</h3>
-          <p>Liaison <code>project_companies</code>.</p>
-          <div id="membresMount" style="margin-top:24px"></div>
         </div>
       </section>
     </main>
@@ -680,7 +677,6 @@
     // Chantier en travaux → onglets documentaires classiques
     await loadDocuments(projectId);
     await loadAnnuaire(projectId);
-    await loadMembres(projectId);
   }
 
   // 8) Activité récente (timeline combinée : docs + connexions + entreprises)
@@ -1142,22 +1138,36 @@ async function loadAnnuaire(projectId) {
     var chip = 'display:inline-block;font:600 11px/1.4 ui-monospace,monospace;padding:2px 7px;border-radius:6px;background:rgba(96,165,250,.15);color:#60A5FA;margin-right:7px';
     var lk = 'color:#60A5FA;text-decoration:none';
     mount.innerHTML = keys.map(function (role) {
-      var items = groups[role].map(function (c) {
-        var lot = c.lot ? '<span style="' + chip + '">' + escapeHtml(c.lot) + '</span>' : '';
-        var email = c.email ? '<a style="' + lk + '" href="mailto:' + escapeHtml(c.email) + '">' + escapeHtml(c.email) + '</a>' : '';
-        var phone = c.phone ? '<a style="' + lk + '" href="tel:' + escapeHtml(c.phone.replace(/\s/g, '')) + '">' + escapeHtml(c.phone) + '</a>' : '';
-        var contact = [email, phone].filter(Boolean).join(' &nbsp;·&nbsp; ');
+      // Regroupe par société (une carte par société, ses contacts dessous)
+      var byCo = [], idx = {};
+      groups[role].forEach(function (c) {
+        var key = (c.company || '') + '|' + (c.lot || '');
+        if (idx[key] === undefined) { idx[key] = byCo.length; byCo.push({ company: c.company, lot: c.lot, address: c.address, people: [] }); }
+        var g = byCo[idx[key]];
+        if (!g.address && c.address) g.address = c.address;
+        if (c.full_name || c.email || c.phone) g.people.push(c);
+      });
+      var items = byCo.map(function (g) {
+        var lot = g.lot ? '<span style="' + chip + '">' + escapeHtml(g.lot) + '</span>' : '';
+        var people = g.people.map(function (c) {
+          var email = c.email ? '<a style="' + lk + '" href="mailto:' + escapeHtml(c.email) + '">' + escapeHtml(c.email) + '</a>' : '';
+          var phone = c.phone ? '<a style="' + lk + '" href="tel:' + escapeHtml(c.phone.replace(/\s/g, '')) + '">' + escapeHtml(c.phone) + '</a>' : '';
+          var contact = [email, phone].filter(Boolean).join(' &nbsp;·&nbsp; ');
+          return '<div style="margin-top:7px">' +
+            (c.full_name ? '<div class="sub" style="color:var(--text)">' + escapeHtml(c.full_name) + '</div>' : '') +
+            (contact ? '<div class="sub">' + contact + '</div>' : '') +
+          '</div>';
+        }).join('');
         return '<div class="doc-row" style="cursor:default;align-items:flex-start">' +
           '<div class="doc-meta">' +
-            '<div class="nm">' + lot + escapeHtml(c.company || '') + '</div>' +
-            (c.full_name ? '<div class="sub">' + escapeHtml(c.full_name) + '</div>' : '') +
-            (contact ? '<div class="sub">' + contact + '</div>' : '') +
-            (c.address ? '<div class="sub" style="color:var(--text-faint)">' + escapeHtml(c.address) + '</div>' : '') +
+            '<div class="nm">' + lot + escapeHtml(g.company || '') + '</div>' +
+            people +
+            (g.address ? '<div class="sub" style="color:var(--text-faint);margin-top:7px">' + escapeHtml(g.address) + '</div>' : '') +
           '</div>' +
         '</div>';
       }).join('');
       return '<h5 style="margin:20px 0 8px;text-transform:uppercase;letter-spacing:.08em">' + escapeHtml(role) +
-        ' <span class="mono" style="color:var(--text-faint)">' + groups[role].length + '</span></h5>' +
+        ' <span class="mono" style="color:var(--text-faint)">' + byCo.length + '</span></h5>' +
         '<div class="doc-list">' + items + '</div>';
     }).join('');
   } catch (e) {
@@ -1166,29 +1176,39 @@ async function loadAnnuaire(projectId) {
   }
 }
 
-// ─── Sidebar : Intervenants (entreprises affectées) ───────────────
-// Style avatar coloré par rôle/métier détecté à partir du champ trade.
+// ─── Sidebar : Intervenants (sociétés distinctes de l'annuaire) ────
+// Lit project_contacts (même source que l'annuaire) → 1 entrée par société.
+function roleKeyOf(role) {
+  return ({ 'MOA': 'moa', 'MOE': 'moe', 'Entreprise': 'ent', 'Bureau de contrôle': 'bet',
+            'AMO': 'bet', 'BET': 'bet', 'SPS': 'def', 'Bailleur social': 'def' })[role] || 'def';
+}
 async function loadIntervenants(projectId) {
   var mount = document.getElementById('peopleMount');
   var counter = document.getElementById('peopleCount');
   try {
     var res = await AxionAuth.sb
-      .from('project_companies')
-      .select('companies(id,name,trade)')
-      .eq('project_id', projectId);
+      .from('project_contacts')
+      .select('role,lot,company,sort_order')
+      .eq('project_id', projectId)
+      .order('sort_order', { ascending: true });
     if (res.error) throw res.error;
-    var rows = (res.data || []).map(function (r) { return r.companies; }).filter(Boolean);
-    counter.textContent = rows.length;
-    if (!rows.length) {
-      mount.innerHTML = '<p class="text-xs" style="color:var(--text-faint)">Aucune entreprise affectée.</p>';
+    var seen = {}, list = [];
+    (res.data || []).forEach(function (c) {
+      var key = c.company || '';
+      if (!key || seen[key]) return;
+      seen[key] = true; list.push(c);
+    });
+    counter.textContent = list.length;
+    if (!list.length) {
+      mount.innerHTML = '<p class="text-xs" style="color:var(--text-faint)">Aucun intervenant renseigné.</p>';
       return;
     }
-    mount.innerHTML = rows.map(function (c) {
-      var roleKey = detectRoleKey(c.trade || '');
+    mount.innerHTML = list.map(function (c) {
+      var sub = c.lot ? (c.lot + ' · ' + c.role) : c.role;
       return '<div class="person">' +
-        '<div class="av role-' + roleKey + '">' + initials(c.name) + '</div>' +
-        '<div class="meta"><div class="nm">' + escapeHtml(c.name) + '</div>' +
-          (c.trade ? '<div class="rl">' + escapeHtml(c.trade) + '</div>' : '') +
+        '<div class="av role-' + roleKeyOf(c.role) + '">' + initials(c.company) + '</div>' +
+        '<div class="meta"><div class="nm">' + escapeHtml(c.company) + '</div>' +
+          (sub ? '<div class="rl">' + escapeHtml(sub) + '</div>' : '') +
         '</div></div>';
     }).join('');
   } catch (e) {
