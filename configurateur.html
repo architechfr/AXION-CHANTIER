@@ -190,6 +190,22 @@ var AX_PROJECT_SLUG=(function(){var m=location.search.match(/[?&]slug=([^&]+)/);
 
 // Pré-remplissage : si le chantier a déjà un planning, on recharge sa config.
 var PREFILL_CFG=null;
+
+// Données projet connues (par slug) — fournies à partir des pièces (CR, SHAB…).
+// La STRUCTURE (nb bâtiments + bâtiments) prime sur un ancien essai ; le reste
+// (dates, durée GO, sous-sol…) reste à choisir/valider par l'utilisateur.
+var SEED_CONFIGS={
+  'jardins-iris':{
+    nbBat:5,
+    buildings:[
+      {code:'A',type:'social',   logts:36,etages:3,toiture:'terrasse'},  // 36 sociaux
+      {code:'B',type:'accession',logts:17,etages:3,toiture:'terrasse'},
+      {code:'C',type:'accession',logts:22,etages:3,toiture:'terrasse'},
+      {code:'D',type:'accession',logts:21,etages:3,toiture:'terrasse'},
+      {code:'E',type:'accession',logts:24,etages:3,toiture:'terrasse'}   // B+C+D+E = 84 accession
+    ]
+  }
+};
 function prefillBasics(cfg){
   if(!cfg) return;
   function setv(id,v){var e=document.getElementById(id); if(e&&v!=null&&v!=='')e.value=v;}
@@ -210,12 +226,17 @@ if(AX_PROJECT_ID && typeof window.getAxionSupabase==='function'){
       var nm=pr&&pr.data&&pr.data.name, e=document.getElementById('cName');
       if(nm&&e&&!e.value) e.value=nm;
     }).catch(function(){});
-    // Config complète si le chantier a déjà un planning généré
+    // Config : on part de la config mémorisée, mais la STRUCTURE (nb bât + bâtiments)
+    // est imposée par les données projet connues (seed) si elles existent.
     sb.from('planning_snapshots').select('snapshot').eq('project_id',AX_PROJECT_ID).maybeSingle().then(function(r){
-      var snap=r&&r.data&&r.data.snapshot;
-      if(snap&&snap.config){
-        prefillBasics(snap.config);
-        if(sub)sub.textContent='Modifier le planning — config pré-remplie';
+      var snap=r&&r.data&&r.data.snapshot, stored=snap&&snap.config;
+      var seed=SEED_CONFIGS[AX_PROJECT_SLUG];
+      var cfg=null;
+      if(stored&&seed){ cfg={}; for(var k in stored)cfg[k]=stored[k]; cfg.nbBat=seed.nbBat; cfg.buildings=seed.buildings; }
+      else cfg=seed||stored||null;
+      if(cfg){
+        prefillBasics(cfg);
+        if(sub)sub.textContent=seed?'Données projet pré-remplies — validez les étapes':'Modifier le planning — config pré-remplie';
       } else if(snap){
         if(sub)sub.textContent='Planning existant (ancienne version sans config) — re-saisir une fois, ce sera mémorisé ensuite';
       }
