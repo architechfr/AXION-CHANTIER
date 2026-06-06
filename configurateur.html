@@ -515,18 +515,23 @@ function reclassToLisa(flat){
   var keys=ORDER.filter(function(g){return byG[g];}).concat(gorder.filter(function(g){return ORDER.indexOf(g)<0;}));
   keys.forEach(function(g){
     var arr=byG[g]; if(!arr.length) return;
+    // On ignore les en-têtes de corps SANS bâtiment (b='') quand il existe des
+    // bâtiments réels : c'est le « fantôme » (souvent à la date projet) qui
+    // dédoublait la ligne et étirait le dossier trop tôt.
+    var building=arr.filter(function(t){return (t.b||'')!=='';});
+    var base=(building.length>0)?building:arr;
     var byB={}, border=[];
-    arr.forEach(function(t){var b=t.b||'';if(!(b in byB)){byB[b]=[];border.push(b);}byB[b].push(t);});
+    base.forEach(function(t){var b=t.b||'';if(!(b in byB)){byB[b]=[];border.push(b);}byB[b].push(t);});
     var leaves=border.map(function(b){
       var ts=byB[b], sumT=null;
       for(var i=0;i<ts.length;i++){if(ts[i].sum){sumT=ts[i];break;}}
       var done=ts.every(function(x){return x.sts==='dn';});
       return {name:(sumT?sumT.name:ts[0].name), s:minS(ts), f:maxF(ts), sum:false, sub:true, grp:'CE_'+g, b:b, g:g, sts:done?'dn':'ns'};
     });
-    if(leaves.length===1){ // un seul (souvent b vide) → feuille simple, pas de faux dossier
+    if(leaves.length===1){ // un seul → feuille simple, pas de faux dossier
       var l=leaves[0]; out.push({name:(LBL[g]||l.name), s:l.s, f:l.f, sum:false, sub:false, grp:'', b:l.b, g:g, sts:l.sts});
     } else {
-      out.push({name:(LBL[g]||g), s:minS(arr), f:maxF(arr), sum:true, sub:false, grp:'CE_'+g, b:'', g:g, sts:'ns'});
+      out.push({name:(LBL[g]||g), s:minS(base), f:maxF(base), sum:true, sub:false, grp:'CE_'+g, b:'', g:g, sts:'ns'});
       leaves.forEach(function(l){out.push(l);});
     }
   });
