@@ -180,7 +180,69 @@ body.light .cad-logo-full{background-image:url("data:image/png;base64,iVBORw0KGg
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/axion-auth.js"></script>
 <script>
+// Contexte projet transmis par AXION (chantier.html → « Créer le planning »)
+var AX_PROJECT_ID=(function(){var m=location.search.match(/[?&]project=([^&]+)/);return m?decodeURIComponent(m[1]):null;})();
+var AX_PROJECT_SLUG=(function(){var m=location.search.match(/[?&]slug=([^&]+)/);return m?decodeURIComponent(m[1]):'';})();
+
+// Pré-remplissage : si le chantier a déjà un planning, on recharge sa config.
+var PREFILL_CFG=null;
+
+// Données projet connues (par slug) — fournies à partir des pièces (CR, SHAB…).
+// La STRUCTURE (nb bâtiments + bâtiments) prime sur un ancien essai ; le reste
+// (dates, durée GO, sous-sol…) reste à choisir/valider par l'utilisateur.
+var SEED_CONFIGS={
+  'jardins-iris':{
+    nbBat:5,
+    buildings:[
+      {code:'A',type:'social',   logts:36,etages:3,toiture:'terrasse'},  // 36 sociaux
+      {code:'B',type:'accession',logts:17,etages:3,toiture:'terrasse'},
+      {code:'C',type:'accession',logts:22,etages:3,toiture:'terrasse'},
+      {code:'D',type:'accession',logts:21,etages:3,toiture:'terrasse'},
+      {code:'E',type:'accession',logts:24,etages:3,toiture:'terrasse'}   // B+C+D+E = 84 accession
+    ]
+  }
+};
+function prefillBasics(cfg){
+  if(!cfg) return;
+  function setv(id,v){var e=document.getElementById(id); if(e&&v!=null&&v!=='')e.value=v;}
+  setv('cName',cfg.name); setv('cProm',cfg.promoteur); setv('cDate',cfg.dateStart);
+  setv('cGO',cfg.dureeMois); setv('cNb',cfg.nbBat); setv('cSSNiv',cfg.ssNiv); setv('cSSDur',cfg.ssDur);
+  if(typeof CFG!=='undefined'){
+    if(cfg.sousSolType)CFG.ss=cfg.sousSolType; if(cfg.ssNiv)CFG.ssNiv=cfg.ssNiv; if(cfg.ssDur)CFG.ssDur=cfg.ssDur;
+    if(cfg.sequence)CFG.seq=cfg.sequence; if(cfg.poseFenetres)CFG.fen=cfg.poseFenetres; if(cfg.livraison)CFG.liv=cfg.livraison;
+  }
+  PREFILL_CFG=cfg;   // les bâtiments seront réappliqués par genBldgConf()
+}
+if(AX_PROJECT_ID && typeof window.getAxionSupabase==='function'){
+  document.addEventListener('DOMContentLoaded',function(){
+    var sb=window.getAxionSupabase();
+    var sub=document.querySelector('.hdr-sub');
+    // Nom de l'opération = nom du chantier (toujours, même sans config sauvegardée)
+    sb.from('projects').select('name').eq('id',AX_PROJECT_ID).maybeSingle().then(function(pr){
+      var nm=pr&&pr.data&&pr.data.name, e=document.getElementById('cName');
+      if(nm&&e&&!e.value) e.value=nm;
+    }).catch(function(){});
+    // Config : on part de la config mémorisée, mais la STRUCTURE (nb bât + bâtiments)
+    // est imposée par les données projet connues (seed) si elles existent.
+    sb.from('planning_snapshots').select('snapshot').eq('project_id',AX_PROJECT_ID).maybeSingle().then(function(r){
+      var snap=r&&r.data&&r.data.snapshot, stored=snap&&snap.config;
+      var seed=SEED_CONFIGS[AX_PROJECT_SLUG];
+      var cfg=null;
+      if(stored&&seed){ cfg={}; for(var k in stored)cfg[k]=stored[k]; cfg.nbBat=seed.nbBat; cfg.buildings=seed.buildings; }
+      else cfg=seed||stored||null;
+      if(cfg){
+        prefillBasics(cfg);
+        if(sub)sub.textContent=seed?'Données projet pré-remplies — validez les étapes':'Modifier le planning — config pré-remplie';
+      } else if(snap){
+        if(sub)sub.textContent='Planning existant (ancienne version sans config) — re-saisir une fois, ce sera mémorisé ensuite';
+      }
+    }).catch(function(e){ console.warn('[prefill]',e); });
+  });
+}
 // ═══════════════════════════════════════
 // MOTEUR DE GÉNÉRATION DE PLANNING
 // Génère un planning TCE complet inspiré du Lisa
@@ -221,8 +283,7 @@ function readBuildings(){
     var c=letters[i];
     var type=(document.getElementById('bType_'+i)||{}).value||'social';
     var BT=BTYPES[type]||BTYPES.social;
-    var liv=BT.deliv;
-    if(CFG.liv==='mix'){var el=document.getElementById('bLiv_'+i);if(el)liv=el.value}
+    var liv=BT.deliv;   // RÈGLE : la livraison découle du type (social→social, accession→accession)
     var partialCheckbox=document.querySelectorAll('#ssPartialBats input')[i];
     blds.push({
       code:c, type:type,
@@ -480,6 +541,58 @@ function generatePlanning(){
   return {tasks:T,buildings:blds};
 }
 
+// ── Reclassement « façon Lisa » (v2) :
+//   • STRUCTUREL (terrassement, sous-sol, GO, grue) → conservé tel quel, PAR BÂTIMENT,
+//     avec suppression des faux dossiers (un dossier sans enfant devient une feuille).
+//   • FINITIONS + CLOS/COUVERT → regroupés PAR CORPS D'ÉTAT (dossier) → bâtiments (feuilles).
+function reclassToLisa(flat){
+  var STRUCT={TERR:1,SS:1,GO:1,GRUE:1,CURAGE:1};
+  var ORDER=['ETANCH','COUVERTURE','CHARPENTE','MENUIS','RAVAL','VMC','PLAT','ELEC','PLOMB','CHAPE','CARREL','PEINT','SOL','MENINT','SSI','SERR'];
+  var LBL={ETANCH:'ÉTANCHÉITÉ',COUVERTURE:'COUVERTURE',CHARPENTE:'CHARPENTE',MENUIS:'MENUISERIES EXT.',RAVAL:'RAVALEMENT / FAÇADE',VMC:'CVC / VMC',PLAT:'CLOISON / DOUBLAGE / PLÂTRERIE',ELEC:'ÉLECTRICITÉ',PLOMB:'PLOMBERIE',CHAPE:'CHAPE',CARREL:'CARRELAGE / FAÏENCE',PEINT:'PEINTURE',SOL:'SOLS SOUPLES',MENINT:'MENUISERIES INT.',SSI:'SÉCURITÉ INCENDIE',SERR:'COMMANDES ANTICIPÉES'};
+  function minS(a){return a.map(function(x){return x.s;}).filter(Boolean).sort()[0];}
+  function maxF(a){var f=a.map(function(x){return x.f;}).filter(Boolean).sort();return f[f.length-1];}
+  var out=[];
+
+  // 1) STRUCTUREL — passe-plat, mais on retire les faux dossiers (sum sans enfant)
+  var structural=flat.filter(function(t){return STRUCT[t.g];});
+  var childCount={};
+  structural.forEach(function(t){ if(t.sub&&t.grp) childCount[t.grp]=(childCount[t.grp]||0)+1; });
+  structural.forEach(function(t){
+    var o={name:t.name, s:t.s, f:t.f, sum:!!t.sum, sub:!!t.sub, grp:t.grp||'', g:t.g, b:t.b||'', sts:t.sts||'ns'};
+    if(o.sum && !(childCount[o.grp]>0)){ o.sum=false; o.grp=''; } // faux dossier → feuille
+    out.push(o);
+  });
+
+  // 2) FINITIONS + CLOS/COUVERT — regroupés par corps d'état → bâtiments
+  var trades=flat.filter(function(t){return !STRUCT[t.g];});
+  var byG={}, gorder=[];
+  trades.forEach(function(t){var g=t.g||'AUTRE';if(!(g in byG)){byG[g]=[];gorder.push(g);}byG[g].push(t);});
+  var keys=ORDER.filter(function(g){return byG[g];}).concat(gorder.filter(function(g){return ORDER.indexOf(g)<0;}));
+  keys.forEach(function(g){
+    var arr=byG[g]; if(!arr.length) return;
+    // On ignore les en-têtes de corps SANS bâtiment (b='') quand il existe des
+    // bâtiments réels : c'est le « fantôme » (souvent à la date projet) qui
+    // dédoublait la ligne et étirait le dossier trop tôt.
+    var building=arr.filter(function(t){return (t.b||'')!=='';});
+    var base=(building.length>0)?building:arr;
+    var byB={}, border=[];
+    base.forEach(function(t){var b=t.b||'';if(!(b in byB)){byB[b]=[];border.push(b);}byB[b].push(t);});
+    var leaves=border.map(function(b){
+      var ts=byB[b], sumT=null;
+      for(var i=0;i<ts.length;i++){if(ts[i].sum){sumT=ts[i];break;}}
+      var done=ts.every(function(x){return x.sts==='dn';});
+      return {name:(sumT?sumT.name:ts[0].name), s:minS(ts), f:maxF(ts), sum:false, sub:true, grp:'CE_'+g, b:b, g:g, sts:done?'dn':'ns'};
+    });
+    if(leaves.length===1){ // un seul → feuille simple, pas de faux dossier
+      var l=leaves[0]; out.push({name:(LBL[g]||l.name), s:l.s, f:l.f, sum:false, sub:false, grp:'', b:l.b, g:g, sts:l.sts});
+    } else {
+      out.push({name:(LBL[g]||g), s:minS(base), f:maxF(base), sum:true, sub:false, grp:'CE_'+g, b:'', g:g, sts:'ns'});
+      leaves.forEach(function(l){out.push(l);});
+    }
+  });
+  return out;
+}
+
 function createProject(){
   var result=generatePlanning();
   var key='proj_'+Date.now();
@@ -498,6 +611,51 @@ function createProject(){
     tasks:result.tasks,
     created:new Date().toISOString()
   };
+
+  // ── Mode AXION : rattacher le planning au projet (Supabase) ─────────────
+  // Convertit la sortie du configurateur en snapshot chantierflow (lu par
+  // planning.html → buildFromSnapshot), l'enregistre dans planning_snapshots,
+  // renseigne projects.planning_url, puis ouvre le planning du chantier.
+  if(AX_PROJECT_ID && typeof window.getAxionSupabase==='function'){
+    var planningUrl='planning.html?project='+encodeURIComponent(AX_PROJECT_ID);
+    var btn=(function(){var bs=document.querySelectorAll('.btn-p');for(var i=0;i<bs.length;i++){if(/planning/i.test(bs[i].textContent))return bs[i];}return null;})(); if(btn){btn.disabled=true;btn.textContent='Enregistrement…';}
+    var sb=window.getAxionSupabase(); var uid=null;
+    sb.auth.getSession().then(function(r){
+      uid=(r&&r.data&&r.data.session&&r.data.session.user)?r.data.session.user.id:null;
+      return sb.from('projects').select('name').eq('id',AX_PROJECT_ID).maybeSingle();   // nom du chantier
+    }).then(function(pr){
+      var chantierName=(pr&&pr.data&&pr.data.name)||data.config.name||AX_PROJECT_SLUG||'Planning';
+      var snapshot={
+        format:'chantierflow-snapshot', appVersion:'configurateur',
+        exportedAt:new Date().toISOString(), projet:chantierName,
+        config:data.config,   // mémorise la saisie → pré-remplissage à la régénération
+        tasks:(function(){
+          var src=result.tasks||[];
+          try{ src=reclassToLisa(src); }catch(e){ console.warn('[reclassToLisa] repli sur la sortie brute :', e); src=result.tasks||[]; }
+          return src.map(function(t){
+            return {name:t.name, start:t.s, end:t.f, dur:t.dur, sts:t.sts||'ns',
+              sum:!!t.sum, sub:!!t.sub, group:t.grp||'', bat:t.b||'', color:t.g||'', vis:'visible'};
+          });
+        })(),
+        links:[], cadences:{}
+      };
+      return sb.from('planning_snapshots').upsert(
+        {project_id:AX_PROJECT_ID, snapshot:snapshot, source_url:location.href, updated_by:uid, updated_at:new Date().toISOString()},
+        {onConflict:'project_id'});
+    }).then(function(res){
+      if(res && res.error) throw res.error;
+      return sb.from('projects').update({planning_url:planningUrl}).eq('id',AX_PROJECT_ID);
+    }).then(function(res){
+      if(res && res.error) console.warn('[configurateur] planning_url non mis à jour :', res.error);
+      window.location.href=planningUrl;
+    }).catch(function(e){
+      console.warn('[configurateur] échec enregistrement Supabase :', e);
+      alert('Échec de l\'enregistrement du planning en base : '+(e.message||e)+'\n\nVérifiez votre connexion / vos droits.');
+      if(btn){btn.disabled=false;btn.textContent='Ouvrir dans le planning →';}
+    });
+    return;
+  }
+
   var payload=JSON.stringify(data);
   // Purge les anciens plannings générés (et leurs snapshots) sauf le courant + la démo,
   // pour éviter que le localStorage ne se remplisse au fil des essais (sinon setItem échoue
@@ -572,11 +730,26 @@ function genBldgConf(){
     h+='<div class="fg" id="bSurfWrap_'+i+'" style="display:none"><label>Surface (m²)</label><input type="number" value="600" min="50" max="20000" id="bSurf_'+i+'"></div>';
     h+='<div class="fg"><label>Niveaux (R+n)</label><input type="number" value="4" min="0" max="20" id="bEtg_'+i+'"></div>';
     h+='<div class="fg"><label>Toiture</label><select id="bToit_'+i+'"><option value="terrasse">Toiture terrasse</option><option value="charpente">Charpente couverture</option><option value="mixte">Mixte</option></select></div>';
-    if(CFG.liv==='mix')h+='<div class="fg"><label>Livraison</label><select id="bLiv_'+i+'"><option value="social">Social</option><option value="accession">Accession</option><option value="erp">ERP / Crèche</option><option value="tertiaire">Tertiaire</option><option value="reno">Rénovation</option></select></div>';
+    // Pas de champ « Livraison » manuel : elle est déduite du type (évite social + livraison accession).
     h+='</div>'}
   h+='</div>';
   document.getElementById('bldgConf').innerHTML=h;
-  for(var i=0;i<nb;i++)onBType(i);}
+  for(var i=0;i<nb;i++)onBType(i);
+  // Pré-remplissage depuis un planning existant (appliqué une seule fois)
+  if(PREFILL_CFG && PREFILL_CFG.buildings){
+    var bs=PREFILL_CFG.buildings;
+    for(var j=0;j<bs.length;j++){
+      var b=bs[j];
+      var ty=document.getElementById('bType_'+j); if(ty&&b.type)ty.value=b.type;
+      var et=document.getElementById('bEtg_'+j); if(et&&b.etages!=null)et.value=b.etages;
+      var to=document.getElementById('bToit_'+j); if(to&&b.toiture)to.value=b.toiture;
+      onBType(j);   // ajuste l'affichage logements/surface selon le type ; livraison déduite du type
+      var lg=document.getElementById('bLog_'+j); if(lg&&b.logts!=null)lg.value=b.logts;
+      var sf=document.getElementById('bSurf_'+j); if(sf&&b.surf!=null)sf.value=b.surf;
+    }
+    PREFILL_CFG=null;
+  }
+}
 
 function onBType(i){
   var t=(document.getElementById('bType_'+i)||{}).value||'social';var BT=BTYPES[t]||BTYPES.social;

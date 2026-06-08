@@ -440,6 +440,14 @@
             Ouvrir le planning (lecture seule)
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg>
           </a>
+          <a class="btn btn-glass" id="planningCreate" href="#" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+            Créer le planning
+          </a>
+          <a class="btn btn-glass" id="planningRegen" href="#" style="display:none; margin-left:8px; opacity:.85">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Régénérer
+          </a>
           <p id="planningSoon" style="display:none; opacity:.7">Planning en préparation pour ce chantier.</p>
         </div>
       </section>
@@ -624,16 +632,27 @@
   // Évite le lien Lisa codé en dur : chaque chantier ouvre SON planning.
   // Forward-compatible Piste 2 : planning_url pourra pointer vers le visualiseur
   // multi-chantier (handoff SSO + ?project=<slug>) une fois déployé.
+  // 3 états : planning existant → ouvrir · pas de planning + MOE/admin → créer
+  // (point d'entrée Flux 1, cf. ARCHITECTURE-PLANNING.md) · sinon → en préparation.
   var planningLink = document.getElementById('planningLink');
+  var planningCreate = document.getElementById('planningCreate');
+  var planningRegen = document.getElementById('planningRegen');
   var planningSoon = document.getElementById('planningSoon');
   var planningUrl = project.planning_url || '';
+  var canCreatePlanning = (role === 'admin' || role === 'moe');
+  var configHref = 'configurateur.html?project=' + encodeURIComponent(project.id) +
+                   '&slug=' + encodeURIComponent(project.slug || '');
+  function show(el, on){ if (el) el.style.display = on ? '' : 'none'; }
   if (planningUrl) {
-    planningLink.href = planningUrl;
-    planningLink.style.display = '';
-    if (planningSoon) planningSoon.style.display = 'none';
+    planningLink.href = planningUrl; show(planningLink, true);
+    if (planningRegen) planningRegen.href = configHref;
+    show(planningRegen, canCreatePlanning);   // MOE/admin : régénérer le planning
+    show(planningCreate, false); show(planningSoon, false);
+  } else if (canCreatePlanning) {
+    planningCreate.href = configHref;
+    show(planningCreate, true); show(planningLink, false); show(planningRegen, false); show(planningSoon, false);
   } else {
-    planningLink.style.display = 'none';
-    if (planningSoon) planningSoon.style.display = '';
+    show(planningSoon, true); show(planningLink, false); show(planningCreate, false); show(planningRegen, false);
   }
 
   // Actions de la cover : retour aux chantiers (tous) + gérer les accès (admin)
