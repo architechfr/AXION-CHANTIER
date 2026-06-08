@@ -262,11 +262,11 @@ function _dd(a,b){return Math.round((b-a)/864e5)}
 //  tma   : travaux modificatifs acquéreurs (allonge peinture + cuisine équipée)
 // ═══════════════════════════════════════
 var BTYPES={
-  social   :{lbl:'Logement social',       ic:'🏘️',build:'neuf',coef:1.00,unit:'logts',fitout:'logement', deliv:'social',   bal:true, tma:false},
-  accession:{lbl:'Logement accession',    ic:'🔑', build:'neuf',coef:1.28,unit:'logts',fitout:'logement', deliv:'accession',bal:false,tma:true },
-  creche   :{lbl:'Crèche / centre loisir',ic:'🧸', build:'neuf',coef:0.95,unit:'m2',   fitout:'erp',      deliv:'erp',      bal:false,tma:false},
-  tertiaire:{lbl:'Tertiaire / commerce',  ic:'🏬', build:'neuf',coef:0.80,unit:'m2',   fitout:'tertiaire',deliv:'tertiaire',bal:false,tma:false},
-  reno     :{lbl:'Rénovation / réhab',    ic:'🛠️',build:'reno',coef:1.10,unit:'logts',fitout:'logement', deliv:'reno',     bal:true, tma:false}
+  social   :{lbl:'Social',       ic:'🏘️',build:'neuf',coef:1.00,unit:'logts',fitout:'logement', deliv:'social',   bal:true, tma:false},
+  accession:{lbl:'Accession',    ic:'🔑', build:'neuf',coef:1.28,unit:'logts',fitout:'logement', deliv:'accession',bal:false,tma:true },
+  creche   :{lbl:'Crèche',ic:'🧸', build:'neuf',coef:0.95,unit:'m2',   fitout:'erp',      deliv:'erp',      bal:false,tma:false},
+  tertiaire:{lbl:'Commerce / tertiaire',  ic:'🏬', build:'neuf',coef:0.80,unit:'m2',   fitout:'tertiaire',deliv:'tertiaire',bal:false,tma:false},
+  reno     :{lbl:'Rénovation',    ic:'🛠️',build:'reno',coef:1.10,unit:'logts',fitout:'logement', deliv:'reno',     bal:true, tma:false}
 };
 var BTYPE_ORDER=['social','accession','creche','tertiaire','reno'];
 
