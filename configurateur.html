@@ -197,6 +197,10 @@ var PREFILL_CFG=null;
 var SEED_CONFIGS={
   'jardins-iris':{
     nbBat:5,
+    promoteur:'SCCV LE DOMAINE DE NOEMIE',
+    dureeMois:14,
+    ssNiv:2,
+    ssDur:5.5,
     buildings:[
       {code:'A',type:'social',   logts:36,etages:3,toiture:'terrasse'},  // 36 sociaux
       {code:'B',type:'accession',logts:17,etages:3,toiture:'terrasse'},
@@ -232,7 +236,11 @@ if(AX_PROJECT_ID && typeof window.getAxionSupabase==='function'){
       var snap=r&&r.data&&r.data.snapshot, stored=snap&&snap.config;
       var seed=SEED_CONFIGS[AX_PROJECT_SLUG];
       var cfg=null;
-      if(stored&&seed){ cfg={}; for(var k in stored)cfg[k]=stored[k]; cfg.nbBat=seed.nbBat; cfg.buildings=seed.buildings; }
+      if(stored&&seed){
+        cfg={}; for(var k in seed)cfg[k]=seed[k];                                   // base = donnees projet (seed)
+        for(var k in stored){ if(stored[k]!=null && stored[k]!=='') cfg[k]=stored[k]; } // l'utilisateur prime s'il a saisi une valeur
+        cfg.nbBat=seed.nbBat; cfg.buildings=seed.buildings;                          // structure imposee par le seed
+      }
       else cfg=seed||stored||null;
       if(cfg){
         prefillBasics(cfg);
