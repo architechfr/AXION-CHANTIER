@@ -448,6 +448,11 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Régénérer
           </a>
+          <button class="btn btn-glass" id="planningLockBtn" style="display:none; margin-left:8px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke-linecap="round"/></svg>
+            <span id="planningLockLbl">Verrouiller</span>
+          </button>
+          <p id="planningLockedNote" style="display:none; margin-top:10px; color:#c9a66b; font-weight:600">🔒 Planning validé — verrouillé. La régénération est désactivée.</p>
           <p id="planningSoon" style="display:none; opacity:.7">Planning en préparation pour ce chantier.</p>
         </div>
       </section>
@@ -638,7 +643,11 @@
   var planningCreate = document.getElementById('planningCreate');
   var planningRegen = document.getElementById('planningRegen');
   var planningSoon = document.getElementById('planningSoon');
+  var planningLockBtn = document.getElementById('planningLockBtn');
+  var planningLockLbl = document.getElementById('planningLockLbl');
+  var planningLockedNote = document.getElementById('planningLockedNote');
   var planningUrl = project.planning_url || '';
+  var planningLocked = !!project.planning_locked;
   var canCreatePlanning = (role === 'admin' || role === 'moe');
   var configHref = 'configurateur.html?project=' + encodeURIComponent(project.id) +
                    '&slug=' + encodeURIComponent(project.slug || '');
@@ -646,13 +655,33 @@
   if (planningUrl) {
     planningLink.href = planningUrl; show(planningLink, true);
     if (planningRegen) planningRegen.href = configHref;
-    show(planningRegen, canCreatePlanning);   // MOE/admin : régénérer le planning
+    show(planningRegen, canCreatePlanning && !planningLocked);
     show(planningCreate, false); show(planningSoon, false);
+    show(planningLockedNote, planningLocked);
+    if (planningLockBtn && canCreatePlanning) {
+      show(planningLockBtn, true);
+      planningLockLbl.textContent = planningLocked ? 'Deverrouiller' : 'Verrouiller';
+      planningLockBtn.onclick = async function(){
+        var lock = !planningLocked;
+        if (lock && !confirm('Verrouiller ce planning ?\n\nLe bouton Regenerer sera desactive pour eviter tout ecrasement accidentel du planning valide. Tu pourras deverrouiller a tout moment.')) return;
+        planningLockBtn.disabled = true;
+        try {
+          var up = await AxionAuth.sb.from('projects').update({ planning_locked: lock }).eq('id', project.id);
+          if (up && up.error) throw up.error;
+          location.reload();
+        } catch(e){
+          planningLockBtn.disabled = false;
+          alert('Impossible de mettre a jour le verrou : ' + (e.message||e) + '\n\n(Migration planning-lock.sql executee ? Droits MOE/admin ?)');
+        }
+      };
+    } else { show(planningLockBtn, false); }
   } else if (canCreatePlanning) {
     planningCreate.href = configHref;
     show(planningCreate, true); show(planningLink, false); show(planningRegen, false); show(planningSoon, false);
+    show(planningLockBtn, false); show(planningLockedNote, false);
   } else {
     show(planningSoon, true); show(planningLink, false); show(planningCreate, false); show(planningRegen, false);
+    show(planningLockBtn, false); show(planningLockedNote, false);
   }
 
   // Actions de la cover : retour aux chantiers (tous) + gérer les accès (admin)

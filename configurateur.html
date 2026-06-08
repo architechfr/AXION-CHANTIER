@@ -622,8 +622,14 @@ function createProject(){
     var sb=window.getAxionSupabase(); var uid=null;
     sb.auth.getSession().then(function(r){
       uid=(r&&r.data&&r.data.session&&r.data.session.user)?r.data.session.user.id:null;
-      return sb.from('projects').select('name').eq('id',AX_PROJECT_ID).maybeSingle();   // nom du chantier
+      return sb.from('projects').select('name, planning_locked').eq('id',AX_PROJECT_ID).maybeSingle();   // nom + verrou
     }).then(function(pr){
+      // GARDE-FOU verrou : un planning verrouille (valide) ne peut pas etre regenere/ecrase
+      if(pr&&pr.data&&pr.data.planning_locked){
+        alert('\uD83D\uDD12 Ce planning est VERROUILLE (valide).\n\nLa regeneration est desactivee pour ne pas ecraser le travail valide. Pour le regenerer, deverrouille-le d\'abord depuis la fiche chantier (bouton Deverrouiller).');
+        if(btn){btn.disabled=false;btn.textContent='Ouvrir dans le planning \u2192';}
+        return Promise.reject({__locked:true});
+      }
       var chantierName=(pr&&pr.data&&pr.data.name)||data.config.name||AX_PROJECT_SLUG||'Planning';
       var snapshot={
         format:'chantierflow-snapshot', appVersion:'configurateur',
@@ -649,6 +655,7 @@ function createProject(){
       if(res && res.error) console.warn('[configurateur] planning_url non mis à jour :', res.error);
       window.location.href=planningUrl;
     }).catch(function(e){
+      if(e&&e.__locked)return;   // verrou : message deja affiche, arret propre
       console.warn('[configurateur] échec enregistrement Supabase :', e);
       alert('Échec de l\'enregistrement du planning en base : '+(e.message||e)+'\n\nVérifiez votre connexion / vos droits.');
       if(btn){btn.disabled=false;btn.textContent='Ouvrir dans le planning →';}
