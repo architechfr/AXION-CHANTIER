@@ -321,20 +321,20 @@ function generatePlanning(){
   if(hasNeuf && CFG.ss==='general'){
     aT('TERRASSEMENT + SOUS-SOL','TERR','',dStart,_ad(dStart,CFG.ssDur*30),0,{sum:1,grp:'SS'});
     var c=new Date(dStart);
-    aT('Terrassement général','TERR','ALL',c,_ad(c,30),1,{grp:'SS',sub:1});c=_ad(c,30);
-    aT('Installation grue','GO','ALL',c,_ad(c,15),1,{grp:'SS',sub:1});c=_ad(c,15);
-    aT('Voiles contre terre','GO','ALL',c,_ad(c,40),1,{grp:'SS',sub:1});c=_ad(c,40);
+    aT('Terrassement général','TERR','',c,_ad(c,30),1,{grp:'SS',sub:1});c=_ad(c,30);
+    aT('Installation grue','GO','',c,_ad(c,15),1,{grp:'SS',sub:1});c=_ad(c,15);
+    aT('Voiles contre terre','GO','',c,_ad(c,40),1,{grp:'SS',sub:1});c=_ad(c,40);
     for(var n=CFG.ssNiv;n>=1;n--){
-      aT('Dalle basse SS-'+n,'GO','ALL',c,_ad(c,30),1,{grp:'SS',sub:1});c=_ad(c,30);
-      aT('Élévations SS-'+n,'GO','ALL',c,_ad(c,30),1,{grp:'SS',sub:1});c=_ad(c,30);
+      aT('Dalle basse SS-'+n,'GO','',c,_ad(c,30),1,{grp:'SS',sub:1});c=_ad(c,30);
+      aT('Élévations SS-'+n,'GO','',c,_ad(c,30),1,{grp:'SS',sub:1});c=_ad(c,30);
     }
-    aT('Dalle RDC (toutes zones)','GO','ALL',c,_ad(c,40),1,{grp:'SS',sub:1});
+    aT('Dalle RDC (toutes zones)','GO','',c,_ad(c,40),1,{grp:'SS',sub:1});
     rdcAvailable=_ad(c,40);
   } else if(hasNeuf && CFG.ss==='partial' && batsAvecSS.length>0){
     aT('SOUS-SOLS PARTIELS','TERR','',dStart,_ad(dStart,CFG.ssDur*30),0,{sum:1,grp:'SS'});
     var c=new Date(dStart),codes=batsAvecSS.map(function(b){return b.code}).join(',');
     aT('Terrassement zones SS ('+codes+')','TERR','SS',c,_ad(c,30),1,{grp:'SS',sub:1});c=_ad(c,30);
-    aT('Installation grue','GO','ALL',c,_ad(c,15),1,{grp:'SS',sub:1});c=_ad(c,15);
+    aT('Installation grue','GO','',c,_ad(c,15),1,{grp:'SS',sub:1});c=_ad(c,15);
     for(var n=CFG.ssNiv;n>=1;n--){
       aT('Dalle SS-'+n,'GO','SS',c,_ad(c,30),1,{grp:'SS',sub:1});c=_ad(c,30);
       aT('Élévations SS-'+n,'GO','SS',c,_ad(c,30),1,{grp:'SS',sub:1});c=_ad(c,30);
@@ -343,7 +343,7 @@ function generatePlanning(){
     rdcAvailable=_ad(c,30);
   } else if(hasNeuf){
     aT('TERRASSEMENT','TERR','',dStart,_ad(dStart,30),0,{grp:'SS'});
-    aT('Installation grue','GO','ALL',_ad(dStart,15),_ad(dStart,30),0,{grp:'GRUE'});
+    aT('Installation grue','GO','',_ad(dStart,15),_ad(dStart,30),0,{grp:'GRUE'});
     rdcAvailable=_ad(dStart,15);
   }
 
@@ -358,7 +358,7 @@ function generatePlanning(){
     var coef=BTYPES[b.type].coef, tma=BTYPES[b.type].tma;
     function D(x){return Math.max(1,Math.round(x*FF*coef))}
     var c=new Date(startSO);
-    aT('PLAQUISTE '+b.code,'PLAT',b.code,c,_ad(c,D(30)),0,{sum:1,grp:'PLAT_'+b.code});
+    aT('Cloisons / doublage '+b.code,'PLAT',b.code,c,_ad(c,D(30)),0,{sum:1,grp:'PLAT_'+b.code});
     aT('Traçage rails '+b.code,'PLAT',b.code,c,_ad(c,D(2)),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,D(2));
     aT('Doublages TGS '+b.code,'PLAT',b.code,c,_ad(c,D(8)),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,D(8));
     aT('Cloisons plaques '+b.code,'PLAT',b.code,c,_ad(c,D(10)),1,{grp:'PLAT_'+b.code,sub:1});c=_ad(c,D(10));
@@ -519,21 +519,13 @@ function generatePlanning(){
   for(var i=0;i<neufBlds.length;i++){var b=neufBlds[i];var s=ravStart||_ad(bldgGOEnd[b.code]||dStart,10);aT('Ravalement '+b.code,'RAVAL',b.code,s,_ad(s,25),1,{grp:'RAVAL',sub:1});ravStart=_ad(s,25);}
   for(var i=0;i<blds.length;i++){var b=blds[i];if(BTYPES[b.type].build!=='reno')continue;var re=bldgEnd[b.code];if(!re)continue;aT('Ravalement / ITE '+b.code,'RAVAL',b.code,_ad(re,-35),_ad(re,-5),1,{grp:'RAVAL',sub:1});}
 
-  // ═══ PHASE 6 — JALONS COMMANDE (BAL + organigramme : social / réno) ═══
-  var balB=blds.filter(function(b){return BTYPES[b.type].bal});
-  if(balB.length){
-    aT('COMMANDES ANTICIPÉES','SERR','',dStart,dStart,0,{sum:1,grp:'CMD'});
-    for(var i=0;i<balB.length;i++){var b=balB[i],e=bldgEnd[b.code];if(!e)continue;
-      aT('Cde BAL '+b.code+' (J-'+JALONS.BAL+')','SERR',b.code,_ad(e,-JALONS.BAL),_ad(e,-JALONS.BAL+5),1,{grp:'CMD',sub:1,sts:'dn'});
-      aT('Cde organigramme '+b.code+' (J-'+JALONS.ORGA+')','SERR',b.code,_ad(e,-JALONS.ORGA),_ad(e,-JALONS.ORGA+5),1,{grp:'CMD',sub:1,sts:'dn'});
-    }
-  }
+  // ═══ PHASE 6 — (COMMANDES ANTICIPÉES retiré : à ajouter manuellement dans le planning si besoin) ═══
 
   // ═══ PHASE 7 — OPR + LIVRAISONS (par groupe de livraison) ═══
   var groups={};
   for(var i=0;i<blds.length;i++){var b=blds[i];var key=CFG.liv==='mix'?(b.livraison||b.type):'ALL';var e=bldgEnd[b.code];if(!e)continue;if(!groups[key]||e>groups[key])groups[key]=e;}
   var GLABEL={social:'SOCIAL',accession:'ACCESSION',erp:'ERP',creche:'CRÈCHE',tertiaire:'TERTIAIRE',reno:'RÉNOVATION',ALL:''};
-  for(var k in groups){var e=groups[k];var suf=(GLABEL[k]!==undefined?GLABEL[k]:k.toUpperCase());var bb=(k==='ALL'?'ALL':k.toUpperCase().slice(0,3));
+  for(var k in groups){var e=groups[k];var suf=(GLABEL[k]!==undefined?GLABEL[k]:k.toUpperCase());var bb=(k==='ALL'?'':k.toUpperCase().slice(0,3));
     aT('OPR'+(suf?' '+suf:''),'OPR',bb,_ad(e,-28),e,0,{grp:'OPR'});
     aT('LIVRAISON'+(suf?' '+suf:''),'LIVR',bb,e,_ad(e,20),0,{grp:'LIVR'});
   }
