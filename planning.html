@@ -965,28 +965,28 @@ window.onerror=function(msg,url,line,col,err){
     </div>
   </div>
   <div class="bs-row">
-    <div class="bs-field"><label>Début</label><input type="date" id="bsS" onchange="saveBS()"></div>
-    <div class="bs-field"><label>Fin</label><input type="date" id="bsF" onchange="saveBS()"></div>
+    <div class="bs-field"><label>Début</label><input type="date" id="bsS" title="Date de début. La déplacer décale la tâche ; ses successeurs suivent si elles ne sont pas verrouillées." onchange="saveBS()"></div>
+    <div class="bs-field"><label>Fin</label><input type="date" id="bsF" title="Date de fin. La durée se recalcule automatiquement." onchange="saveBS()"></div>
   </div>
   <div class="bs-row">
     <div class="bs-field"><label>Durée (j / sem / mois)</label><input type="text" id="bsDur" placeholder="ex : 5j, 3sem, 2m" title="Saisir en jours, semaines ou mois — ex : 10j, 3sem, 2m. Sans unité = jours." onchange="saveBSDur()"></div>
     <div class="bs-field"><label>UID interne</label><input type="text" id="bsUid" readonly="" title="Identifiant technique stable — utilisé par le moteur de dépendances" style="font:500 11px &#39;JetBrains Mono&#39;,monospace;color:var(--t2);background:var(--b1);cursor:default" onclick="this.select()"></div>
   </div>
   <div class="bs-sts">
-    <button onclick="setStsBS(&#39;ns&#39;)">—</button>
-    <button onclick="setStsBS(&#39;ip&#39;)">En cours</button>
-    <button onclick="setStsBS(&#39;dn&#39;)">Terminé</button>
-    <button onclick="setStsBS(&#39;nd&#39;)">⏰ Non démarrée</button>
-    <button onclick="setStsBS(&#39;rt&#39;)">⏰ En retard</button>
-    <button onclick="setStsBS(&#39;bl&#39;)">Bloqué</button>
+    <button onclick="setStsBS(&#39;ns&#39;)" title="Aucun statut — état neutre par défaut.">—</button>
+    <button onclick="setStsBS(&#39;ip&#39;)" title="Travaux en cours sur cette tâche.">En cours</button>
+    <button onclick="setStsBS(&#39;dn&#39;)" title="Tâche terminée. Sur un dossier, marque aussi toutes ses sous-tâches terminées.">Terminé</button>
+    <button onclick="setStsBS(&#39;nd&#39;)" title="Aurait dû démarrer mais pas encore commencée.">⏰ Non démarrée</button>
+    <button onclick="setStsBS(&#39;rt&#39;)" title="En retard sur la date prévue.">⏰ En retard</button>
+    <button onclick="setStsBS(&#39;bl&#39;)" title="Bloquée : en attente (intempérie, litige, validation…).">Bloqué</button>
   </div>
   <div style="display:flex;gap:8px;margin:8px 0">
-    <button id="bsLock" onclick="toggleLock()" style="flex:1;padding:10px;border:2px solid var(--bd);border-radius:8px;background:var(--b3);color:var(--t2);font:600 11px inherit;cursor:pointer">🔓 Non verrouillée — suit les dépendances</button>
+    <button id="bsLock" onclick="toggleLock()" title="Verrouiller fige les dates de cette tâche : elle ne bougera plus automatiquement quand les tâches dont elle dépend changent. Déverrouillée, elle suit la cascade (recalcul auto selon ses prédécesseurs). À verrouiller pour une date imposée ou contractuelle." style="flex:1;padding:10px;border:2px solid var(--bd);border-radius:8px;background:var(--b3);color:var(--t2);font:600 11px inherit;cursor:pointer">🔓 Non verrouillée — suit les dépendances</button>
   </div>
   <div style="display:flex;gap:6px;margin:8px 0">
     <button id="bsHide" onclick="setVisibility(&#39;hidden&#39;)" title="Masquer cette tâche de l&#39;affichage (réversible à tout moment via le bouton « 👁 Masquées » de la barre d&#39;outils)" style="flex:1;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--b3);color:var(--t2);font:600 10px inherit;cursor:pointer">👁 Masquer</button>
-    <button id="bsDim" onclick="setVisibility(&#39;dimmed&#39;)" style="flex:1;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--b3);color:var(--t2);font:600 10px inherit;cursor:pointer">💧 Estomper</button>
-    <button id="bsShow" onclick="setVisibility(&#39;visible&#39;)" style="flex:1;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--b3);color:var(--t2);font:600 10px inherit;cursor:pointer">✓ Afficher</button>
+    <button id="bsDim" onclick="setVisibility(&#39;dimmed&#39;)" title="Afficher la tâche en transparence (repère discret), sans la masquer." style="flex:1;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--b3);color:var(--t2);font:600 10px inherit;cursor:pointer">💧 Estomper</button>
+    <button id="bsShow" onclick="setVisibility(&#39;visible&#39;)" title="Réafficher normalement la tâche (annule Masquer et Estomper)." style="flex:1;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--b3);color:var(--t2);font:600 10px inherit;cursor:pointer">✓ Afficher</button>
   </div>
   <!-- v99 — Bouton couleur locale de la tâche + popover palette -->
   <div style="position:relative;margin:8px 0">
