@@ -219,6 +219,11 @@
 
   /* Toolbar recherche / tri (au-dessus de chaque onglet de documents) */
   .doc-toolbar { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+  .doc-folder-btn { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; margin-left:auto;
+    padding:9px 14px; border-radius:10px; background:var(--green); color:#06231a;
+    font-weight:700; font-size:13px; text-decoration:none; border:1px solid var(--green); }
+  .doc-folder-btn:hover { filter:brightness(1.07); }
+  @media (max-width:640px){ .doc-folder-btn{ margin-left:0; width:100%; justify-content:center; } }
   .doc-search { flex:1; min-width:220px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:9px 12px; font-size:13px; font-family:inherit; }
   .doc-search:focus { outline:none; border-color: rgba(96,165,250,.4); box-shadow:0 0 0 3px rgba(96,165,250,.12); }
   .doc-sort   { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:9px 12px; font-size:13px; font-family:inherit; cursor:pointer; }
@@ -773,6 +778,19 @@ function routeCategoryToTab(cat) {
   return DOC_TAB_MAP.PDF; // défaut : Plans & EXE
 }
 
+// Les catégories « Dossier … » ne sont PAS des documents : ce sont des liens
+// vers un dossier OneDrive complet, affichés en bouton dans la barre d'outils
+// de l'onglet correspondant (et exclus des listes). Renvoie l'id du mount cible.
+function isFolderCategory(cat) { return /^DOSSIER\b/.test(String(cat || '').toUpperCase()); }
+function routeFolderToTab(cat) {
+  var c = String(cat || '').toUpperCase();
+  if (/CR|COMPTE/.test(c))      return 'crMount';
+  if (/NOTICE|NOTAIRE/.test(c)) return 'noticeMount';
+  if (/VENTE/.test(c))          return 'venteMount';
+  if (/PLAN|EXE|DWG|PDF/.test(c)) return 'docMount';
+  return 'crMount';
+}
+
 async function loadDocuments(projectId) {
   try {
     var res = await AxionAuth.sb.from('documents').select('*').eq('project_id', projectId).order('title', { ascending: true });
@@ -787,6 +805,26 @@ async function loadDocuments(projectId) {
         url:  d.url  || d.file_path || '#',
       });
     });
+
+    // Dossiers OneDrive (catégorie « Dossier … ») : pas des cartes mais un
+    // bouton dans la barre d'outils de l'onglet ; on les retire des listes.
+    var folderByMount = {};
+    allDocs = allDocs.filter(function (d) {
+      if (isFolderCategory(d.category)) {
+        var m = routeFolderToTab(d.category);
+        folderByMount[m] = { url: d.url, title: d.name };
+        return false;
+      }
+      return true;
+    });
+    function folderBtnFor(mountId) {
+      var f = folderByMount[mountId];
+      if (!f || !f.url || f.url === '#') return '';
+      return '<a class="doc-folder-btn" href="' + escapeAttr(f.url) + '" target="_blank" rel="noopener" ' +
+             'title="Voir et télécharger tous les fichiers du dossier OneDrive">' +
+             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>' +
+             escapeHtml(f.title || 'Ouvrir le dossier OneDrive') + '</a>';
+    }
 
     // Group par onglet de destination
     var byTab = {};
@@ -829,6 +867,14 @@ async function loadDocuments(projectId) {
         filtersEl.innerHTML = '';
       }
       render(mountEl, docs);
+    });
+
+    // Onglets qui n'ont QU'un dossier (aucun document listé, ex. CR pas encore
+    // chargés un par un) : on affiche quand même la barre avec le bouton dossier.
+    Object.keys(folderByMount).forEach(function (mountId) {
+      if (byTab[mountId]) return; // déjà rendu : le bouton est dans sa barre
+      var el = document.getElementById(mountId);
+      if (el) el.innerHTML = '<div class="doc-toolbar">' + folderBtnFor(mountId) + '</div>';
     });
 
     // Aiguillage : selon la catégorie du 1er doc, on choisit le bon renderer.
@@ -887,6 +933,7 @@ async function loadDocuments(projectId) {
               (hasNum ? '<option value="num_asc"'  + (state.sort==='num_asc' ?' selected':'')  + '>N° croissant</option>'  : '') +
             '</select>' +
             (filtered.length !== fullList.length ? '<span class="doc-count">' + filtered.length + ' / ' + fullList.length + '</span>' : '') +
+            folderBtnFor(mount.id) +
           '</div>';
 
         if (!filtered.length) {
@@ -1081,6 +1128,7 @@ async function loadDocuments(projectId) {
               '<option value="name_desc"' + (state.sort==='name_desc'?' selected':'')  + '>Nom Z → A</option>' +
             '</select>' +
             '<span class="doc-count">' + filtered.length + (filtered.length !== fullList.length ? ' / ' + fullList.length : '') + ' plan' + (filtered.length>1?'s':'') + '</span>' +
+            folderBtnFor(mount.id) +
           '</div>';
 
         if (!filtered.length) {
