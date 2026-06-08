@@ -728,7 +728,7 @@
     await AxionAnalysis.mount(project);
   } else {
     // Chantier en travaux → onglets documentaires classiques
-    await loadDocuments(projectId);
+    await loadDocuments(projectId, project.slug);
     await loadAnnuaire(projectId);
   }
 
@@ -791,7 +791,13 @@ function routeFolderToTab(cat) {
   return 'crMount';
 }
 
-async function loadDocuments(projectId) {
+// ─── Config lecture auto des CR depuis le dossier OneDrive ───────────
+// URL du flux Power Automate (déclencheur HTTP GET) qui renvoie la liste des
+// CR du dossier sous la forme [{ "name":"…", "date":"…ISO…", "url":"…" }].
+// Laisser vide tant que le flux n'est pas créé → repli sur les CR en base.
+window.AXION_CR_FLOW_URL = window.AXION_CR_FLOW_URL || '';
+
+async function loadDocuments(projectId, projectSlug) {
   try {
     var res = await AxionAuth.sb.from('documents').select('*').eq('project_id', projectId).order('title', { ascending: true });
     if (res.error) throw res.error;
@@ -837,6 +843,44 @@ async function loadDocuments(projectId) {
     // Mise à jour du badge Plans & EXE (PDF + DWG)
     var plansCount = ((byTab['docMount'] || {}).docs || []).length;
     document.getElementById('badgePlans').textContent = plansCount;
+
+    // Lecture auto des CR depuis le dossier OneDrive (via flux Power Automate).
+    // Remplace la liste CR de la base par le contenu réel du dossier. Si le flux
+    // n'est pas configuré ou échoue, on garde les CR enregistrés en base (repli).
+    if (window.AXION_CR_FLOW_URL && projectSlug) {
+      try {
+        var crCtrl = new AbortController();
+        var crTo = setTimeout(function () { crCtrl.abort(); }, 8000);
+        var sep = window.AXION_CR_FLOW_URL.indexOf('?') >= 0 ? '&' : '?';
+        var crResp = await fetch(window.AXION_CR_FLOW_URL + sep + 'project=' + encodeURIComponent(projectSlug), { method: 'GET', signal: crCtrl.signal });
+        clearTimeout(crTo);
+        if (crResp.ok) {
+          var crJson = await crResp.json();
+          var crFiles = Array.isArray(crJson) ? crJson : (crJson.files || crJson.value || []);
+          if (crFiles.length) {
+            var prettyCR = function (raw, dateIso) {
+              var s = String(raw || '').replace(/\.pdf$/i, '');
+              var m = s.match(/CR\s*0*(\d+)/i) || s.match(/n[°º]\s*0*(\d+)/i);
+              var d = dateIso ? new Date(dateIso) : null;
+              var df = (d && !isNaN(d)) ? d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+              return (m ? 'CR n°' + m[1] : s) + (df ? ' — ' + df : '');
+            };
+            var liveCR = crFiles.map(function (f) {
+              var dt = f.date || f.modified || f.LastModified || f.Modified || null;
+              return {
+                name: prettyCR(f.name || f.title || f.Name, dt),
+                url: f.url || f.webUrl || f.link || f.Link || '#',
+                created_at: dt,
+                category: 'Compte-rendu',
+              };
+            });
+            byTab['crMount'] = { docs: liveCR, dest: DOC_TAB_MAP.CR };
+          }
+        }
+      } catch (e) {
+        console.warn('[chantier] lecture CR dossier indisponible, repli sur la base', e);
+      }
+    }
 
     // Pour chaque onglet, rendre la liste + filtres
     Object.keys(byTab).forEach(function (mountId) {
