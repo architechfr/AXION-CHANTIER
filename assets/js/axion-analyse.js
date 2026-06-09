@@ -235,6 +235,30 @@
   }
 
   var TABS = [
+  var PHOTOS_URL = 'https://cadencearchitectes-my.sharepoint.com/:f:/g/personal/f_clarisse_cadence-architectes_fr/IgB7SkaBqZRQR5GF0o1R_skOAZOu0xTYt5FgHaklCy7fR-w?e=m1vrpC';
+
+  function panePhotos(){
+    var embedUrl = PHOTOS_URL + '&action=embedview&viewid=&wdAllowInteractivity=False';
+    return '<div class="anl-h">Photos du chantier</div>'+
+      '<div style="margin-bottom:14px;display:flex;align-items:center;gap:12px">'+
+        '<a href="'+PHOTOS_URL+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:var(--azure);color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;transition:opacity .15s" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'">'+
+          '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'+
+          'Ouvrir dans SharePoint</a>'+
+        '<span style="font-size:12px;color:var(--text-faint)">Galerie partagée · Château Moussy-le-Vieux</span>'+
+      '</div>'+
+      '<div style="position:relative;width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--surface)">'+
+        '<iframe src="'+embedUrl+'" '+
+          'style="width:100%;height:680px;border:none;display:block" '+
+          'title="Galerie photos chantier" '+
+          'allowfullscreen loading="lazy">'+
+        '</iframe>'+
+        '<div id="photos-fallback" style="display:none;padding:32px;text-align:center;color:var(--text-faint)">'+
+          '<p style="margin-bottom:12px">La galerie ne peut pas s\'afficher en ligne.</p>'+
+          '<a href="'+PHOTOS_URL+'" target="_blank" rel="noopener" style="color:var(--azure);text-decoration:underline">Ouvrir SharePoint dans un nouvel onglet →</a>'+
+        '</div>'+
+      '</div>';
+  }
+
     { id:'synth', label:'Synthèse' },
     { id:'offres', label:'Offres par lot', count:3 },
     { id:'comparatif', label:'Comparatif GO' },
@@ -242,7 +266,8 @@
     { id:'alertes', label:'Alertes', count:6 },
     { id:'breeam', label:'BREEAM' },
     { id:'planning', label:'Planning' },
-    { id:'docs', label:'Documents' }
+    { id:'docs', label:'Documents' },
+    { id:'photos', label:'Photos' }
   ];
 
   async function mount(project){
@@ -273,12 +298,12 @@
       panes = {
         synth: paneSynth(d), offres: paneOffres(d), comparatif: paneComparatif(d),
         cctp: paneCctp(d), alertes: paneAlertes(d), breeam: paneBreeam(d),
-        planning: panePlanning(d), docs: paneDocs(docs)
+        planning: panePlanning(d), docs: paneDocs(docs), photos: panePhotos()
       };
     } else {
       panes = {
         synth:'<div class="anl-h">Phase d\'analyse</div><p class="anl-lead">Ce chantier est en phase d\'études / analyse des offres. Les documents d\'analyse sont rassemblés dans l\'onglet Documents.</p>',
-        offres:'', comparatif:'', cctp:'', alertes:'', breeam:'', planning:'', docs: paneDocs(docs)
+        offres:'', comparatif:'', cctp:'', alertes:'', breeam:'', planning:'', docs: paneDocs(docs), photos: panePhotos()
       };
     }
     main.innerHTML = TABS.map(function(t,i){
