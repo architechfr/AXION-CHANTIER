@@ -224,6 +224,19 @@
     font-weight:700; font-size:13px; text-decoration:none; border:1px solid var(--green); }
   .doc-folder-btn:hover { filter:brightness(1.07); }
   @media (max-width:640px){ .doc-folder-btn{ margin-left:0; width:100%; justify-content:center; } }
+  .cr-addbox { margin-bottom:14px; }
+  .cr-add-form { display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    background:rgba(52,211,153,.07); border:1px dashed rgba(52,211,153,.5); border-radius:12px; padding:10px 12px; }
+  .cr-add-label { font-weight:700; color:var(--green); font-size:13px; white-space:nowrap; }
+  .cr-add-form input { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.15); color:inherit;
+    border-radius:8px; padding:8px 10px; font-size:13px; }
+  .cr-add-form input::placeholder { color:var(--text-faint); }
+  .cr-add-num { width:62px; }
+  .cr-add-url { flex:1; min-width:220px; }
+  .cr-add-btn { background:var(--green); color:#06231a; font-weight:700; border:none; border-radius:8px;
+    padding:8px 16px; font-size:13px; cursor:pointer; }
+  .cr-add-btn:hover { filter:brightness(1.07); }
+  .cr-add-msg { font-size:12px; color:var(--text-faint); }
   .doc-search { flex:1; min-width:220px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:9px 12px; font-size:13px; font-family:inherit; }
   .doc-search:focus { outline:none; border-color: rgba(96,165,250,.4); box-shadow:0 0 0 3px rgba(96,165,250,.12); }
   .doc-sort   { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:9px 12px; font-size:13px; font-family:inherit; cursor:pointer; }
@@ -426,6 +439,7 @@
       <!-- Comptes-rendus (actif par défaut) -->
       <section class="tab-pane active" id="pane-cr">
         <div class="doc-filters" id="crFilters"></div>
+        <div id="crAddBox" class="cr-addbox" hidden></div>
         <div id="crMount">
           <div class="placeholder">
             <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></div>
@@ -797,6 +811,66 @@ function routeFolderToTab(cat) {
 // Laisser vide tant que le flux n'est pas créé → repli sur les CR en base.
 window.AXION_CR_FLOW_URL = window.AXION_CR_FLOW_URL || '';
 
+// ─── « Ajouter un CR » : formulaire réservé MOE/admin ────────────────
+// Le MOE colle le lien OneDrive du PDF → une ligne documents est créée et
+// le CR s'affiche aussitôt comme « le plus récent ». Aucune copie de fichier :
+// le lien pointe vers le dossier OneDrive (source unique).
+async function setupCrAdd(projectId, projectSlug) {
+  var box = document.getElementById('crAddBox');
+  if (!box) return;
+  try {
+    var u = await AxionAuth.sb.auth.getUser();
+    var email = u && u.data && u.data.user ? u.data.user.email : null;
+    var role = '';
+    if (email) {
+      var pr = await AxionAuth.sb.from('user_profiles').select('role').eq('email', email).maybeSingle();
+      role = ((pr.data && pr.data.role) || '').toLowerCase();
+    }
+    if (role !== 'moe' && role !== 'admin') { box.hidden = true; return; }
+  } catch (e) { box.hidden = true; return; }
+  box.hidden = false;
+  if (box.dataset.ready) return;
+  box.dataset.ready = '1';
+  box.innerHTML =
+    '<form class="cr-add-form" autocomplete="off">' +
+      '<span class="cr-add-label">+ Ajouter un CR</span>' +
+      '<input type="text" id="crAddNum" class="cr-add-num" inputmode="numeric" placeholder="N°" />' +
+      '<input type="url" id="crAddUrl" class="cr-add-url" placeholder="Coller le lien OneDrive du PDF" required />' +
+      '<input type="date" id="crAddDate" class="cr-add-date" />' +
+      '<button type="submit" class="cr-add-btn">Ajouter</button>' +
+      '<span class="cr-add-msg" id="crAddMsg"></span>' +
+    '</form>';
+  var today = new Date().toISOString().slice(0, 10);
+  box.querySelector('#crAddDate').value = today;
+  var urlEl = box.querySelector('#crAddUrl');
+  var numEl = box.querySelector('#crAddNum');
+  urlEl.addEventListener('input', function () {
+    if (numEl.value) return;
+    var m = decodeURIComponent(urlEl.value).match(/CR\s*0*(\d+)/i);
+    if (m) numEl.value = m[1];
+  });
+  box.querySelector('.cr-add-form').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var msg = box.querySelector('#crAddMsg');
+    var num = numEl.value.trim();
+    var url = urlEl.value.trim();
+    var date = box.querySelector('#crAddDate').value || today;
+    if (!url) { msg.textContent = 'Lien manquant'; return; }
+    var dfr = new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    var title = (num ? 'CR n°' + num : 'Compte-rendu') + ' — ' + dfr;
+    msg.textContent = 'Ajout…';
+    var ins = await AxionAuth.sb.from('documents').insert([{
+      project_id: projectId, title: title, file_path: url,
+      category: 'Compte-rendu', visibility: 'projet',
+      created_at: new Date(date + 'T12:00:00').toISOString()
+    }]);
+    if (ins.error) { msg.textContent = 'Erreur : ' + ins.error.message; return; }
+    msg.textContent = '✓ Ajouté';
+    numEl.value = ''; urlEl.value = '';
+    loadDocuments(projectId, projectSlug);
+  });
+}
+
 async function loadDocuments(projectId, projectSlug) {
   try {
     var res = await AxionAuth.sb.from('documents').select('*').eq('project_id', projectId).order('title', { ascending: true });
@@ -920,6 +994,9 @@ async function loadDocuments(projectId, projectSlug) {
       var el = document.getElementById(mountId);
       if (el) el.innerHTML = '<div class="doc-toolbar">' + folderBtnFor(mountId) + '</div>';
     });
+
+    // Formulaire « Ajouter un CR » (MOE/admin) — self-service, sans copie de fichier
+    setupCrAdd(projectId, projectSlug);
 
     // Aiguillage : selon la catégorie du 1er doc, on choisit le bon renderer.
     // Décision UX 2026-06-04 (cf. axion-ux-doc-logique) :
