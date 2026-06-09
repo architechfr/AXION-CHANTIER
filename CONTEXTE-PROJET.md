@@ -3,7 +3,7 @@
 > **Source de vérité du projet.** Lire ce document AVANT toute action sur AXION.
 > À mettre à jour à chaque décision structurante.
 
-**Dernière mise à jour** : 2 juin 2026 · Florian Clarisse
+**Dernière mise à jour** : 9 juin 2026 · Florian Clarisse
 
 ---
 
@@ -71,7 +71,7 @@ documents
 
 ---
 
-## 4. Modèle de rôles (DÉCIDÉ — pas encore en BDD)
+## 4. Modèle de rôles (refonte EN COURS — `moe` déjà actif en BDD)
 
 | Rôle | Qui | Périmètre | Création |
 |---|---|---|---|
@@ -80,7 +80,7 @@ documents
 | `partner` | Entreprises, BET, MOA, bureaux de contrôle | Uniquement leur(s) chantier(s) affecté(s) — sous-type via `companies.type` | Lien d'invitation par MOE/admin |
 | `viewer` | Consultation pure (futur) | Lecture stricte | Lien d'invitation |
 
-**Aujourd'hui (à migrer)** : on a juste `admin` et `user`. Migration prévue (voir §8).
+**État réel (vérifié 09/06/2026)** : le rôle `moe` existe et est **actif** en base — `c.havet` est `moe` (et non plus `admin`). **Constat RLS** : un compte `moe` **peut créer un projet** (`insert` sur `public.projects` autorisé) — vérifié en créant « Villages d'Or - Noisy » depuis la session `c.havet`. La migration admin/user → admin/moe/partner/viewer est donc partiellement faite. Reste à confirmer le rôle BDD réel des autres comptes.
 
 ---
 
@@ -89,7 +89,7 @@ documents
 | Email | Rôle BDD actuel | Rôle cible (refonte) | Status |
 |---|---|---|---|
 | `f.clarisse@cadence-architectes.fr` | admin | admin | ✅ actif, connecté |
-| `c.havet@cadence-architectes.fr` | admin | moe | ✅ actif (bêta-test) |
+| `c.havet@cadence-architectes.fr` | **moe** (vérifié 09/06) | moe | ✅ actif (bêta-test) |
 | `o.penarette@cadence-architectes.fr` | admin | moe | ✅ actif (bêta-test) |
 | `d.clarisse@cadence-architectes.fr` | admin | moe | ⚠️ **À CRÉER** (manuel, prochaine étape) |
 | `p.depreux@cadence-architectes.fr` | — | moe | ❌ pas créé |
@@ -120,14 +120,14 @@ documents
 | Notice | Notices descriptives | Notice notaire |
 | Vente | Plans de vente | Plan de vente |
 
-### Chantier : Les Villages d'Or - Noisy  (créé 09/06/2026)
-- Slug : `villages-or-noisy`
+### Chantier : Les Villages d'Or - Noisy  (✅ CRÉÉ EN BASE le 09/06/2026)
+- Slug : `villages-or-noisy` · `projects.id` = `2f4691b5-1c78-4065-ad0a-dee35890327d`
 - Localisation : Noisy-le-Grand (93) · réf. interne lot **M6.2** · Mission Cadence : MOE d'exécution
 - MOA / programme (logements, SDP, livraison) : **à renseigner** (coquille volontairement légère)
-- Cover : `/assets/img/cover-villages-or-noisy.png`
+- Cover : `/assets/img/cover-villages-or-noisy.png` (déployée Vercel, HTTP 200)
 - Source : e-mail O. Pénarette du 09/06. **4 documents par défaut** = liens vers dossiers SharePoint (`:f:`) :
   Plans de vente (`Vente`) · Notice descriptive (`Notice notaire`) · Plans EXE DWG (`DWG`) · Plans EXE PDF (`PDF`). Pas encore de CR.
-- Bootstrap : `supabase/bootstrap-villages-or-noisy.sql` (idempotent, à exécuter dans SQL Editor).
+- **Création effectuée en base** via la session `c.havet` (rôle `moe`) — `insert` projet + 4 documents. Le script `supabase/bootstrap-villages-or-noisy.sql` est conservé comme **référence** (idempotent) ; inutile de le rejouer.
 
 ### Intervenants — SOURCE UNIQUE = table `project_contacts` (décision 06/06/2026)
 > ⚠️ **DÉCISION (F. Clarisse, 06/06)** : deux sessions Claude ont traité les intervenants en parallèle → doublon. Tranché : la **table `project_contacts`** (annuaire PAR CHANTIER : `role, lot, company, address, full_name, email, phone, sort_order`) est la **seule source de vérité**. **NE PAS exécuter** `bootstrap-entreprises-jardins-lisa.sql` (enrichissement de `companies` = approche abandonnée — un même prestataire peut avoir lot/contact différents selon le chantier, donc ça ne peut pas vivre dans la table `companies` globale). Les colonnes `companies.lot/contact_name/email/phone` n'ont jamais été créées : ne pas les créer.
@@ -180,6 +180,8 @@ AXION-CHANTIER/
 - Module 1 : **reset password + page Mon compte**
 - 3 comptes utilisateurs actifs (f.clarisse, c.havet, o.penarette)
 - Charte graphique formalisée (skill `axion-brand`)
+- **4 chantiers en base** : Les Jardins de Lisa · Les Jardins d'Iris · Domaine des Gueules Cassées · **Les Villages d'Or - Noisy** (créé 09/06)
+- **Simulateur bas-carbone** (`simulateur.html`) : bouton retour contextuel — « ← Retour au chantier » si ouvert depuis un chantier (`?project=`), « ← Retour à AXION » (→ `app.html`) si ouvert depuis l'accès rapide du tableau de bord (corrigé 09/06).
 
 - **Atelier MOE — Cohérence planning** (`moe-coherence.html`) : lit le snapshot live ChantierFlow, dérives par phase, jalons. **+ Pointage interactif (04/06)** : le MOE peut marquer une tâche « terminée » depuis AXION (table `task_progress`, override par `task_uid`) sans toucher au planning. Bouton sur chaque dérive, garde-fou dépendances (confirm si un prédécesseur n'est pas fini), section « Pointages AXION » avec annulation, audit `updated_by`/`updated_at`. Statut effectif = override sinon `task.sts`. ⚠️ **Activation** : exécuter `supabase/task_progress.sql` dans le SQL Editor.
 
