@@ -710,6 +710,12 @@
         var AX_SDP=(AX_Q.get('sdp')||'').replace(/[^\d]/g,''); if(AX_SDP) $("opSdp").value=AX_SDP;
         var AX_LOG=(AX_Q.get('log')||'').replace(/[^\d]/g,''); if(AX_LOG) $("opLog").value=AX_LOG;
       }
+    } else {
+      // Arrivée hors contexte chantier (ex. depuis le tableau de bord AXION via
+      // l'accès rapide « Prescription bas-carbone ») : le bouton retour pointe
+      // vers le dashboard AXION plutôt que vers un chantier.
+      var bkApp=$("axBack");
+      if(bkApp){ bkApp.href="app.html"; bkApp.textContent="← Retour à AXION"; bkApp.style.display="inline-block"; }
     }
 
     var ids=["opName","opMoa","opSdp","opLog","vForfait","vPrescrit"];
