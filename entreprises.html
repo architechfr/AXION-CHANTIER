@@ -173,12 +173,13 @@ function tradeColor(trade){
   return '#94A3B8';
 }
 
-var STATE={ companies:[], links:[], projects:{}, projList:[], role:null, canEdit:false, demo:false, q:'', proj:'' };
+var STATE={ companies:[], links:[], projects:{}, projList:[], role:null, canEdit:false, demo:false, q:'', proj:'', type:'' };
 function chantiersOf(cid){ return STATE.links.filter(function(l){return l.company_id===cid;}).map(function(l){return STATE.projects[l.project_id];}).filter(Boolean); }
 
 function render(){
   var rows=STATE.companies.filter(function(c){
     if(STATE.proj && !STATE.links.some(function(l){return l.company_id===c.id&&l.project_id===STATE.proj;})) return false;
+    if(STATE.type && c.type !== STATE.type) return false;
     if(STATE.q){ var hay=((c.name||'')+' '+(c.trade||'')+' '+(c.lot?'lot '+c.lot:'')+' '+(c.contact_name||'')+' '+(c.email||'')).toLowerCase(); if(hay.indexOf(STATE.q)<0) return false; }
     return true;
   });
@@ -250,6 +251,25 @@ function demoData(){
     pf.addEventListener('change',function(){ STATE.proj=pf.value; render(); });
     var sp=document.getElementById('fProject'); STATE.projList.forEach(function(p){ var o=document.createElement('option'); o.value=p.id; o.textContent=p.name; sp.appendChild(o); });
     document.getElementById('search').addEventListener('input',function(e){ STATE.q=e.target.value.toLowerCase().trim(); render(); });
+
+    /* ── Filtre entrant depuis la roue des métiers (app.html) ── */
+    var _sp = new URLSearchParams(location.search);
+    var _typeParam = _sp.get('type') || '';
+    var _qParam = _sp.get('q') || '';
+    var TYPE_LABEL_EXT = Object.assign({amo:'AMO',moex:'MOEX'}, TYPE_LABEL);
+    if(_typeParam){ STATE.type=_typeParam; }
+    if(_qParam){ STATE.q=_qParam.toLowerCase(); document.getElementById('search').value=_qParam; }
+    if(_typeParam || _qParam){
+      var _label = _typeParam ? (TYPE_LABEL_EXT[_typeParam]||_typeParam) : _qParam;
+      var _chip = document.createElement('div');
+      _chip.id='filterChip';
+      _chip.style.cssText='display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(59,130,246,.15);border:1px solid rgba(96,165,250,.4);border-radius:999px;font-size:12px;font-weight:600;color:#93C5FD;margin-bottom:16px;cursor:pointer';
+      _chip.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> '+_label+' <span style="margin-left:4px;opacity:.7">✕</span>';
+      _chip.onclick=function(){ STATE.type=''; STATE.q=''; document.getElementById('search').value=''; _chip.remove(); history.replaceState({},'',location.pathname); render(); };
+      var _header=document.querySelector('.max-w-screen-xl h1,h1');
+      if(_header&&_header.parentNode) _header.parentNode.insertBefore(_chip, _header.nextSibling);
+      render();
+    }
   }
 
   if(isPreview){
