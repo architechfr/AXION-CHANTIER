@@ -256,7 +256,24 @@ if(AX_PROJECT_ID && typeof window.getAxionSupabase==='function'){
 // Génère un planning TCE complet inspiré du Lisa
 // avec sous-sol, GO bât., étanchéité, second œuvre, OPR
 // ═══════════════════════════════════════
-function _ad(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r}
+// Congés chantier (mêmes plages que le planning) : août entier + trêve de Noël.
+// Une tâche qui les traverse "met en pause" → sa fin recule d'autant (les jours
+// de congé ne sont pas comptés dans la durée). Les week-ends restent comptés
+// (ils font déjà partie de la durée nominale calendaire).
+function _isVac(d){
+  var m=d.getMonth(), day=d.getDate();
+  if(m===7) return true;                       // août (0-indexé : 7)
+  if(m===11 && day>=21 && day<=31) return true;// trêve des confiseurs (21→31 déc)
+  return false;
+}
+// _ad : avance de n jours CALENDAIRES en sautant (sans les compter) les congés.
+function _ad(d,n){
+  var r=new Date(d);
+  if(!n) return r;
+  var step=n<0?-1:1, need=Math.abs(n), done=0, guard=0;
+  while(done<need && guard<6000){ r.setDate(r.getDate()+step); guard++; if(!_isVac(r)) done++; }
+  return r;
+}
 function _iso(d){return d.toISOString().slice(0,10)}
 function _dd(a,b){return Math.round((b-a)/864e5)}
 
@@ -511,13 +528,12 @@ function generatePlanning(){
     for(var i=0;i<terr.length;i++){var b=terr[i],s=bldgGOEnd[b.code];aT('Étanchéité '+b.code,'ETANCH',b.code,s,_ad(s,28),1,{grp:'ETANCH',sub:1});}
   }
 
-  // ═══ PHASE 4 — MENUISERIES EXT. (+ jalon commande J-84) ═══
+  // ═══ PHASE 4 — MENUISERIES EXT. (par bâtiment ; jalon de commande à ajouter manuellement si besoin) ═══
   if(neufBlds.length){
     aT('MENUISERIES EXT.','MENUIS','',dStart,dStart,0,{sum:1,grp:'MENUIS'});
     for(var i=0;i<neufBlds.length;i++){var b=neufBlds[i];
       var fenStart=CFG.fen==='bt'?bldgGOEnd[b.code]:_ad(bldgGOEnd[b.code],-30);
-      aT('Cde menuiseries '+b.code+' (J-'+JALONS.MENUIS+')','MENUIS',b.code,_ad(fenStart,-JALONS.MENUIS),_ad(fenStart,-JALONS.MENUIS+5),1,{grp:'MENUIS',sub:1,sts:'dn'});
-      aT('Menu. ext. '+b.code,'MENUIS',b.code,fenStart,_ad(fenStart,14),1,{grp:'MENUIS',sub:1});
+      aT('Menuiserie ext. '+b.code,'MENUIS',b.code,fenStart,_ad(fenStart,14),1,{grp:'MENUIS',sub:1});
     }
   }
 
@@ -789,7 +805,7 @@ function generate(){
     h+='&nbsp;&nbsp;'+BT.ic+' <b>Bât '+b.code+'</b> — '+BT.lbl+' · '+(BT.unit==='logts'?b.logts+' logts':b.surf+' m²')+' · R+'+b.etages+(BT.build==='reno'?' · <span class="chain">séquence réhabilitation</span>':'')+(BT.tma?' · <span class="chain">finitions soignées + TMA</span>':'')+'<br>';}
   h+='<br><b>Sous-sol :</b> '+ssLabel+'<br>';
   h+='<b>Séquence intérieure :</b> '+seqLabel+' &nbsp;·&nbsp; <b>Fenêtres :</b> '+fenLabel+'<br>';
-  h+='<b>Jalons de commande intégrés :</b> menuiseries J-'+JALONS.MENUIS+' · BAL/organigramme J-'+JALONS.BAL+'<br>';
+  h+='<b>Jalons de commande intégrés :</b> BAL/organigramme J-'+JALONS.BAL+'<br>';
   h+='</div>';
 
   document.getElementById('resultBox').innerHTML=h;

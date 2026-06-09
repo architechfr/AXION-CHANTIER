@@ -428,6 +428,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.7"/></svg>
         Membres
       </button>
+      <button class="tab" role="tab" data-tab="carbone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 3.5 6.5C10 17 11 19 11 22h2c0-3 1-5 2.5-6.5C17 14 19 12 19 9a7 7 0 0 0-7-7z"/></svg>
+        Bas-carbone
+      </button>
     </nav>
   </div>
 
@@ -519,6 +523,20 @@
           <h3>Membres &amp; accès</h3>
           <p>Annuaire des intervenants du chantier (MOA, MOE, contrôle, SPS, entreprises) avec contacts.</p>
           <div id="annuaireMount" style="margin-top:24px;text-align:left"></div>
+        </div>
+      </section>
+
+      <!-- Bas-carbone -->
+      <section class="tab-pane" id="pane-carbone">
+        <div class="placeholder">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 3.5 6.5C10 17 11 19 11 22h2c0-3 1-5 2.5-6.5C17 14 19 12 19 9a7 7 0 0 0-7-7z"/></svg></div>
+          <h3>Simulateur de prescription bas-carbone</h3>
+          <p>Chiffrer l'écart carbone, prescrire des références PEP édition 4 et générer l'article de CCTP — rattaché à cette opération.</p>
+          <a id="carboneLink" href="#" target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:12px 20px;border-radius:11px;background:#10b981;color:#06231a;font-weight:700;font-size:14px;text-decoration:none">
+            Ouvrir le simulateur
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg>
+          </a>
         </div>
       </section>
     </main>
@@ -701,6 +719,14 @@
   } else {
     show(planningSoon, true); show(planningLink, false); show(planningCreate, false); show(planningRegen, false);
     show(planningLockBtn, false); show(planningLockedNote, false);
+  }
+
+  // Bas-carbone : lien vers le simulateur, rattaché à l'opération (id + nom + MOA pré-remplis)
+  var carboneLink = document.getElementById('carboneLink');
+  if (carboneLink) {
+    carboneLink.href = 'simulateur.html?project=' + encodeURIComponent(project.id) +
+                       '&name=' + encodeURIComponent(project.name || '') +
+                       '&moa=' + encodeURIComponent(project.moa || '');
   }
 
   // Actions de la cover : retour aux chantiers (tous) + gérer les accès (admin)

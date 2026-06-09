@@ -9619,10 +9619,20 @@ function installQrCopy(){
   }
   function refresh(){ try{ if(typeof recalc==='function')recalc(); if(typeof buildMeta==='function')buildMeta(); if(typeof render==='function')render(); }catch(e){console.warn('[planning.refresh]',e);} }
 
+  // SOURCE UNIQUE DU NOM : la table projects (nom saisi à la création du projet).
+  // Écrase tout nom recopié (snapshot.projet) qui pourrait être périmé/erroné.
+  function applyProjectName(){
+    return sb.from('projects').select('name').eq('id',PID).maybeSingle().then(function(p){
+      var nm=p&&p.data&&p.data.name; if(!nm)return;
+      var hs=document.querySelector('.hdr-sub'); if(hs)hs.textContent=nm;
+      var ms=document.getElementById('mobSubtitle'); if(ms)ms.textContent=nm;
+      try{document.title='Planning — '+nm;}catch(e){}
+    }).catch(function(){});
+  }
   function loadFromSupabase(){
     return sb.from('planning_snapshots').select('snapshot').eq('project_id',PID).maybeSingle().then(function(r){
       if(r.error){ console.warn('[planning.load]',r.error); setMsg('Accès au planning refusé ou indisponible.'); return; }
-      if(r.data&&r.data.snapshot){ if(buildFromSnapshot(r.data.snapshot)){ refresh(); hide(); } else { setMsg('Planning illisible.'); } }
+      if(r.data&&r.data.snapshot){ if(buildFromSnapshot(r.data.snapshot)){ refresh(); hide(); applyProjectName(); } else { setMsg('Planning illisible.'); } }
       else { setMsg('Aucun planning enregistré pour ce chantier.<br>Générez-le via le configurateur.'); }
     });
   }
