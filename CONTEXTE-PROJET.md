@@ -120,6 +120,15 @@ documents
 | Notice | Notices descriptives | Notice notaire |
 | Vente | Plans de vente | Plan de vente |
 
+### Chantier : Les Villages d'Or - Noisy  (créé 09/06/2026)
+- Slug : `villages-or-noisy`
+- Localisation : Noisy-le-Grand (93) · réf. interne lot **M6.2** · Mission Cadence : MOE d'exécution
+- MOA / programme (logements, SDP, livraison) : **à renseigner** (coquille volontairement légère)
+- Cover : `/assets/img/cover-villages-or-noisy.png`
+- Source : e-mail O. Pénarette du 09/06. **4 documents par défaut** = liens vers dossiers SharePoint (`:f:`) :
+  Plans de vente (`Vente`) · Notice descriptive (`Notice notaire`) · Plans EXE DWG (`DWG`) · Plans EXE PDF (`PDF`). Pas encore de CR.
+- Bootstrap : `supabase/bootstrap-villages-or-noisy.sql` (idempotent, à exécuter dans SQL Editor).
+
 ### Intervenants — SOURCE UNIQUE = table `project_contacts` (décision 06/06/2026)
 > ⚠️ **DÉCISION (F. Clarisse, 06/06)** : deux sessions Claude ont traité les intervenants en parallèle → doublon. Tranché : la **table `project_contacts`** (annuaire PAR CHANTIER : `role, lot, company, address, full_name, email, phone, sort_order`) est la **seule source de vérité**. **NE PAS exécuter** `bootstrap-entreprises-jardins-lisa.sql` (enrichissement de `companies` = approche abandonnée — un même prestataire peut avoir lot/contact différents selon le chantier, donc ça ne peut pas vivre dans la table `companies` globale). Les colonnes `companies.lot/contact_name/email/phone` n'ont jamais été créées : ne pas les créer.
 - **Affichage** : `chantier.html` onglet **Membres** (`loadAnnuaire`, groupé par rôle puis par société) + `entreprises.html` (fusionne les contacts depuis `project_contacts` par nom de société). RLS `project_contacts_moe_all` (admin+moe).
