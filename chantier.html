@@ -834,9 +834,9 @@ async function setupCrAdd(projectId, projectSlug) {
   box.innerHTML =
     '<form class="cr-add-form" autocomplete="off">' +
       '<span class="cr-add-label">+ Ajouter un CR</span>' +
-      '<input type="text" id="crAddNum" class="cr-add-num" inputmode="numeric" placeholder="N°" />' +
-      '<input type="url" id="crAddUrl" class="cr-add-url" placeholder="Coller le lien OneDrive du PDF" required />' +
-      '<input type="date" id="crAddDate" class="cr-add-date" />' +
+      '<input type="text" id="crAddNum" class="cr-add-num" inputmode="numeric" placeholder="N°" title="Numéro du CR" />' +
+      '<input type="url" id="crAddUrl" class="cr-add-url" placeholder="Coller le lien OneDrive du PDF" required title="Lien OneDrive du PDF du compte-rendu" />' +
+      '<input type="date" id="crAddDate" class="cr-add-date" title="Date de la réunion (sert au classement du CR). La date d’ajout dans Axion est enregistrée automatiquement." />' +
       '<button type="submit" class="cr-add-btn">Ajouter</button>' +
       '<span class="cr-add-msg" id="crAddMsg"></span>' +
     '</form>';
