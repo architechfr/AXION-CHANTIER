@@ -326,7 +326,8 @@ var QUICK = {
   depotAtt:   { label:'Déposer attestation',   icon:'cr',          accent:'green' },
   myPlans:    { label:'Mes plans à jour',      icon:'plans',       accent:'azure' },
   consultPlan:{ label:'Consulter planning',    icon:'plannings',   accent:'azure' },
-  newPlanning:{ label:'Nouveau planning',      icon:'plannings',   accent:'amber', href:'configurateur.html' }
+  newPlanning:{ label:'Nouveau planning',      icon:'plannings',   accent:'amber', href:'configurateur.html' },
+  prescCO2:   { label:'Prescription bas-carbone (CCTP)', icon:'documents', accent:'green', href:'simulateur.html' }
 };
 
 /* Configuration par rôle */
@@ -338,7 +339,7 @@ var ROLES = {
     chantiersKicker:'Tous les chantiers',
     nav:['dashboard','chantiers','entreprises','coherence','users','settings'],
     kpi:['chantiers','entreprises','users'],
-    quick:['newProject','newPlanning','coherence','importPlan','addDoc','newCR','inviteCo'], canEdit:true
+    quick:['newProject','newPlanning','coherence','importPlan','addDoc','newCR','inviteCo','prescCO2'], canEdit:true
   },
   moe: {
     label:'Maître d’œuvre', pill:'moe', avatarGrad:'linear-gradient(135deg,#93C5FD,#2563EB)',
@@ -347,7 +348,7 @@ var ROLES = {
     chantiersKicker:'Mes opérations',
     nav:['dashboard','chantiers','entreprises','coherence'],
     kpi:['chantiers','entreprises','cr'],
-    quick:['coherence','newPlanning','importPlan','addDoc','newCR','inviteCo'], canEdit:true
+    quick:['coherence','newPlanning','importPlan','addDoc','newCR','inviteCo','prescCO2'], canEdit:true
   },
   moa: {
     label:'Maître d’ouvrage', pill:'moa', avatarGrad:'linear-gradient(135deg,#5EEAD4,#0D9488)',
