@@ -485,11 +485,12 @@ function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=docum
       .select('project_id,category,title,created_at')
       .order('created_at', { ascending: false });
     if (!dc.error && dc.data) {
-      counts.documents = dc.data.length;
       dc.data.forEach(function(d){
-        if (byProject[d.project_id]) byProject[d.project_id].documents++;
         var cat = (d.category||'').toUpperCase();
         var bp  = byProject[d.project_id];
+        if (cat.indexOf('DOSSIER')===0) return; // lien dossier OneDrive : ce n'est pas un document
+        counts.documents++;
+        if (bp) bp.documents++;
         if (cat.indexOf('CR')>-1 || cat.indexOf('COMPTE')>-1) {
           counts.cr++;
           if (bp) { bp.cr++; if (!bp.lastCR) bp.lastCR = d.created_at; }
