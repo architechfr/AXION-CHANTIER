@@ -691,16 +691,25 @@
     bindType();
     load();
 
-    // Rattachement au chantier (depuis chantier.html) : lien retour + pré-remplissage
+    // Rattachement au chantier (depuis chantier.html) : lien retour + pré-remplissage auto
     if(AX_PROJECT){
       var bk=$("axBack");
       if(bk){ bk.href="chantier.html?id="+encodeURIComponent(AX_PROJECT); bk.style.display="inline-block"; }
       var ch=$("axChantier");
       if(ch && AX_NAME){ ch.textContent="Opération : "+AX_NAME; ch.style.display="block"; }
-      // Pré-remplir si rien n'a été enregistré pour ce chantier
-      if(AX_NAME && !val("opName")) $("opName").value=AX_NAME;
-      if(AX_MOA  && !val("opMoa"))  $("opMoa").value=AX_MOA;
       try{ if(AX_NAME) document.title="Bas-carbone — "+AX_NAME+" — AXION"; }catch(e){}
+      // Pré-remplissage depuis la fiche chantier UNIQUEMENT à la 1ʳᵉ ouverture
+      // (si une simulation a déjà été enregistrée pour ce chantier, on la respecte).
+      var axFresh=false; try{ axFresh = !localStorage.getItem(STORE); }catch(e){ axFresh=true; }
+      if(axFresh){
+        // Type d'abord : applique le bon forfait préréglé (col 48 / mi 98 kg CO₂/m²)
+        var AX_TYPE=(AX_Q.get('type')||'').toLowerCase();
+        if(AX_TYPE==='col'||AX_TYPE==='mi'){ var tb=document.querySelector('#segType [data-type="'+AX_TYPE+'"]'); if(tb) tb.click(); }
+        if(AX_NAME) $("opName").value=AX_NAME;
+        if(AX_MOA)  $("opMoa").value=AX_MOA;
+        var AX_SDP=(AX_Q.get('sdp')||'').replace(/[^\d]/g,''); if(AX_SDP) $("opSdp").value=AX_SDP;
+        var AX_LOG=(AX_Q.get('log')||'').replace(/[^\d]/g,''); if(AX_LOG) $("opLog").value=AX_LOG;
+      }
     }
 
     var ids=["opName","opMoa","opSdp","opLog","vForfait","vPrescrit"];

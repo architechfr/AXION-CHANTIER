@@ -724,9 +724,15 @@
   // Bas-carbone : lien vers le simulateur, rattaché à l'opération (id + nom + MOA pré-remplis)
   var carboneLink = document.getElementById('carboneLink');
   if (carboneLink) {
+    var _sdp = String(project.surface || '').replace(/[^\d]/g, '');   // "9 150" -> "9150"
+    var _log = String(project.units   || '').replace(/[^\d]/g, '');   // "150" -> "150"
+    var _type = (parseInt(_log, 10) >= 2) ? 'col' : 'mi';            // collectif si plusieurs logements
     carboneLink.href = 'simulateur.html?project=' + encodeURIComponent(project.id) +
                        '&name=' + encodeURIComponent(project.name || '') +
-                       '&moa=' + encodeURIComponent(project.moa || '');
+                       '&moa=' + encodeURIComponent(project.moa || '') +
+                       (_sdp ? '&sdp=' + _sdp : '') +
+                       (_log ? '&log=' + _log : '') +
+                       '&type=' + _type;
   }
 
   // Actions de la cover : retour aux chantiers (tous) + gérer les accès (admin)
