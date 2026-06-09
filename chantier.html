@@ -1561,8 +1561,19 @@ function renderLabelPane(rows) {
   var mount = document.getElementById('labelMount'); if (!mount) return;
   var view = rows.filter(function (r) { return r.kind === 'lecture'; });
   var ent = rows.filter(function (r) { return r.kind === 'entreprise'; });
+  var moe = rows.filter(function (r) { return r.kind === 'moe'; });
   var chip = 'display:inline-block;font:600 11px/1.4 ui-monospace,monospace;padding:2px 7px;border-radius:6px;background:rgba(96,165,250,.15);color:#60A5FA;margin-right:7px';
   var html = '';
+  // Lien d'édition MOE (dossier complet) — réservé à l'affichage MOE/admin :
+  // un lien d'édition global ne doit jamais être présenté à une entreprise.
+  if (moe.length && LABEL_EDITOR) {
+    html += moe.map(function (r) {
+      return '<div class="doc-row" style="cursor:default;justify-content:space-between;align-items:center;border-color:rgba(201,169,92,.4)">' +
+        '<div class="doc-meta"><div class="nm">' + escapeHtml(r.title || 'LABEL — édition (MOE)') + '</div>' +
+        '<div class="sub" style="color:var(--text-faint)">Accès complet en écriture sur tout le dossier — réservé MOE</div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px"><a class="btn btn-glass" style="font-size:12px;padding:7px 13px" href="' + escapeAttr(r.url) + '" target="_blank" rel="noopener">Ouvrir (édition)</a>' + labelDelBtn(r.id) + '</div></div>';
+    }).join('');
+  }
   if (view.length) {
     html += view.map(function (r) {
       return '<div class="doc-row" style="cursor:default;justify-content:space-between;align-items:center;border-color:rgba(96,165,250,.3)">' +
@@ -1607,6 +1618,7 @@ function mountLabelForm(projectId) {
       '<select id="lblKind" class="cr-add-num" style="width:auto">' +
         '<option value="entreprise">Espace entreprise</option>' +
         '<option value="lecture">Lien lecture (AMO / MOE)</option>' +
+        '<option value="moe">Édition MOE (dossier complet)</option>' +
       '</select>' +
       '<select id="lblCompany" class="cr-add-num" style="width:auto">' + compOpts + '</select>' +
       '<input id="lblLot" class="cr-add-num" style="width:80px" placeholder="Lot" />' +
@@ -1627,7 +1639,7 @@ function mountLabelForm(projectId) {
     if (kind === 'entreprise' && !comp) { msg.textContent = 'Choisir une entreprise'; msg.style.color = '#F87171'; return; }
     var payload = { project_id: projectId, kind: kind, company_id: comp ? comp.id : null,
       company_name: comp ? comp.name : null, lot: box.querySelector('#lblLot').value.trim() || null,
-      url: url, title: (kind === 'lecture') ? 'LABEL — lecture (AMO / MOE)' : null };
+      url: url, title: (kind === 'lecture') ? 'LABEL — lecture (AMO / MOE)' : (kind === 'moe') ? 'LABEL — édition (MOE)' : null };
     var r = await AxionAuth.sb.from('label_spaces').insert(payload).select('*').maybeSingle();
     if (r.error) { msg.textContent = 'Erreur : ' + r.error.message; msg.style.color = '#F87171'; return; }
     msg.textContent = 'Ajouté'; msg.style.color = '#34D399';
