@@ -442,6 +442,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 3.5 6.5C10 17 11 19 11 22h2c0-3 1-5 2.5-6.5C17 14 19 12 19 9a7 7 0 0 0-7-7z"/></svg>
         Suivi carbone
       </button>
+      <button class="tab" role="tab" data-tab="label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 13h6"/></svg>
+        Espace LABEL
+      </button>
     </nav>
   </div>
 
@@ -548,6 +552,18 @@
             Ouvrir le suivi carbone
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M7 7h10v10"/></svg>
           </a>
+        </div>
+      </section>
+
+      <!-- Espace LABEL — cloud par entreprise (liens OneDrive) -->
+      <section class="tab-pane" id="pane-label">
+        <div style="margin-bottom:14px">
+          <h3 style="margin:0 0 4px">Espace LABEL — échanges entreprises</h3>
+          <p class="sub" style="color:var(--text-faint);max-width:680px">Chaque entreprise dispose d'un espace OneDrive où déposer ses pièces (fiches techniques, certificats, FDES/PEP). La MOE a tous les droits, l'AMO et la MOE consultent l'ensemble en lecture, et chaque entreprise ne modifie que son espace. <small style="opacity:.7">(Les droits sont gérés dans OneDrive ; AXION ne fait qu'afficher le bon lien.)</small></p>
+        </div>
+        <div id="labelAddBox" class="cr-addbox" hidden></div>
+        <div id="labelMount" style="margin-top:14px">
+          <p class="text-xs" style="color:var(--text-faint)">Chargement…</p>
         </div>
       </section>
     </main>
@@ -790,6 +806,10 @@
   addInfo('Mission CADENCE', project.mission);
   addInfo('Maître d\'ouvrage', project.moa);
   addInfo('Adresse', project.address);
+
+  // 5b) Espace LABEL (liens OneDrive par entreprise) — avant l'annuaire pour
+  // que les boutons « Espace LABEL » par société soient disponibles au rendu.
+  await initLabel(projectId);
 
   // 6/7) Vue selon la phase du chantier
   if (window.AxionAnalysis && AxionAnalysis.isAnalysisPhase(project)) {
@@ -1470,6 +1490,7 @@ async function loadAnnuaire(projectId) {
             '<div class="nm">' + lot + escapeHtml(g.company || '') + '</div>' +
             people +
             (g.address ? '<div class="sub" style="color:var(--text-faint);margin-top:7px">' + escapeHtml(g.address) + '</div>' : '') +
+            labelBtnFor(g.company) +
           '</div>' +
         '</div>';
       }).join('');
@@ -1481,6 +1502,140 @@ async function loadAnnuaire(projectId) {
     console.warn('[chantier] annuaire:', e.message);
     mount.innerHTML = '<p class="text-xs" style="color:var(--text-faint)">Annuaire indisponible.</p>';
   }
+}
+
+// ─── Espace LABEL (liens OneDrive par entreprise) ───────────────────
+// AXION stocke et présente des liens OneDrive ; il ne gère JAMAIS les droits
+// de partage (faits côté OneDrive par la MOE). Écriture réservée MOE/admin.
+var LABEL_EDITOR = false;
+var LABEL_COMPANIES = [];
+window.__labelByCompany = {};
+
+// Bouton « Espace LABEL » injecté dans la carte société de l'annuaire (Membres).
+function labelBtnFor(company) {
+  var m = (window.__labelByCompany || {})[(company || '').toLowerCase().trim()];
+  if (!m || !m.url) return '';
+  return '<a class="btn btn-glass" style="margin-top:9px;font-size:12px;padding:6px 12px;display:inline-flex;align-items:center" href="' + escapeAttr(m.url) + '" target="_blank" rel="noopener" title="Espace OneDrive de cette entreprise">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Espace LABEL</a>';
+}
+
+async function initLabel(projectId) {
+  window.__labelProjectId = projectId;
+  try {
+    var u = await AxionAuth.sb.auth.getUser();
+    var uid = u && u.data && u.data.user ? u.data.user.id : null;
+    if (uid) {
+      var pr = await AxionAuth.sb.from('user_profiles').select('role').eq('id', uid).maybeSingle();
+      var role = ((pr.data && pr.data.role) || '').toLowerCase();
+      LABEL_EDITOR = (role === 'admin' || role === 'moe');
+    }
+  } catch (e) { LABEL_EDITOR = false; }
+  try {
+    var pc = await AxionAuth.sb.from('project_companies').select('companies(id,name)').eq('project_id', projectId);
+    LABEL_COMPANIES = (pc.data || []).map(function (r) { return r.companies; }).filter(Boolean)
+      .sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); });
+  } catch (e) { LABEL_COMPANIES = []; }
+  await loadLabelSpaces(projectId);
+  if (LABEL_EDITOR) mountLabelForm(projectId);
+}
+
+async function loadLabelSpaces(projectId) {
+  var rows = [];
+  try {
+    var res = await AxionAuth.sb.from('label_spaces')
+      .select('id,kind,company_id,company_name,lot,title,url,created_at')
+      .eq('project_id', projectId).order('created_at', { ascending: true });
+    if (!res.error) rows = res.data || [];
+  } catch (e) {}
+  var map = {};
+  rows.forEach(function (r) { if (r.kind === 'entreprise' && r.company_name) map[(r.company_name).toLowerCase().trim()] = r; });
+  window.__labelByCompany = map;
+  renderLabelPane(rows);
+}
+
+function labelDelBtn(id) {
+  return LABEL_EDITOR ? '<button class="del-label" data-id="' + escapeAttr(id) + '" title="Retirer cet espace d\'AXION" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:15px;line-height:1">✕</button>' : '';
+}
+
+function renderLabelPane(rows) {
+  var mount = document.getElementById('labelMount'); if (!mount) return;
+  var view = rows.filter(function (r) { return r.kind === 'lecture'; });
+  var ent = rows.filter(function (r) { return r.kind === 'entreprise'; });
+  var chip = 'display:inline-block;font:600 11px/1.4 ui-monospace,monospace;padding:2px 7px;border-radius:6px;background:rgba(96,165,250,.15);color:#60A5FA;margin-right:7px';
+  var html = '';
+  if (view.length) {
+    html += view.map(function (r) {
+      return '<div class="doc-row" style="cursor:default;justify-content:space-between;align-items:center;border-color:rgba(96,165,250,.3)">' +
+        '<div class="doc-meta"><div class="nm">' + escapeHtml(r.title || 'LABEL — lecture (AMO / MOE)') + '</div>' +
+        '<div class="sub" style="color:var(--text-faint)">Consultation et téléchargement de tout le dossier</div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px"><a class="btn btn-glass" style="font-size:12px;padding:7px 13px" href="' + escapeAttr(r.url) + '" target="_blank" rel="noopener">Ouvrir (lecture)</a>' + labelDelBtn(r.id) + '</div></div>';
+    }).join('');
+  }
+  if (ent.length) {
+    html += '<h5 style="margin:18px 0 8px;text-transform:uppercase;letter-spacing:.08em">Espaces entreprise <span class="mono" style="color:var(--text-faint)">' + ent.length + '</span></h5>' +
+      '<div class="doc-list">' + ent.map(function (r) {
+        var lot = r.lot ? '<span style="' + chip + '">' + escapeHtml(r.lot) + '</span>' : '';
+        return '<div class="doc-row" style="cursor:default;justify-content:space-between;align-items:center">' +
+          '<div class="doc-meta"><div class="nm">' + lot + escapeHtml(r.company_name || 'Entreprise') + '</div>' +
+          '<div class="sub" style="color:var(--text-faint)">Espace de dépôt — modifiable par l\'entreprise</div></div>' +
+          '<div style="display:flex;align-items:center;gap:10px"><a class="btn btn-glass" style="font-size:12px;padding:7px 13px" href="' + escapeAttr(r.url) + '" target="_blank" rel="noopener">Ouvrir (modifier)</a>' + labelDelBtn(r.id) + '</div></div>';
+      }).join('') + '</div>';
+  }
+  if (!html) html = '<p class="text-xs" style="color:var(--text-faint)">Aucun espace LABEL pour l\'instant.' + (LABEL_EDITOR ? ' Utilisez le formulaire ci-dessus pour en ajouter.' : '') + '</p>';
+  mount.innerHTML = html;
+  if (LABEL_EDITOR && !mount.dataset.delWired) {
+    mount.dataset.delWired = '1';
+    mount.addEventListener('click', async function (e) {
+      var b = e.target.closest('.del-label'); if (!b) return;
+      if (!confirm('Retirer cet espace LABEL d\'AXION ?\n(le dossier OneDrive n\'est pas supprimé)')) return;
+      var r = await AxionAuth.sb.from('label_spaces').delete().eq('id', b.getAttribute('data-id'));
+      if (r.error) { alert('Erreur : ' + r.error.message); return; }
+      await loadLabelSpaces(window.__labelProjectId);
+      loadAnnuaire(window.__labelProjectId);
+    });
+  }
+}
+
+function mountLabelForm(projectId) {
+  var box = document.getElementById('labelAddBox'); if (!box) return;
+  box.hidden = false;
+  if (box.dataset.ready) return; box.dataset.ready = '1';
+  var compOpts = LABEL_COMPANIES.map(function (c) { return '<option value="' + escapeAttr(c.id) + '">' + escapeHtml(c.name) + '</option>'; }).join('');
+  box.innerHTML =
+    '<form class="cr-add-form" id="labelForm" autocomplete="off" style="flex-wrap:wrap">' +
+      '<span class="cr-add-label">+ Espace LABEL</span>' +
+      '<select id="lblKind" class="cr-add-num" style="width:auto">' +
+        '<option value="entreprise">Espace entreprise</option>' +
+        '<option value="lecture">Lien lecture (AMO / MOE)</option>' +
+      '</select>' +
+      '<select id="lblCompany" class="cr-add-num" style="width:auto">' + compOpts + '</select>' +
+      '<input id="lblLot" class="cr-add-num" style="width:80px" placeholder="Lot" />' +
+      '<input id="lblUrl" type="url" class="cr-add-url" placeholder="Coller le lien OneDrive (édition = entreprise, lecture = AMO/MOE)" required />' +
+      '<button type="submit" class="cr-add-btn">Ajouter</button>' +
+      '<span class="cr-add-msg" id="lblMsg"></span>' +
+    '</form>';
+  var kindEl = box.querySelector('#lblKind'), compEl = box.querySelector('#lblCompany');
+  function sync() { compEl.style.display = (kindEl.value === 'entreprise') ? '' : 'none'; }
+  kindEl.addEventListener('change', sync); sync();
+  box.querySelector('#labelForm').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var msg = box.querySelector('#lblMsg');
+    var kind = kindEl.value;
+    var url = box.querySelector('#lblUrl').value.trim();
+    if (!url) { msg.textContent = 'Lien manquant'; msg.style.color = '#F87171'; return; }
+    var comp = (kind === 'entreprise') ? LABEL_COMPANIES.find(function (c) { return c.id === compEl.value; }) : null;
+    if (kind === 'entreprise' && !comp) { msg.textContent = 'Choisir une entreprise'; msg.style.color = '#F87171'; return; }
+    var payload = { project_id: projectId, kind: kind, company_id: comp ? comp.id : null,
+      company_name: comp ? comp.name : null, lot: box.querySelector('#lblLot').value.trim() || null,
+      url: url, title: (kind === 'lecture') ? 'LABEL — lecture (AMO / MOE)' : null };
+    var r = await AxionAuth.sb.from('label_spaces').insert(payload).select('*').maybeSingle();
+    if (r.error) { msg.textContent = 'Erreur : ' + r.error.message; msg.style.color = '#F87171'; return; }
+    msg.textContent = 'Ajouté'; msg.style.color = '#34D399';
+    box.querySelector('#lblUrl').value = ''; box.querySelector('#lblLot').value = '';
+    await loadLabelSpaces(projectId);
+    loadAnnuaire(projectId);
+    setTimeout(function () { msg.textContent = ''; }, 2200);
+  });
 }
 
 // ─── Sidebar : Intervenants (sociétés distinctes de l'annuaire) ────
