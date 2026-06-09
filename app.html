@@ -524,7 +524,14 @@ function initials(name){ var p=(name||'').trim().split(/\s+/); return ((p[0]||''
 function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=document.getElementById('scrim'); var open=(force===undefined)?!s.classList.contains('open'):force; s.classList.toggle('open',open); sc.classList.toggle('show',open); }
 
 (async function () {
+  /* Timeout de sécurité : si getSession() accroche plus de 8s, on redirige */
+  var _authTimeout = setTimeout(function(){
+    var ls = document.getElementById('loadingScreen');
+    if (ls && ls.style.display !== 'none') window.location.href = 'login.html';
+  }, 8000);
+
   var session = await AxionAuth.currentSession();
+  clearTimeout(_authTimeout);
   if (!session) { window.location.href = 'login.html'; return; }
 
   var profile;
@@ -593,4 +600,170 @@ function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=docum
   } catch(e){ /* silencieux */ }
   // Fallback : table companies si dispo
   if (!counts.entreprises) {
-    try { var c
+    try { var co = await AxionAuth.sb.from('companies').select('id'); if(!co.error&&co.data) counts.entreprises = co.data.length; } catch(e){}
+  }
+
+  // Documents (+ ventilation par catégorie/projet)
+  try {
+    // Tri par created_at DESC : le 1er document trouvé pour chaque famille
+    // est le plus récent → on ne met à jour lastCR/lastPlan qu'à la 1ère
+    // occurrence (sinon on écrasait avec des dates plus anciennes).
+    var dc = await AxionAuth.sb.from('documents')
+      .select('project_id,category,title,created_at')
+      .order('created_at', { ascending: false });
+    if (!dc.error && dc.data) {
+      dc.data.forEach(function(d){
+        var cat = (d.category||'').toUpperCase();
+        var bp  = byProject[d.project_id];
+        if (cat.indexOf('DOSSIER')===0) return; // lien dossier OneDrive : ce n'est pas un document
+        counts.documents++;
+        if (bp) bp.documents++;
+        if (cat.indexOf('CR')>-1 || cat.indexOf('COMPTE')>-1) {
+          counts.cr++;
+          if (bp) { bp.cr++; if (!bp.lastCR) bp.lastCR = d.created_at; }
+        }
+        if (cat.indexOf('PDF')>-1 || cat.indexOf('DWG')>-1 || cat.indexOf('PLAN')>-1 || cat.indexOf('EXE')>-1) {
+          counts.plans++;
+          if (bp && !bp.lastPlan) bp.lastPlan = d.created_at;
+        }
+      });
+    }
+  } catch(e){ /* silencieux */ }
+
+  // Utilisateurs (admin uniquement ; RLS limite les autres à leur ligne)
+  try { var up = await AxionAuth.sb.from('user_profiles').select('id'); if(!up.error&&up.data) counts.users = up.data.length; } catch(e){}
+  // Livraisons = chantiers ayant une date de livraison renseignée
+  counts.livraisons = projects.filter(function(p){return p.delivery;}).length;
+
+  /* ================= KPI ================= */
+  var kpiRow = document.getElementById('kpiRow');
+  cfg.kpi.forEach(function(k){
+    var d = KPI_DEFS[k]; if(!d) return;
+    var el = document.createElement('div');
+    el.className = 'kpi glass rounded-2xl p-4 md:p-5';
+    el.innerHTML =
+      '<div class="w-10 h-10 rounded-xl grid place-items-center mb-3" style="background:'+d.bg+';border:1px solid '+d.bd+'">'+
+        svgIcon(d.icon,'w-5 h-5').replace('stroke="currentColor"','stroke="'+d.color+'"')+
+      '</div>'+
+      '<div class="font-display text-3xl font-700 text-white leading-none">'+counts[k]+'</div>'+
+      '<div class="text-xs text-slate2-400 mt-1.5">'+d.label+'</div>';
+    kpiRow.appendChild(el);
+  });
+
+  /* ================= CARTES CHANTIERS ================= */
+  var grid = document.getElementById('projectsGrid');
+  var counter = document.getElementById('projectsCount');
+  counter.textContent = projects.length + ' chantier' + (projects.length>1?'s':'');
+  if (projects.length === 0) {
+    if (document.getElementById('projectsError').classList.contains('hidden'))
+      document.getElementById('projectsEmpty').classList.remove('hidden');
+  } else {
+    projects.forEach(function(p,i){
+      var b = byProject[p.id] || {entreprises:0,documents:0,users:0,cr:0,lastCR:null};
+      var cover = p.cover_url || ('assets/img/cover-'+(p.slug||'')+'.png');
+      var statusTxt = (p.status||'En cours');
+      var lastCR = b.lastCR ? timeAgo(b.lastCR) : '—';
+      var a = document.createElement('a');
+      a.href = 'chantier.html?id=' + encodeURIComponent(p.id);
+      a.className = 'glass card-hover rounded-2xl overflow-hidden block';
+      a.innerHTML =
+        '<div class="relative h-36 bg-ink-700">'+
+          '<img src="'+escapeHtml(cover)+'" alt="" class="absolute inset-0 w-full h-full object-cover" loading="lazy" onerror="this.style.display=\'none\'" />'+
+          '<div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(10,18,34,.15),rgba(10,18,34,.85))"></div>'+
+          '<span class="absolute top-3 left-3 font-mono text-[10px] tracking-[0.25em] uppercase text-azure-300 glass rounded-full px-2.5 py-1">Chantier '+String(i+1).padStart(2,'0')+'</span>'+
+          '<span class="absolute top-3 right-3 inline-flex items-center gap-1.5 text-[11px] text-green-300 glass rounded-full px-2.5 py-1"><span class="dot bg-green-400"></span>'+escapeHtml(statusTxt)+'</span>'+
+          '<h3 class="absolute bottom-3 left-4 right-4 font-display text-lg text-white leading-tight">'+escapeHtml(p.name||'Sans nom')+'</h3>'+
+        '</div>'+
+        '<div class="p-4">'+
+          (p.slug?'<p class="font-mono text-[11px] text-slate2-500 mb-3">'+escapeHtml(p.slug)+'</p>':'')+
+          '<div class="grid grid-cols-3 gap-2 text-center">'+
+            statCell(b.entreprises,'Entreprises','entreprises')+
+            statCell(b.documents,'Documents','documents')+
+            statCell(b.cr,'CR','cr')+
+          '</div>'+
+          '<div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate2-500">'+
+            '<span>Dernier CR · '+lastCR+'</span>'+
+            '<span class="text-azure-400">→</span>'+
+          '</div>'+
+        '</div>';
+      grid.appendChild(a);
+    });
+  }
+  function statCell(val,label,icon){
+    return '<div class="glass rounded-xl py-2.5"><div class="flex items-center justify-center gap-1.5 text-slate2-300">'+
+      svgIcon(icon,'w-3.5 h-3.5')+'<span class="font-display text-base text-white">'+val+'</span></div>'+
+      '<div class="text-[10px] text-slate2-500 mt-0.5">'+label+'</div></div>';
+  }
+
+  /* ================= ACTIVITÉ RÉCENTE ================= */
+  var actEl = document.getElementById('activityPanel');
+  var activity = buildActivity(projects, byProject, role);
+  if (activity.length === 0) {
+    actEl.innerHTML = '<div class="p-5 text-center text-sm text-slate2-500">Aucune activité récente.</div>';
+  } else {
+    actEl.innerHTML = activity.map(function(a){
+      return '<a href="'+(a.href||'#')+'" class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/[.04] transition-colors">'+
+        '<div class="w-8 h-8 rounded-lg grid place-items-center shrink-0" style="background:'+a.bg+';border:1px solid '+a.bd+'">'+
+          svgIcon(a.icon,'w-4 h-4').replace('stroke="currentColor"','stroke="'+a.color+'"')+'</div>'+
+        '<div class="min-w-0 flex-1"><p class="text-sm text-slate2-200 leading-snug">'+escapeHtml(a.title)+'</p>'+
+          '<p class="text-[11px] text-slate2-500 mt-0.5 truncate">'+escapeHtml(a.sub)+'</p></div>'+
+        '<span class="font-mono text-[10px] text-slate2-500 shrink-0">'+escapeHtml(a.time)+'</span></a>';
+    }).join('');
+  }
+
+  /* ================= ACCÈS RAPIDE ================= */
+  var quickRow = document.getElementById('quickRow');
+  cfg.quick.forEach(function(q){
+    var def = QUICK[q]; if(!def) return; var ac = QUICK_ACCENT[def.accent];
+    var el = document.createElement('a'); el.href='#';
+    if (def.href) { el.href = def.href; el.target = '_blank'; el.rel = 'noopener'; }
+    if ((q==='importPlan' || q==='consultPlan') && planningHref) { el.href = planningHref; el.target = '_blank'; el.rel = 'noopener'; }
+    el.className='glass card-hover rounded-2xl p-4 flex items-center gap-3';
+    el.innerHTML =
+      '<div class="w-10 h-10 rounded-xl grid place-items-center shrink-0" style="background:'+ac.bg+';border:1px solid '+ac.bd+'">'+
+        svgIcon(def.icon,'w-5 h-5').replace('stroke="currentColor"','stroke="'+ac.color+'"')+'</div>'+
+      '<span class="text-sm font-500 text-slate2-200 leading-tight">'+def.label+'</span>';
+    quickRow.appendChild(el);
+  });
+
+  /* ---- Si une image de fond perso est déposée, l'activer ---- */
+  var bgProbe = new Image();
+  bgProbe.onload = function(){ document.getElementById('heroBand').classList.add('has-bg'); };
+  bgProbe.src = 'assets/img/dashboard-bg.jpg';
+
+  /* ---- Révèle l'UI ---- */
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('sidebar').style.visibility = 'visible';
+  document.getElementById('content').style.visibility = 'visible';
+
+  /* ================= Helpers activité ================= */
+  function buildActivity(projects, byProject, role){
+    // Construit un flux à partir des dernières dates connues ; complété par des jalons génériques.
+    var out = [];
+    projects.forEach(function(p){
+      var b = byProject[p.id]||{};
+      if (b.lastCR) out.push({ title:'Compte-rendu publié', sub:p.name, time:timeAgo(b.lastCR), icon:'cr', color:'#38BDF8', bg:'rgba(56,189,248,.12)', bd:'rgba(56,189,248,.25)', href:'chantier.html?id='+encodeURIComponent(p.id) });
+    });
+    // Jalons indicatifs (affichés tant que le flux d'événements n'est pas branché)
+    if (projects[0]) out.push({ title:'Planning mis à jour', sub:projects[0].name, time:'récent', icon:'plannings', color:'#A78BFA', bg:'rgba(167,139,250,.12)', bd:'rgba(167,139,250,.25)' });
+    if (projects[0]) out.push({ title:'Notice notaire ajoutée', sub:projects[projects.length>1?1:0].name, time:'hier', icon:'notaire', color:'#34D399', bg:'rgba(52,211,153,.12)', bd:'rgba(52,211,153,.25)' });
+    if (role==='admin') out.push({ title:'Entreprise invitée', sub:projects[0]?projects[0].name:'—', time:'hier', icon:'entreprises', color:'#F59E0B', bg:'rgba(245,158,11,.12)', bd:'rgba(245,158,11,.25)' });
+    out.push({ title:'Plan EXE mis à jour', sub:projects[projects.length>1?1:0]?projects[projects.length>1?1:0].name:'—', time:'27/05', icon:'plans', color:'#60A5FA', bg:'rgba(59,130,246,.12)', bd:'rgba(96,165,250,.25)' });
+    return out.slice(0,6);
+  }
+  function timeAgo(iso){
+    if(!iso) return '—'; var d=new Date(iso); if(isNaN(d)) return '—';
+    var s=(Date.now()-d.getTime())/1000;
+    if(s<3600) return 'il y a '+Math.max(1,Math.floor(s/60))+' min';
+    if(s<86400) return 'il y a '+Math.floor(s/3600)+' h';
+    if(s<172800) return 'hier';
+    if(s<604800) return 'il y a '+Math.floor(s/86400)+' j';
+    return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+  }
+})().catch(function(err){
+  console.error('[app] fatal:', err);
+  window.location.href = 'login.html';
+});
+</script>
+</body>
+</html>
