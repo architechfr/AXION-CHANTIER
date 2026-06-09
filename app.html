@@ -234,7 +234,7 @@
       </div>
 
       <!-- KPI -->
-      <div id="kpiRow" class="relative grid grid-cols-2 lg:grid-cols-4 gap-4 mt-9"></div>
+      <div id="kpiRow" class="relative grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6"></div>
 
       <!-- Roue des métiers interactive (visible uniquement avec bg image) -->
       <div id="wheelNav" aria-label="Navigation métiers">
@@ -640,13 +640,15 @@ function toggleSidebar(force){ var s=document.getElementById('sidebar'),sc=docum
   cfg.kpi.forEach(function(k){
     var d = KPI_DEFS[k]; if(!d) return;
     var el = document.createElement('div');
-    el.className = 'kpi glass rounded-2xl p-4 md:p-5';
+    el.className = 'kpi glass rounded-xl p-3';
     el.innerHTML =
-      '<div class="w-10 h-10 rounded-xl grid place-items-center mb-3" style="background:'+d.bg+';border:1px solid '+d.bd+'">'+
-        svgIcon(d.icon,'w-5 h-5').replace('stroke="currentColor"','stroke="'+d.color+'"')+
+      '<div class="flex items-center gap-2 mb-1.5">'+
+        '<div class="w-7 h-7 rounded-lg grid place-items-center flex-shrink-0" style="background:'+d.bg+';border:1px solid '+d.bd+'">'+
+          svgIcon(d.icon,'w-4 h-4').replace('stroke="currentColor"','stroke="'+d.color+'"')+
+        '</div>'+
+        '<div class="font-display text-xl font-700 text-white leading-none">'+counts[k]+'</div>'+
       '</div>'+
-      '<div class="font-display text-3xl font-700 text-white leading-none">'+counts[k]+'</div>'+
-      '<div class="text-xs text-slate2-400 mt-1.5">'+d.label+'</div>';
+      '<div class="text-xs text-slate2-400">'+d.label+'</div>';
     kpiRow.appendChild(el);
   });
 
