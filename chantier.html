@@ -237,9 +237,16 @@
     padding:8px 16px; font-size:13px; cursor:pointer; }
   .cr-add-btn:hover { filter:brightness(1.07); }
   .cr-add-msg { font-size:12px; color:var(--text-faint); }
-  .doc-del { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; flex:0 0 auto;
+  /* Suppression cachée par défaut : révélée seulement en « mode suppression » (molette) */
+  .doc-del { display:none; align-items:center; justify-content:center; width:30px; height:30px; flex:0 0 auto;
     border-radius:8px; color:var(--text-faint); font-size:15px; cursor:pointer; margin-left:6px; transition:.15s; }
   .doc-del:hover { background:rgba(248,113,113,.14); color:#F87171; }
+  body.del-mode .doc-del { display:inline-flex; }
+  body.del-mode .doc-hero, body.del-mode .doc-row { outline:1px dashed rgba(248,113,113,.35); }
+  .delmode-btn.on { border-color:#F87171 !important; color:#F87171 !important; background:rgba(248,113,113,.12) !important; }
+  .delmode-banner { display:none; margin:0 0 14px; padding:10px 14px; border-radius:10px;
+    background:rgba(248,113,113,.12); border:1px solid rgba(248,113,113,.4); color:#FCA5A5; font-size:13px; }
+  body.del-mode .delmode-banner { display:block; }
   .doc-search { flex:1; min-width:220px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:9px 12px; font-size:13px; font-family:inherit; }
   .doc-search:focus { outline:none; border-color: rgba(96,165,250,.4); box-shadow:0 0 0 3px rgba(96,165,250,.12); }
   .doc-sort   { background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:9px 12px; font-size:13px; font-family:inherit; cursor:pointer; }
@@ -443,6 +450,7 @@
 
     <!-- MAIN -->
     <main>
+      <div class="delmode-banner">⚠️ Mode suppression actif — un bouton ✕ apparaît sur les documents. Clique-le puis confirme pour retirer une fiche d'Axion (le fichier OneDrive n'est pas supprimé). Reclique la molette « Réglages » pour quitter ce mode.</div>
       <!-- Comptes-rendus (actif par défaut) -->
       <section class="tab-pane active" id="pane-cr">
         <div class="doc-filters" id="crFilters"></div>
@@ -750,7 +758,20 @@
         'Gérer les accès</a>';
     // Note : pas de bouton « Nouveau compte-rendu » — rédaction des CR hors AXION.
   }
+  if (canCreatePlanning) {
+    // Molette « Réglages » → active/désactive le MODE SUPPRESSION (sécurité 2 étages)
+    actionsHtml +=
+      '<button type="button" class="btn btn-glass btn-sm delmode-btn" id="delModeBtn" title="Réglages — activer la suppression de documents">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' +
+        '<span class="dm-lbl">Réglages</span></button>';
+  }
   actions.innerHTML = actionsHtml;
+  var dmb = document.getElementById('delModeBtn');
+  if (dmb) dmb.addEventListener('click', function(){
+    var on = document.body.classList.toggle('del-mode');
+    dmb.classList.toggle('on', on);
+    dmb.querySelector('.dm-lbl').textContent = on ? 'Quitter le mode suppression' : 'Réglages';
+  });
 
   // 5) Sidebar — infos
   document.getElementById('infoSlug').textContent = project.slug || '—';

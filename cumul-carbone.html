@@ -18,6 +18,9 @@
   .top .brand .ac{color:var(--green)}
   .top .op{color:var(--muted);font-size:13px}
   .top .sp{margin-left:auto}
+  .chip{border:1px solid var(--line);background:var(--panel2);color:var(--muted);padding:5px 11px;border-radius:999px;font-size:12px;font-weight:600}
+  .chip.moe{color:var(--green);border-color:rgba(52,211,153,.4)}
+  .chip.ro{color:var(--amber);border-color:rgba(245,158,11,.4)}
   .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);
     padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none}
   .btn:hover{border-color:var(--green)}
@@ -37,23 +40,29 @@
   .bar.over > i{background:var(--red)}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}
   .panel h2{font-size:15px;margin:0 0 12px}
-  .form{display:grid;grid-template-columns:1.4fr 2fr .7fr .8fr 1fr auto;gap:8px;align-items:end}
+  .form{display:grid;grid-template-columns:1fr 1fr 1.7fr .6fr .7fr 1fr auto;gap:8px;align-items:end}
   .form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
   .form input{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 10px;font-size:14px}
   .form input:focus{outline:none;border-color:var(--green)}
   @media(max-width:820px){.form{grid-template-columns:1fr 1fr}}
+  .viewsel{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:8px 10px;font-size:13px}
+  .banner{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.35);color:var(--azure);border-radius:10px;padding:9px 13px;font-size:13px;margin-bottom:12px}
   table{width:100%;border-collapse:collapse;font-size:14px}
   th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
   th{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);font-weight:600}
   td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   .lotrow td{background:var(--panel2);font-weight:700;color:var(--green);border-top:2px solid var(--line)}
   .sub td{color:var(--muted);font-weight:600}
+  .co{color:var(--faint);font-size:12px}
   .del{cursor:pointer;color:var(--faint);border:none;background:none;font-size:16px}
   .del:hover{color:var(--red)}
+  body.viewer .del{display:none}
+  body.viewer #addPanel{display:none}
   .empty{color:var(--faint);padding:28px;text-align:center}
   .msg{font-size:13px;margin-left:10px}
   .msg.ok{color:var(--green)} .msg.err{color:var(--red)}
   .meth{color:var(--faint);font-size:12px;margin-top:14px;line-height:1.5}
+  .loading{color:var(--faint);padding:40px;text-align:center}
   @media print{.no-print{display:none!important} body{background:#fff;color:#000} .panel,.card{border-color:#ccc}}
 </style>
 </head>
@@ -63,12 +72,13 @@
   <div class="brand">AXION · <span class="ac">Suivi carbone</span></div>
   <div class="op" id="opLabel"></div>
   <div class="sp"></div>
+  <span class="chip" id="roleChip">…</span>
   <a id="backLink" class="btn ghost" href="#" style="display:none">← Retour au chantier</a>
 </header>
 
 <div class="wrap">
   <h1>Suivi carbone des produits choisis</h1>
-  <p class="lede">Cumul de l'empreinte carbone des produits réellement retenus en chantier, lot par lot, comparé à l'objectif de l'opération. Données enregistrées par chantier sur ce poste.</p>
+  <p class="lede">Cumul de l'empreinte carbone des produits réellement retenus en chantier, lot par lot, comparé à l'objectif de l'opération. Données partagées et enregistrées en base, par chantier.</p>
 
   <!-- Synthèse -->
   <div class="cards">
@@ -83,7 +93,7 @@
       </div>
     </div>
     <div class="card tot">
-      <div class="k">Cumul réalisé (produits choisis)</div>
+      <div class="k" id="cTotK">Cumul réalisé (produits choisis)</div>
       <div class="v"><span id="cTot">0</span> <small>kg CO₂</small></div>
       <div style="font-size:12px;color:var(--muted);margin-top:6px"><span id="cRatio">—</span> kg CO₂/m²</div>
     </div>
@@ -95,11 +105,14 @@
   </div>
 
   <!-- Saisie -->
-  <div class="panel no-print">
+  <div class="panel no-print" id="addPanel">
     <h2>+ Ajouter un produit</h2>
     <div class="form">
       <label>Lot
         <input id="fLot" list="lots" placeholder="ex. Électricité (CFO/CFA)">
+      </label>
+      <label>Entreprise
+        <input id="fCompany" list="companies" placeholder="(optionnel)">
       </label>
       <label>Désignation du produit
         <input id="fDes" list="base" placeholder="ex. Tableau électrique ...">
@@ -117,18 +130,23 @@
     </div>
     <datalist id="lots"></datalist>
     <datalist id="base"></datalist>
-    <div style="margin-top:8px;font-size:12px;color:var(--faint)">Astuce : les produits saisis alimentent une <b>base réutilisable</b> sur ce poste — re-tapez une désignation déjà connue et la valeur carbone se pré-remplit. <span class="msg" id="msg"></span></div>
+    <datalist id="companies"></datalist>
+    <div style="margin-top:8px;font-size:12px;color:var(--faint)">Astuce : les produits saisis alimentent une <b>base réutilisable partagée</b> — re-tapez une désignation déjà connue et la valeur carbone se pré-remplit. <span class="msg" id="msg"></span></div>
   </div>
 
   <!-- Tableau -->
   <div class="panel">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
       <h2 style="margin:0">Produits cumulés</h2>
+      <select class="viewsel no-print" id="viewLot" title="Filtrer la vue par lot (démontre le cloisonnement par entreprise)">
+        <option value="">Tous les lots (MOE / AMO)</option>
+      </select>
       <div class="sp" style="margin-left:auto"></div>
       <button class="btn ghost no-print" id="csvBtn" type="button">Export CSV</button>
       <button class="btn ghost no-print" id="jsonBtn" type="button">Export .json</button>
       <button class="btn ghost no-print" id="pdfBtn" type="button">Imprimer / PDF</button>
     </div>
+    <div class="banner no-print" id="viewBanner" style="display:none"></div>
     <table>
       <thead><tr>
         <th>Désignation</th><th class="num">Qté</th><th>Unité</th>
@@ -137,76 +155,131 @@
       <tbody id="tb"></tbody>
     </table>
     <div class="empty" id="emptyMsg">Aucun produit saisi pour l'instant.</div>
+    <div class="loading" id="loadMsg">Chargement…</div>
   </div>
 
   <div class="meth">
-    Outil de suivi (cumul) du carbone « réalisé » d'après les produits choisis en chantier — distinct de la prescription CCTP (conception). Les valeurs kg CO₂/unité proviennent des fiches FDES/PEP (base INIES) ou de la base réutilisable de l'agence. Document indicatif, à valider avec le bureau d'études.
+    Outil de suivi (cumul) du carbone « réalisé » d'après les produits choisis en chantier — distinct de la prescription CCTP (conception). Les valeurs kg CO₂/unité proviennent des fiches FDES/PEP (base INIES) ou de la base réutilisable de l'agence. Document indicatif, à valider avec le bureau d'études. <b>Saisie réservée à la maîtrise d'œuvre</b> ; l'AMO et les partenaires consultent et exportent.
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-config.js"></script>
 <script>
 (function(){
   var $=function(id){return document.getElementById(id);};
   var Q=new URLSearchParams(location.search);
-  var PROJECT=(Q.get('project')||'').replace(/[^a-zA-Z0-9_-]/g,'');
+  var PROJECT=(Q.get('project')||'').replace(/[^a-zA-Z0-9_-]/g,'');   // = projects.id (UUID)
   var NAME=Q.get('name')||'';
   var PARAM_SDP=(Q.get('sdp')||'').replace(/[^\d]/g,'');
-  var STORE='axion-cumul-'+(PROJECT||'local');
-  var BASE='axion-cumul-base'; // base produits réutilisable (tous chantiers, ce poste)
 
   var LOTS=['Terrassement','Gros œuvre','Étanchéité','Couverture','Charpente','Menuiseries ext.',
     'Ravalement / façade','CVC / VMC','Cloison / doublage / plâtrerie','Électricité (CFO/CFA)',
     'Plomberie','Chape','Carrelage / faïence','Peinture','Sols souples','Menuiseries int.',
     'Serrurerie / métallerie','Ascenseur','Sécurité incendie','VRD / aménagements ext.'];
 
-  var state={ sdp:'', objM2:'', lines:[] };
+  var sb=null;
+  var ME={ email:null, role:null, isEditor:false };
+  var COMPANIES=[];   // [{id,name}]
+  var CATALOG=[];     // [{id,des,unit,co2,lot}]
+  var state={ sdp:'', objM2:'', lines:[] };  // lines:[{id,lot,company_id,des,qte,unit,co2}]
+  var viewLot='';
+  var settingsTimer=null;
 
   function num(v){ v=parseFloat(v); return isNaN(v)?0:v; }
   function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function compName(id){ if(!id) return ''; var c=COMPANIES.find(function(x){return x.id===id;}); return c?c.name:''; }
+  function mapRow(r){ return { id:r.id, lot:r.lot||'Autres', company_id:r.company_id||null, des:r.designation, qte:r.quantity, unit:r.unit||'', co2:r.kg_co2_per_unit }; }
 
-  /* ---------- persistence (par chantier) ---------- */
-  function load(){
-    try{ var r=localStorage.getItem(STORE); if(r){ var d=JSON.parse(r); state.sdp=d.sdp||''; state.objM2=d.objM2||''; state.lines=d.lines||[]; } }catch(e){}
+  /* ---------- chargement ---------- */
+  async function loadAll(){
+    // entreprises du chantier (pour le datalist + l'affichage)
+    try{
+      var pc=await sb.from('project_companies').select('companies(id,name)').eq('project_id',PROJECT);
+      COMPANIES=((pc.data)||[]).map(function(r){return r.companies;}).filter(Boolean);
+    }catch(e){ COMPANIES=[]; }
+    // réglages (objectif + SDP)
+    try{
+      var st=await sb.from('carbon_settings').select('obj_kg_m2,sdp').eq('project_id',PROJECT).maybeSingle();
+      if(st.data){ state.objM2=(st.data.obj_kg_m2!=null?String(st.data.obj_kg_m2):''); state.sdp=(st.data.sdp!=null?String(st.data.sdp):''); }
+    }catch(e){}
     if(!state.sdp && PARAM_SDP) state.sdp=PARAM_SDP;
+    // produits
+    try{
+      var pr=await sb.from('carbon_products').select('*').eq('project_id',PROJECT).order('created_at',{ascending:true});
+      state.lines=((pr.data)||[]).map(mapRow);
+    }catch(e){ state.lines=[]; }
+    // catalogue partagé
+    try{
+      var ca=await sb.from('carbon_catalog').select('id,designation,unit,kg_co2_per_unit,lot').order('designation',{ascending:true});
+      CATALOG=((ca.data)||[]).map(function(r){return {id:r.id,des:r.designation,unit:r.unit||'',co2:r.kg_co2_per_unit,lot:r.lot||''};});
+    }catch(e){ CATALOG=[]; }
   }
-  function save(){ try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){} }
 
-  /* ---------- base produits réutilisable ---------- */
-  function getBase(){ try{ return JSON.parse(localStorage.getItem(BASE)||'[]'); }catch(e){ return []; } }
-  function rememberProduct(p){
-    var b=getBase(); var key=(p.des||'').toLowerCase().trim(); if(!key) return;
-    var found=false;
-    for(var i=0;i<b.length;i++){ if((b[i].des||'').toLowerCase().trim()===key){ b[i]=p; found=true; break; } }
-    if(!found) b.push(p);
-    try{ localStorage.setItem(BASE, JSON.stringify(b)); }catch(e){}
+  /* ---------- base produits réutilisable (partagée) ---------- */
+  async function rememberProduct(p){
+    if(!ME.isEditor) return;
+    var key=(p.des||'').toLowerCase().trim(); if(!key) return;
+    var ex=CATALOG.find(function(c){return (c.des||'').toLowerCase().trim()===key;});
+    try{
+      if(ex){
+        await sb.from('carbon_catalog').update({unit:p.unit||null,kg_co2_per_unit:num(p.co2),lot:p.lot||null,updated_at:new Date().toISOString()}).eq('id',ex.id);
+        ex.unit=p.unit; ex.co2=p.co2; ex.lot=p.lot;
+      } else {
+        var r=await sb.from('carbon_catalog').insert({designation:p.des,unit:p.unit||null,kg_co2_per_unit:num(p.co2),lot:p.lot||null}).select('id').maybeSingle();
+        CATALOG.push({id:(r.data&&r.data.id)||null,des:p.des,unit:p.unit||'',co2:p.co2,lot:p.lot||''});
+      }
+    }catch(e){}
   }
 
-  /* ---------- rendu ---------- */
+  /* ---------- datalists & filtre ---------- */
   function buildDatalists(){
     $("lots").innerHTML = LOTS.map(function(l){return '<option value="'+esc(l)+'">';}).join('');
-    var b=getBase();
-    $("base").innerHTML = b.map(function(p){return '<option value="'+esc(p.des)+'">';}).join('');
+    $("base").innerHTML = CATALOG.map(function(p){return '<option value="'+esc(p.des)+'">';}).join('');
+    $("companies").innerHTML = COMPANIES.map(function(c){return '<option value="'+esc(c.name)+'">';}).join('');
+  }
+  function buildViewOptions(){
+    var present=Array.from(new Set(state.lines.map(function(l){return l.lot||'Autres';})));
+    var order=LOTS.concat(['Autres']);
+    present.sort(function(a,b){ var ia=order.indexOf(a),ib=order.indexOf(b); return (ia<0?999:ia)-(ib<0?999:ib); });
+    var cur=viewLot;
+    $("viewLot").innerHTML='<option value="">Tous les lots (MOE / AMO)</option>'+
+      present.map(function(l){return '<option value="'+esc(l)+'"'+(l===cur?' selected':'')+'>Vue entreprise — '+esc(l)+'</option>';}).join('');
   }
 
-  function totals(){
+  /* ---------- calculs ---------- */
+  function visibleLines(){ return viewLot? state.lines.filter(function(l){return (l.lot||'Autres')===viewLot;}) : state.lines; }
+  function totals(lines){
     var byLot={}, grand=0;
-    state.lines.forEach(function(l){ var t=num(l.qte)*num(l.co2); grand+=t; (byLot[l.lot||'Autres']=byLot[l.lot||'Autres']||{n:0,t:0}); byLot[l.lot||'Autres'].t+=t; byLot[l.lot||'Autres'].n++; });
+    lines.forEach(function(l){ var t=num(l.qte)*num(l.co2); grand+=t; (byLot[l.lot||'Autres']=byLot[l.lot||'Autres']||{n:0,t:0}); byLot[l.lot||'Autres'].t+=t; byLot[l.lot||'Autres'].n++; });
     return {byLot:byLot, grand:grand};
   }
 
+  /* ---------- rendu ---------- */
   function render(){
-    // synthèse
     var sdp=num(state.sdp), objM2=num(state.objM2);
-    var objTot = sdp*objM2;
+    var objTot=sdp*objM2;
     $("sdp").value=state.sdp; $("objM2").value=state.objM2;
     $("cObj").textContent = objTot? fmt(objTot) : '—';
-    var T=totals();
+
+    var lines=visibleLines();
+    var T=totals(lines);
     $("cTot").textContent = fmt(T.grand);
+    $("cTotK").textContent = viewLot ? ('Cumul du lot — '+viewLot) : 'Cumul réalisé (produits choisis)';
     $("cRatio").textContent = sdp? (Math.round(T.grand/sdp*10)/10).toLocaleString('fr-FR') : '—';
-    // écart
+
+    // bandeau vue entreprise
+    if(viewLot){
+      $("viewBanner").style.display='block';
+      $("viewBanner").textContent='Vue entreprise — lot « '+viewLot+' » : seuls les produits de ce lot sont affichés (les autres lots sont masqués).';
+    } else { $("viewBanner").style.display='none'; }
+
+    // écart (seulement en vue globale)
     var bar=$("cBar");
-    if(objTot>0){
+    if(viewLot){
+      $("cEcart").textContent='— (vue lot)'; bar.querySelector('i').style.width='0%'; bar.className='bar';
+    } else if(objTot>0){
       var pct=Math.min(200,Math.round(T.grand/objTot*100));
       var ecart=T.grand-objTot;
       $("cEcart").textContent=(ecart>0?'+':'')+fmt(ecart)+' kg ('+Math.round(T.grand/objTot*100)+'%)';
@@ -218,54 +291,78 @@
     var tb=$("tb"); tb.innerHTML='';
     var order=LOTS.concat(['Autres']);
     var present=Object.keys(T.byLot);
-    var sorted=present.slice().sort(function(a,b){ var ia=order.indexOf(a), ib=order.indexOf(b); return (ia<0?999:ia)-(ib<0?999:ib); });
-    if(state.lines.length===0){ $("emptyMsg").style.display='block'; }
+    var sorted=present.slice().sort(function(a,b){ var ia=order.indexOf(a),ib=order.indexOf(b); return (ia<0?999:ia)-(ib<0?999:ib); });
+    $("loadMsg").style.display='none';
+    if(lines.length===0){ $("emptyMsg").style.display='block'; }
     else {
       $("emptyMsg").style.display='none';
       sorted.forEach(function(lot){
         var sub=T.byLot[lot];
         tb.insertAdjacentHTML('beforeend','<tr class="lotrow"><td colspan="4">'+esc(lot)+'</td><td class="num">'+fmt(sub.t)+'</td><td class="no-print"></td></tr>');
-        state.lines.forEach(function(l,idx){
+        lines.forEach(function(l){
           if((l.lot||'Autres')!==lot) return;
           var t=num(l.qte)*num(l.co2);
+          var cn=compName(l.company_id);
           tb.insertAdjacentHTML('beforeend',
-            '<tr><td>'+esc(l.des)+'</td><td class="num">'+esc(l.qte)+'</td><td>'+esc(l.unit||'')+'</td>'+
+            '<tr><td>'+esc(l.des)+(cn?' <span class="co">· '+esc(cn)+'</span>':'')+'</td><td class="num">'+esc(l.qte)+'</td><td>'+esc(l.unit||'')+'</td>'+
             '<td class="num">'+esc(l.co2)+'</td><td class="num">'+fmt(t)+'</td>'+
-            '<td class="no-print"><button class="del" data-i="'+idx+'" title="Supprimer">✕</button></td></tr>');
+            '<td class="no-print"><button class="del" data-id="'+esc(l.id)+'" title="Supprimer">✕</button></td></tr>');
         });
       });
     }
-    save();
   }
 
   /* ---------- actions ---------- */
-  function addLine(){
+  function msg(t,ok){ var m=$("msg"); if(!m)return; m.textContent=t; m.className='msg '+(ok?'ok':'err'); setTimeout(function(){m.textContent='';},2800); }
+
+  async function addLine(){
+    if(!ME.isEditor){ msg('Lecture seule.',false); return; }
     var des=$("fDes").value.trim();
     var co2=$("fCo2").value;
     if(!des){ msg('Désignation manquante.',false); return; }
     if(num(co2)<=0){ msg('Renseignez la valeur kg CO₂/unité.',false); return; }
-    var line={ lot:$("fLot").value.trim()||'Autres', des:des, qte:$("fQte").value||'1', unit:$("fUnit").value.trim(), co2:co2 };
-    state.lines.push(line);
-    rememberProduct({des:des, unit:line.unit, co2:co2, lot:line.lot});
-    $("fDes").value=''; $("fQte").value='1'; $("fUnit").value=''; $("fCo2").value='';
-    buildDatalists(); render(); msg('Produit ajouté.',true);
-    $("fDes").focus();
+    var lot=$("fLot").value.trim()||'Autres';
+    var cn=$("fCompany").value.trim();
+    var comp=COMPANIES.find(function(c){return c.name.toLowerCase()===cn.toLowerCase();});
+    var payload={ project_id:PROJECT, lot:lot, company_id:comp?comp.id:null, designation:des,
+      quantity:num($("fQte").value||'1'), unit:$("fUnit").value.trim()||null, kg_co2_per_unit:num(co2) };
+    var r=await sb.from('carbon_products').insert(payload).select('*').maybeSingle();
+    if(r.error){ msg('Erreur : '+r.error.message,false); return; }
+    state.lines.push(mapRow(r.data));
+    await rememberProduct({des:des, unit:payload.unit, co2:co2, lot:lot});
+    $("fDes").value=''; $("fQte").value='1'; $("fUnit").value=''; $("fCo2").value=''; $("fCompany").value='';
+    buildDatalists(); buildViewOptions(); render(); msg('Produit ajouté.',true); $("fDes").focus();
   }
-  function msg(t,ok){ var m=$("msg"); m.textContent=t; m.className='msg '+(ok?'ok':'err'); setTimeout(function(){m.textContent='';},2500); }
 
-  // pré-remplir co2/unité quand on choisit une désignation connue
+  async function delLine(id){
+    if(!ME.isEditor) return;
+    if(!confirm('Supprimer ce produit du suivi carbone ?')) return;
+    var r=await sb.from('carbon_products').delete().eq('id',id);
+    if(r.error){ msg('Erreur : '+r.error.message,false); return; }
+    state.lines=state.lines.filter(function(l){return l.id!==id;});
+    buildViewOptions(); render();
+  }
+
+  function queueSettings(){
+    if(!ME.isEditor) return;
+    clearTimeout(settingsTimer);
+    settingsTimer=setTimeout(async function(){
+      try{ await sb.from('carbon_settings').upsert({project_id:PROJECT, obj_kg_m2:num(state.objM2)||null, sdp:num(state.sdp)||null, updated_at:new Date().toISOString()},{onConflict:'project_id'}); }catch(e){}
+    },600);
+  }
+
+  // pré-remplir co2/unité quand on choisit une désignation connue (catalogue)
   function onDesChange(){
     var key=$("fDes").value.toLowerCase().trim(); if(!key) return;
-    var b=getBase();
-    for(var i=0;i<b.length;i++){ if((b[i].des||'').toLowerCase().trim()===key){
-      if(!$("fCo2").value) $("fCo2").value=b[i].co2||'';
-      if(!$("fUnit").value) $("fUnit").value=b[i].unit||'';
-      if(!$("fLot").value && b[i].lot) $("fLot").value=b[i].lot;
-      break;
-    } }
+    var p=CATALOG.find(function(c){return (c.des||'').toLowerCase().trim()===key;});
+    if(p){
+      if(!$("fCo2").value) $("fCo2").value=p.co2||'';
+      if(!$("fUnit").value) $("fUnit").value=p.unit||'';
+      if(!$("fLot").value && p.lot) $("fLot").value=p.lot;
+    }
   }
 
-  /* ---------- exports ---------- */
+  /* ---------- exports (toujours sur l'ensemble de l'opération) ---------- */
   function download(name,content,mime){
     try{ var blob=new Blob([content],{type:mime||'text/plain;charset=utf-8'}); var u=URL.createObjectURL(blob);
       var a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click();
@@ -273,33 +370,68 @@
   }
   function safeName(){ return (NAME||'operation').replace(/[^a-z0-9]+/gi,'-').toLowerCase(); }
   function exportCSV(){
-    var rows=[['Lot','Désignation','Quantité','Unité','kgCO2/u','Total kgCO2']];
-    state.lines.forEach(function(l){ rows.push([l.lot,l.des,l.qte,l.unit,l.co2,Math.round(num(l.qte)*num(l.co2))]); });
-    rows.push([]); rows.push(['','','','','TOTAL',Math.round(totals().grand)]);
+    var rows=[['Lot','Entreprise','Désignation','Quantité','Unité','kgCO2/u','Total kgCO2']];
+    state.lines.forEach(function(l){ rows.push([l.lot,compName(l.company_id),l.des,l.qte,l.unit,l.co2,Math.round(num(l.qte)*num(l.co2))]); });
+    rows.push([]); rows.push(['','','','','','TOTAL',Math.round(totals(state.lines).grand)]);
     var csv=rows.map(function(r){return r.map(function(c){var s=String(c==null?'':c);return /[";\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(';');}).join('\n');
     download('suivi-carbone-'+safeName()+'.csv','﻿'+csv,'text/csv;charset=utf-8');
   }
   function exportJSON(){
-    download('suivi-carbone-'+safeName()+'.json', JSON.stringify({project:PROJECT,operation:NAME,sdp:state.sdp,objectif_kg_m2:state.objM2,total_kgCO2:Math.round(totals().grand),lignes:state.lines},null,2),'application/json');
+    download('suivi-carbone-'+safeName()+'.json', JSON.stringify({
+      project:PROJECT, operation:NAME, sdp:state.sdp, objectif_kg_m2:state.objM2,
+      total_kgCO2:Math.round(totals(state.lines).grand),
+      lignes:state.lines.map(function(l){return {lot:l.lot,entreprise:compName(l.company_id),designation:l.des,quantite:l.qte,unite:l.unit,kgCO2_u:l.co2};})
+    },null,2),'application/json');
   }
 
-  /* ---------- init ---------- */
-  function init(){
-    load();
-    if(NAME){ $("opLabel").textContent='Opération : '+NAME; document.title='Suivi carbone — '+NAME+' — AXION'; }
-    if(PROJECT){ var bk=$("backLink"); bk.href='chantier.html?id='+encodeURIComponent(PROJECT); bk.style.display='inline-flex'; }
-    buildDatalists(); render();
+  /* ---------- rôle (édition MOE/admin sinon lecture) ---------- */
+  function applyRoleUI(){
+    var chip=$("roleChip");
+    if(ME.isEditor){ chip.textContent='MOE · édition'; chip.className='chip moe'; }
+    else {
+      chip.textContent='Lecture seule'; chip.className='chip ro';
+      document.body.classList.add('viewer');
+      $("objM2").readOnly=true; $("sdp").readOnly=true;
+      $("objM2").style.opacity='.6'; $("sdp").style.opacity='.6';
+    }
+  }
 
+  function wire(){
     $("addBtn").addEventListener('click',addLine);
     $("fCo2").addEventListener('keydown',function(e){ if(e.key==='Enter') addLine(); });
     $("fDes").addEventListener('change',onDesChange);
     $("fDes").addEventListener('blur',onDesChange);
-    $("sdp").addEventListener('input',function(){ state.sdp=$("sdp").value; render(); });
-    $("objM2").addEventListener('input',function(){ state.objM2=$("objM2").value; render(); });
-    $("tb").addEventListener('click',function(e){ var b=e.target.closest('.del'); if(!b) return; var i=+b.getAttribute('data-i'); state.lines.splice(i,1); render(); });
+    $("objM2").addEventListener('input',function(){ state.objM2=$("objM2").value; render(); queueSettings(); });
+    $("sdp").addEventListener('input',function(){ state.sdp=$("sdp").value; render(); queueSettings(); });
+    $("viewLot").addEventListener('change',function(){ viewLot=$("viewLot").value; render(); });
+    $("tb").addEventListener('click',function(e){ var b=e.target.closest('.del'); if(!b) return; delLine(b.getAttribute('data-id')); });
     $("csvBtn").addEventListener('click',exportCSV);
     $("jsonBtn").addEventListener('click',exportJSON);
     $("pdfBtn").addEventListener('click',function(){ window.print(); });
+  }
+
+  /* ---------- init ---------- */
+  async function init(){
+    if(NAME){ $("opLabel").textContent='Opération : '+NAME; document.title='Suivi carbone — '+NAME+' — AXION'; }
+    if(PROJECT){ var bk=$("backLink"); bk.href='chantier.html?id='+encodeURIComponent(PROJECT); bk.style.display='inline-flex'; }
+
+    try{ sb=window.getAxionSupabase(); }
+    catch(e){ $("loadMsg").textContent='Erreur : SDK Supabase indisponible.'; return; }
+
+    var u=await sb.auth.getUser();
+    if(!u || !u.data || !u.data.user){ location.href='login.html'; return; }
+    ME.email=u.data.user.email;
+    try{
+      var pr=await sb.from('user_profiles').select('role').eq('id',u.data.user.id).maybeSingle();
+      ME.role=((pr.data&&pr.data.role)||'').toLowerCase();
+    }catch(e){ ME.role=''; }
+    ME.isEditor=(ME.role==='admin'||ME.role==='moe');
+
+    if(!PROJECT){ $("loadMsg").textContent='Aucun chantier indiqué (paramètre ?project= manquant).'; return; }
+
+    applyRoleUI();
+    await loadAll();
+    buildDatalists(); buildViewOptions(); render(); wire();
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
