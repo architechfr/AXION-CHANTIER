@@ -330,50 +330,33 @@ function render(){
     return;
   }
 
-  // Grouper par corps d'état, trier par numéro de lot puis alpha
+  // Grouper par corps d'état (annuaire = classement métier, pas par lot)
+  var UNSPEC = 'Corps d\'état non précisé';
   var groups = {};
   rows.forEach(function(c){
-    var key = (c.trade||'').trim() || 'Corps d\'état non précisé';
+    var key = (c.trade||'').trim() || UNSPEC;
     (groups[key] = groups[key] || []).push(c);
   });
   var entries = Object.keys(groups).map(function(k){
-    var minLot = null;
-    groups[k].forEach(function(c){
-      if(c.lot != null && c.lot !== ''){
-        var n = parseInt(String(c.lot).replace(/[^0-9]/g,''), 10);
-        if(!isNaN(n) && (minLot===null || n<minLot)) minLot = n;
-      }
-    });
-    // Tri interne : par lot puis nom
-    groups[k].sort(function(a,b){
-      var la = parseInt(String(a.lot||'').replace(/[^0-9]/g,''),10);
-      var lb = parseInt(String(b.lot||'').replace(/[^0-9]/g,''),10);
-      if(!isNaN(la) && !isNaN(lb) && la!==lb) return la-lb;
-      if(!isNaN(la) && isNaN(lb)) return -1;
-      if(isNaN(la) && !isNaN(lb)) return 1;
-      return (a.name||'').localeCompare(b.name||'','fr');
-    });
-    return { trade:k, items:groups[k], minLot:minLot };
+    // Tri interne : alpha sur le nom
+    groups[k].sort(function(a,b){ return (a.name||'').localeCompare(b.name||'','fr'); });
+    return { trade:k, items:groups[k] };
   });
+  // Tri des groupes : alpha, sauf "Corps d'état non précisé" rejeté en fin
   entries.sort(function(a,b){
-    if(a.minLot!=null && b.minLot!=null) return a.minLot - b.minLot;
-    if(a.minLot!=null) return -1;
-    if(b.minLot!=null) return 1;
+    if(a.trade === UNSPEC) return 1;
+    if(b.trade === UNSPEC) return -1;
     return a.trade.localeCompare(b.trade,'fr');
   });
 
   list.className = '';
   list.innerHTML = entries.map(function(g){
     var col = tradeColor(g.trade);
-    var lotChip = g.minLot != null
-      ? '<span class="font-mono text-[10px] tracking-[0.25em] uppercase" style="color:'+col+';opacity:.85">Lot '+(g.minLot<10?'0':'')+g.minLot+'</span>'
-      : '';
     var count = g.items.length;
     return '<section class="mb-8">'+
       '<header class="flex items-center gap-3 mb-3 pb-2.5" style="border-bottom:1px solid '+col+'33">'+
         '<span class="w-2.5 h-2.5 rounded-full" style="background:'+col+';box-shadow:0 0 12px '+col+'aa"></span>'+
         '<h3 class="font-display text-base font-700 text-white">'+escapeHtml(g.trade)+'</h3>'+
-        lotChip+
         '<span class="font-mono text-[10px] text-slate2-500 ml-auto">'+count+' entreprise'+(count>1?'s':'')+'</span>'+
       '</header>'+
       '<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">'+g.items.map(cardHtml).join('')+'</div>'+
