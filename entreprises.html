@@ -39,13 +39,25 @@
   .pill.entreprise{color:#C4B5FD;border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.08)}
   .pill.economiste{color:#FDBA74;border-color:rgba(251,146,60,.35);background:rgba(251,146,60,.08)}
   .chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#CBD5E1;}
-  .subchip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:500;
-    background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.10); color:#CBD5E1; cursor:pointer; transition:.2s;
-    --c:#60A5FA; }
-  .subchip svg{ width:13px; height:13px; fill:none; stroke:var(--c); stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; flex:none; }
-  .subchip:hover{ border-color: color-mix(in srgb, var(--c) 60%, transparent); color:#fff; background: color-mix(in srgb, var(--c) 8%, transparent); }
-  .subchip.on{ border-color: color-mix(in srgb, var(--c) 75%, transparent); background: color-mix(in srgb, var(--c) 18%, transparent); color:#fff; box-shadow: 0 6px 18px -8px var(--c); }
-  .subchip.on svg{ stroke:#fff; }
+  /* Grille pictos sous-catégories (in-line, sans page intermédiaire) */
+  .subtile{ display:flex; flex-direction:column; gap:6px; padding:14px 14px 12px; border-radius:14px;
+    background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.08); cursor:pointer; text-align:left;
+    transition:.25s; --c:#60A5FA; position:relative; overflow:hidden; color:inherit; }
+  .subtile::before{ content:""; position:absolute; inset:0; pointer-events:none; opacity:0;
+    background:radial-gradient(circle at 25% 0%, var(--c), transparent 60%); transition:opacity .3s; }
+  .subtile:hover{ transform:translateY(-2px); border-color:color-mix(in srgb, var(--c) 50%, transparent); background:rgba(255,255,255,.04); }
+  .subtile:hover::before{ opacity:.10; }
+  .subtile.on{ border-color:color-mix(in srgb, var(--c) 75%, transparent); background:color-mix(in srgb, var(--c) 12%, transparent); box-shadow:0 10px 26px -16px var(--c); }
+  .subtile.on::before{ opacity:.16; }
+  .subtile .ico{ width:34px; height:34px; border-radius:10px; display:grid; place-items:center;
+    background: color-mix(in srgb, var(--c) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--c) 32%, transparent);
+    color: var(--c); flex:none; }
+  .subtile .ico svg{ width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+  .subtile .lbl{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; line-height:1.2; color:#E2E8F0; }
+  .subtile .hnt{ font-size:11px; color:#94A3B8; line-height:1.3; }
+  .subtile.on .lbl{ color:#fff; }
+  .subtile.on .ico{ background: color-mix(in srgb, var(--c) 28%, transparent); color:#fff; }
   .field{background:#0A1628;border:1px solid rgba(255,255,255,.12);color:#E2E8F0;border-radius:10px;padding:9px 12px;font-size:14px;}
   .field:focus{outline:none;border-color:#60A5FA;box-shadow:0 0 0 3px rgba(96,165,250,.15);}
   a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #60A5FA;outline-offset:2px;border-radius:6px;}
@@ -194,7 +206,7 @@
         <div class="flex items-center justify-between flex-wrap gap-3">
           <div>
             <p class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400">La roue AXION</p>
-            <h2 class="font-display text-xl text-white mt-0.5">Onze métiers, un seul chantier</h2>
+            <h2 class="font-display text-xl text-white mt-0.5">Les familles d'intervenants</h2>
           </div>
           <button id="wheelToggle" class="btn-outline rounded-xl px-4 py-2 text-xs font-medium">Masquer la roue</button>
         </div>
@@ -223,13 +235,16 @@
       <select id="projFilter" class="field lg:w-64"><option value="">Tous les chantiers</option></select>
     </section>
 
-    <!-- Sous-catégories (chips) injectées dynamiquement si ?cat=… -->
+    <!-- Sous-catégories (grille de pictos) injectée dynamiquement si ?cat=… -->
     <section id="subcatBar" class="hidden mb-6">
-      <div class="flex items-center gap-2 mb-3">
-        <span id="subcatKicker" class="font-mono text-[10px] tracking-[0.25em] uppercase text-slate2-500"></span>
-        <span class="font-mono text-[10px] text-slate2-500" id="subcatCount"></span>
+      <div class="flex items-end justify-between gap-3 mb-3 flex-wrap">
+        <div>
+          <p class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400" id="subcatKicker"></p>
+          <h2 class="font-display text-xl md:text-2xl font-700 text-white mt-1" id="subcatTitle"></h2>
+        </div>
+        <span class="font-mono text-[11px] text-slate2-500" id="subcatCount"></span>
       </div>
-      <div id="subcatChips" class="flex flex-wrap gap-2"></div>
+      <div id="subcatGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-2.5"></div>
     </section>
 
     <section id="kpiRow" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6"></section>
@@ -424,28 +439,32 @@ function demoData(){
       if(_header&&_header.parentNode) _header.parentNode.insertBefore(_chip, _header.nextSibling);
     }
 
-    /* ── Rangée de chips de sous-catégories (alimentée par sous-metiers-data.js) ── */
+    /* ── Grille de pictos sous-catégories (alimentée par sous-metiers-data.js) ── */
     var subData = (window.AXION_SOUS_METIERS||{})[_catParam];
     if(subData){
+      // On masque la roue embarquée (la même que sur le tableau de bord) → on ne re-propose pas la roue principale.
+      var wheelPanel = document.getElementById('wheelPanel'); if(wheelPanel) wheelPanel.style.display='none';
+
       var bar = document.getElementById('subcatBar');
-      var chipsWrap = document.getElementById('subcatChips');
+      var grid = document.getElementById('subcatGrid');
       document.getElementById('subcatKicker').textContent = subData.parentLabel + ' · ' + subData.parentSub;
-      document.getElementById('subcatCount').textContent = '· ' + subData.items.length + ' sous-catégories';
+      document.getElementById('subcatTitle').textContent = subData.title;
+      document.getElementById('subcatCount').textContent = subData.items.length + ' sous-catégories';
       var html = subData.items.map(function(it){
-        return '<button type="button" class="subchip" data-q="'+escapeHtml(it.q||it.label)+'" style="--c:'+it.color+'">'+
-          '<svg viewBox="0 0 24 24" aria-hidden="true">'+it.icon+'</svg>'+
-          escapeHtml(it.label)+
+        return '<button type="button" class="subtile" data-q="'+escapeHtml(it.q||it.label)+'" style="--c:'+it.color+'">'+
+          '<div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true">'+it.icon+'</svg></div>'+
+          '<div class="lbl">'+escapeHtml(it.label)+'</div>'+
+          (it.hint ? '<div class="hnt">'+escapeHtml(it.hint)+'</div>' : '')+
         '</button>';
       }).join('');
-      chipsWrap.innerHTML = html;
+      grid.innerHTML = html;
       bar.classList.remove('hidden');
 
       var searchEl = document.getElementById('search');
-      function activateChip(btn){
+      function activateTile(btn){
         var q = btn.getAttribute('data-q');
         var isOn = btn.classList.contains('on');
-        // désactive tous les chips
-        chipsWrap.querySelectorAll('.subchip.on').forEach(function(b){ b.classList.remove('on'); });
+        grid.querySelectorAll('.subtile.on').forEach(function(b){ b.classList.remove('on'); });
         if(isOn){
           searchEl.value=''; STATE.q='';
         } else {
@@ -454,13 +473,13 @@ function demoData(){
         }
         render();
       }
-      chipsWrap.querySelectorAll('.subchip').forEach(function(btn){
-        btn.addEventListener('click', function(){ activateChip(btn); });
+      grid.querySelectorAll('.subtile').forEach(function(btn){
+        btn.addEventListener('click', function(){ activateTile(btn); });
       });
 
-      // Si on arrive avec ?q=… qui matche un chip, l'activer visuellement
+      // Si on arrive avec ?q=… qui matche une tuile, l'activer visuellement
       if(_qParam){
-        var match = chipsWrap.querySelector('.subchip[data-q="'+_qParam.replace(/"/g,'\\"')+'"]');
+        var match = grid.querySelector('.subtile[data-q="'+_qParam.replace(/"/g,'\\"')+'"]');
         if(match) match.classList.add('on');
       }
     }
