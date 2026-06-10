@@ -90,6 +90,7 @@
   /* ── Roue des métiers ── */
   #wheelNav { position:absolute;right:0;top:0;bottom:0;width:46%;display:none;align-items:center;justify-content:center;pointer-events:none; }
   .hero-band.has-bg #wheelNav { display:flex; }
+  #wheelNav svg { height:88%; max-height:440px; aspect-ratio:1; width:auto; }
   .wnode { cursor:pointer;transition:all .2s; }
   .wnode circle.bg { transition:fill .2s,stroke .2s; }
   .wnode:hover circle.bg { fill:rgba(59,130,246,.45)!important;stroke:#93C5FD!important; }
@@ -238,7 +239,7 @@
 
       <!-- Roue des métiers interactive (visible uniquement avec bg image) -->
       <div id="wheelNav" aria-label="Navigation métiers">
-        <svg viewBox="0 0 440 440" width="440" height="440" style="pointer-events:none;overflow:visible" aria-hidden="false">
+        <svg viewBox="0 0 440 440" style="pointer-events:none" aria-hidden="false">
           <defs>
             <radialGradient id="wglow" cx="50%" cy="50%" r="50%">
               <stop offset="0" stop-color="#3B82F6" stop-opacity=".18"/>
