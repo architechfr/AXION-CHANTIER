@@ -51,7 +51,7 @@
       '<span class="lbl"><b>' + m.name + '</b><span>' + m.phase + '</span></span>';
     node.addEventListener("mouseenter", function () { hot(i, true); });
     node.addEventListener("mouseleave", function () { hot(i, false); });
-    node.addEventListener("click", function () { openDrawer(i); });
+    node.addEventListener("click", function () { window.location.href = linkOf(m); });
     nodesWrap.appendChild(node);
   });
 
