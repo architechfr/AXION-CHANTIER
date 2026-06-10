@@ -65,28 +65,32 @@
   };
 
   // ────────────────────────────────────────────────────────────────────────
-  // ENT — Corps d'état (lots TCE — nomenclature réelle CADENCE / projets Iris·Lisa)
-  // L'ordre suit la phase d'exécution du chantier.
+  // ENT — Corps d'état (lots TCE — nomenclature CADENCE, projets Iris·Lisa)
+  // ⚠️ LIBELLÉS À VALIDER par Cadence (les attributions précises lot→entreprise
+  // viennent du CR, pas de cette taxonomie). Le hint est volontairement générique
+  // : seuls les CR (table project_contacts) donnent la liste des titulaires.
   // ────────────────────────────────────────────────────────────────────────
   var ENT_ITEMS = [
-    { slug:'lot00', label:'Lot 00 · Terrassement · VRD',         hint:'TT-TP, ROISSY TP, MTR BATIMENT',          q:'00',            color:'#A78BFA', icon:I.truck },
-    { slug:'lot01', label:'Lot 01 · Gros œuvre · Béton armé',    hint:'AGZ, ROISSY TP, MTR BATIMENT',       q:'01',            color:'#60A5FA', icon:I.brick },
-    { slug:'lot01c',label:'Lot 01c · Isolation thermique ext.',  hint:'ITE — AJB ISOLATION',                     q:'01c',           color:'#34D399', icon:I.layers },
-    { slug:'lot02', label:'Lot 02 · Étanchéité',                 hint:'Toiture-terrasse — LES TOITS D’ORIVANA', q:'02',  color:'#38BDF8', icon:I.rain },
-    { slug:'lot03', label:'Lot 03 · Couverture · Zinguerie',     hint:'Tuiles, ardoise, zinc — STRP, SPCC',           q:'03',            color:'#38BDF8', icon:I.roof },
-    { slug:'lot04', label:'Lot 04 · Charpente bois',             hint:'Ossature bois — SPCC, STRP',                    q:'04',            color:'#D4A946', icon:I.cube },
-    { slug:'lot05', label:'Lot 05 · Menuiseries extérieures',    hint:'Aluminium, volets — LCI CONCEPT',         q:'05',            color:'#A78BFA', icon:I.window },
-    { slug:'lot06', label:'Lot 06 · Serrurerie · Métallerie',    hint:'Garde-corps, portails — SDP ENGINEERING', q:'06',            color:'#94A3B8', icon:I.bolt },
-    { slug:'lot07', label:'Lot 07 · Fermetures · Volets',        hint:'Stores, occultation — CRISTAL',                q:'07',            color:'#94A3B8', icon:I.window },
-    { slug:'lot08', label:'Lot 08 · Cloisons · Doublages · Plafonds', hint:'Plâtrerie sèche — EPC',                  q:'08',            color:'#E2E8F0', icon:I.layers },
-    { slug:'lot09', label:'Lot 09 · Menuiseries intérieures bois', hint:'Portes, parquet — EPC MENUISERIE',     q:'09',            color:'#A78BFA', icon:I.door },
-    { slug:'lot11', label:'Lot 11 · Peinture · Revêtements',     hint:'Murs et plafonds — DECORATION DE SOUSA', q:'11',        color:'#F472B6', icon:I.paint },
-    { slug:'lot12', label:'Lot 12 · Carrelage · Faïence',        hint:'Sols et murs — DECORATION DE SOUSA', q:'12',            color:'#F472B6', icon:I.brick },
-    { slug:'lot13', label:'Lot 13 · Sols souples',               hint:'PVC, moquette — DECORATION DE SOUSA', q:'13',           color:'#F472B6', icon:I.floor },
-    { slug:'lot14', label:'Lot 14 · Électricité CFO · CFA',      hint:'Courants forts et faibles — LED',              q:'14',            color:'#FBBF24', icon:I.plug },
-    { slug:'lot15', label:'Lot 15 · Plomberie · CVC',            hint:'Sanitaire, chauffage, ventil. — APM',          q:'15',            color:'#34D399', icon:I.pipe },
-    { slug:'lot16', label:'Lot 16 · Ascenseurs',                 hint:'Installation, maintenance — SOVIDES',          q:'16',            color:'#94A3B8', icon:I.elevator },
-    { slug:'lot17', label:'Lot 17 · Espaces verts · VRD finit.', hint:'Plantations, mobilier — STRP',                 q:'17',            color:'#22C55E', icon:I.tree }
+    { slug:'lot00',  label:'Lot 00 · Terrassement · VRD',                 hint:'Terrassement général, voiries, réseaux',  q:'00',  color:'#A78BFA', icon:I.truck },
+    { slug:'lot01a', label:'Lot 01a · Terrassement · Voile contre terre', hint:'Soutènement, infrastructures',            q:'01a', color:'#94A3B8', icon:I.foundation },
+    { slug:'lot01b', label:'Lot 01b · Gros œuvre · Béton armé',           hint:'Structure béton (chantier découpé)',      q:'01b', color:'#60A5FA', icon:I.brick },
+    { slug:'lot01c', label:'Lot 01c · à valider Cadence',                 hint:'Libellé exact à confirmer',               q:'01c', color:'#94A3B8', icon:I.layers },
+    { slug:'lot01',  label:'Lot 01 · Gros œuvre · Béton armé',            hint:'Structure béton (lot unique)',            q:'lot 01 ', color:'#60A5FA', icon:I.brick },
+    { slug:'lot02',  label:'Lot 02 · Étanchéité',                         hint:'Toiture-terrasse',                        q:'02',  color:'#38BDF8', icon:I.rain },
+    { slug:'lot03',  label:'Lot 03 · Couverture · Zinguerie',             hint:'Tuiles, ardoise, zinc',                   q:'03',  color:'#38BDF8', icon:I.roof },
+    { slug:'lot04',  label:'Lot 04 · Charpente bois',                     hint:'Ossature bois',                           q:'04',  color:'#D4A946', icon:I.cube },
+    { slug:'lot05',  label:'Lot 05 · Menuiseries extérieures',            hint:'Aluminium, PVC, mixte',                   q:'05',  color:'#A78BFA', icon:I.window },
+    { slug:'lot06',  label:'Lot 06 · Serrurerie · Métallerie',            hint:'Garde-corps, portails',                   q:'06',  color:'#94A3B8', icon:I.bolt },
+    { slug:'lot07',  label:'Lot 07 · Fermetures · Volets',                hint:'Stores, occultations',                    q:'07',  color:'#94A3B8', icon:I.window },
+    { slug:'lot08',  label:'Lot 08 · Cloisons · Doublages · Plafonds',    hint:'Plâtrerie sèche',                         q:'08',  color:'#E2E8F0', icon:I.layers },
+    { slug:'lot09',  label:'Lot 09 · Menuiseries intérieures bois',       hint:'Portes, parquet',                         q:'09',  color:'#A78BFA', icon:I.door },
+    { slug:'lot11',  label:'Lot 11 · Peinture · Revêtements',             hint:'Murs et plafonds',                        q:'11',  color:'#F472B6', icon:I.paint },
+    { slug:'lot12',  label:'Lot 12 · Carrelage · Faïence',                hint:'Sols et murs',                            q:'12',  color:'#F472B6', icon:I.brick },
+    { slug:'lot13',  label:'Lot 13 · Sols souples',                       hint:'PVC, moquette, parquet',                  q:'13',  color:'#F472B6', icon:I.floor },
+    { slug:'lot14',  label:'Lot 14 · Électricité CFO · CFA',              hint:'Courants forts et faibles',               q:'14',  color:'#FBBF24', icon:I.plug },
+    { slug:'lot15',  label:'Lot 15 · Plomberie · CVC',                    hint:'Sanitaire, chauffage, ventilation',       q:'15',  color:'#34D399', icon:I.pipe },
+    { slug:'lot16',  label:'Lot 16 · Ascenseurs',                         hint:'Installation, maintenance',               q:'16',  color:'#94A3B8', icon:I.elevator },
+    { slug:'lot17',  label:'Lot 17 · Espaces verts · VRD finitions',      hint:'Plantations, mobilier',                   q:'17',  color:'#22C55E', icon:I.tree }
   ];
 
   // ────────────────────────────────────────────────────────────────────────
