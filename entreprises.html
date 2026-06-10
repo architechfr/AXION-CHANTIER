@@ -56,6 +56,58 @@
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   @media (max-width:1023px){ #sidebar{position:fixed;z-index:55;top:0;bottom:0;left:0;transform:translateX(-100%);} #sidebar.open{transform:translateX(0);} #content{margin-left:0!important;} }
   #scrim{position:fixed;inset:0;background:rgba(5,8,18,.6);z-index:54;opacity:0;pointer-events:none;transition:opacity .3s;}#scrim.show{opacity:1;pointer-events:auto;}
+  /* ════ ROUE DES MÉTIERS (embarquée) ════ */
+  .wheel-stage{position:relative;width:min(620px,88vw);aspect-ratio:1;margin:0 auto;}
+  .wheel-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+  .wheel-svg .ring{fill:none;stroke:rgba(148,163,184,.14);stroke-width:.1;}
+  .wheel-svg .ring-azure{fill:none;stroke:rgba(96,165,250,.22);stroke-width:.14;stroke-dasharray:.4 1.5;}
+  .outer-rot{transform-box:fill-box;transform-origin:center;animation:rot 120s linear infinite;}
+  @keyframes rot{to{transform:rotate(360deg);}}
+  .wheel-svg .spoke{stroke:rgba(96,165,250,.22);stroke-width:.14;opacity:.6;transition:stroke .3s,opacity .3s,stroke-width .3s;}
+  .wheel-svg .spoke.hot{stroke-width:.3;opacity:1;}
+  .node{position:absolute;top:50%;left:50%;width:var(--ns);height:var(--ns);--ns:clamp(60px,8vw,88px);transform:translate(-50%,-50%);cursor:pointer;border:none;background:none;padding:0;}
+  .node .disc{width:100%;height:100%;border-radius:50%;position:relative;display:grid;place-items:center;
+    background:radial-gradient(130% 130% at 32% 24%, rgba(26,34,51,.95) 0%, rgba(10,14,26,.96) 72%);
+    border:1px solid rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 16px 34px -20px #000;
+    transition:transform .32s,border-color .32s,box-shadow .32s;}
+  .node .disc svg{width:40%;height:40%;fill:none;stroke-width:1.5;stroke:var(--mc);transition:stroke .3s;}
+  .node .lbl{position:absolute;left:50%;transform:translateX(-50%);top:calc(100% + 6px);text-align:center;width:max(110px,108%);pointer-events:none;}
+  .node .lbl b{font-family:'Space Grotesk',sans-serif;font-size:clamp(10px,1vw,12px);font-weight:600;color:#E2E8F0;display:block;white-space:nowrap;letter-spacing:.01em;}
+  .node .lbl span{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#64748B;display:block;margin-top:2px;}
+  .node:hover{z-index:20;}
+  .node:hover .disc{transform:scale(1.1);border-color:var(--mc);box-shadow:0 0 0 4px color-mix(in srgb,var(--mc) 10%,transparent),0 22px 46px -22px #000,0 0 32px -6px var(--mc);}
+  .node:hover .lbl b{color:#fff;}
+  .node.active .disc{border-color:var(--mc);box-shadow:0 0 0 4px color-mix(in srgb,var(--mc) 16%,transparent),0 0 36px -4px var(--mc);}
+  .node.dim{opacity:.34;filter:saturate(.5);}
+  .hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:clamp(110px,18%,150px);aspect-ratio:1;border-radius:24px;z-index:10;
+    display:grid;place-items:center;background:rgba(13,19,32,.72);border:1px solid rgba(96,165,250,.25);
+    box-shadow:0 0 0 8px rgba(10,22,40,.55),0 0 70px -12px rgba(59,130,246,.5),inset 0 0 36px -12px rgba(96,165,250,.3);}
+  .hub img{width:74%;height:74%;object-fit:contain;border-radius:16px;}
+  .wscrim{position:fixed;inset:0;background:rgba(5,8,18,.66);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);z-index:80;opacity:0;pointer-events:none;transition:opacity .4s;}
+  .wscrim.show{opacity:1;pointer-events:auto;}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:min(440px,100vw);z-index:90;transform:translateX(100%);transition:transform .5s cubic-bezier(.2,.8,.2,1);
+    background:linear-gradient(180deg,#0D1320,#090C14);border-left:1px solid rgba(255,255,255,.10);display:flex;flex-direction:column;box-shadow:-30px 0 80px -30px #000;}
+  .drawer.show{transform:translateX(0);}
+  .drawer-head{position:relative;padding:30px 30px 26px;border-bottom:1px solid rgba(255,255,255,.06);overflow:hidden;}
+  .drawer-head .glow{position:absolute;top:-70px;right:-50px;width:230px;height:230px;border-radius:50%;pointer-events:none;opacity:.5;}
+  .drawer .close{position:absolute;top:22px;right:24px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#94A3B8;cursor:pointer;display:grid;place-items:center;transition:.25s;z-index:2;}
+  .drawer .close:hover{color:#fff;border-color:rgba(96,165,250,.4);transform:rotate(90deg);}
+  .drawer .d-phase{display:inline-flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;padding:5px 12px;border-radius:999px;}
+  .drawer .d-icon{width:60px;height:60px;border-radius:16px;display:grid;place-items:center;margin:18px 0 16px;}
+  .drawer .d-icon svg{width:28px;height:28px;fill:none;stroke-width:1.5;}
+  .drawer h3{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:27px;line-height:1.06;color:#fff;}
+  .drawer .d-sub{color:#94A3B8;font-size:13.5px;margin-top:6px;}
+  .drawer-body{padding:26px 30px;overflow-y:auto;flex:1;}
+  .drawer-body .desc{color:#CBD5E1;font-size:14.5px;line-height:1.7;font-weight:300;}
+  .drawer-body h4{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#64748B;margin:28px 0 14px;}
+  .missions{list-style:none;display:flex;flex-direction:column;gap:11px;padding:0;margin:0;}
+  .missions li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:#CBD5E1;}
+  .missions li .ck{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;margin-top:1px;}
+  .missions li .ck svg{width:11px;height:11px;fill:none;stroke-width:2.4;}
+  .drawer-foot{padding:20px 30px 26px;border-top:1px solid rgba(255,255,255,.06);}
+  .drawer-foot .btn-azure{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:13px;border-radius:12px;font-size:14px;font-weight:600;}
+  .drawer-foot .hint{text-align:center;color:#64748B;font-size:11.5px;margin-top:11px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em;}
+  @media (max-width:560px){.node{--ns:clamp(48px,14vw,64px)}.node .lbl span{display:none}.drawer{width:100vw}}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
 </style>
 </head>
@@ -129,6 +181,33 @@
       </div>
     </section>
 
+    <!-- ── Roue des métiers (entrée visuelle de l'annuaire) ── -->
+    <section id="wheelPanel" class="mb-6">
+      <div class="glass-strong rounded-2xl p-5 md:p-6 relative overflow-hidden">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <p class="font-mono text-[10px] tracking-[0.25em] uppercase text-azure-400">La roue AXION</p>
+            <h2 class="font-display text-xl text-white mt-0.5">Onze métiers, un seul chantier</h2>
+          </div>
+          <button id="wheelToggle" class="btn-outline rounded-xl px-4 py-2 text-xs font-medium">Masquer la roue</button>
+        </div>
+        <div id="wheelWrap" class="mt-2">
+          <p class="text-slate2-400 text-sm mb-6 max-w-xl">Cliquez sur un métier pour découvrir son rôle, ses missions — et filtrer l'annuaire sur ce corps d'état.</p>
+          <div class="wheel-stage" id="wheelStage">
+            <svg class="wheel-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+              <circle class="ring" cx="50" cy="50" r="38" />
+              <circle class="ring" cx="50" cy="50" r="19" />
+              <g class="outer-rot"><circle class="ring-azure" cx="50" cy="50" r="46.5" /></g>
+              <g id="spokes"></g>
+            </svg>
+            <div id="nodes"></div>
+            <div class="hub"><img src="assets/img/logo-axion-icon.png" alt="AXION" /></div>
+          </div>
+          <div class="h-8"></div>
+        </div>
+      </div>
+    </section>
+
     <section class="mb-6 flex flex-col lg:flex-row lg:items-center gap-3">
       <div class="relative flex-1">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate2-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>
@@ -147,6 +226,22 @@
   </main>
 </div>
 
+<!-- Drawer fiche métier (roue) -->
+<div class="wscrim" id="wheelScrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true"></aside>
+
+<script src="assets/js/metiers-data.js"></script>
+<script src="assets/js/roue.js"></script>
+<script>
+/* Repli/dépli de la roue (préférence mémorisée) */
+(function(){
+  var t=document.getElementById('wheelToggle'), w=document.getElementById('wheelWrap');
+  function set(open){ w.style.display=open?'':'none'; t.textContent=open?'Masquer la roue':'Afficher la roue'; try{localStorage.setItem('axionWheelOpen',open?'1':'0');}catch(e){} }
+  t.addEventListener('click',function(){ set(w.style.display==='none'); });
+  var pref='1'; try{ pref=localStorage.getItem('axionWheelOpen')||'1'; }catch(e){}
+  set(pref!=='0');
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/supabase-config.js"></script>
 <script src="assets/js/axion-auth.js"></script>

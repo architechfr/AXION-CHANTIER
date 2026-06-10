@@ -12,8 +12,11 @@
 
   /* ---------- build wheel ---------- */
   var stage = document.getElementById("wheelStage");
+  if (!stage) return;
   var nodesWrap = document.getElementById("nodes");
   var spokesWrap = document.getElementById("spokes");
+  var isDemo = /[?&]demo=1\b/.test(location.search);
+  function linkOf(m) { return m.link + (isDemo ? "&demo=1" : ""); }
   var R = 38; // svg radius units (matches viewBox 100)
   var Rp = 38; // percent radius for nodes
 
@@ -98,7 +101,7 @@
   if (!reduce) { window.addEventListener("scroll", fireReveals, { passive: true }); fireReveals(); }
 
   /* ---------- drawer ---------- */
-  var scrim = document.getElementById("scrim");
+  var scrim = document.getElementById("wheelScrim") || document.getElementById("scrim");
   var drawer = document.getElementById("drawer");
   var current = null;
 
@@ -142,7 +145,7 @@
         '</ul>' +
       '</div>' +
       '<div class="drawer-foot">' +
-        '<a class="btn-azure" href="' + m.link + '">' +
+        '<a class="btn-azure" href="' + linkOf(m) + '">' +
           'Voir les entreprises' +
           '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
         '</a>' +
