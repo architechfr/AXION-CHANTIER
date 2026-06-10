@@ -439,24 +439,59 @@ function demoData(){
   try { var lk=await AxionAuth.sb.from('project_companies').select('project_id,company_id'); if(!lk.error) STATE.links=lk.data||[]; }catch(e){ console.warn('project_companies',e); }
 
   /* Source unique des contacts = project_contacts (annuaire par chantier).
-     On fusionne ici sur chaque société (par nom) lot/contact/email/tél/rôle. */
+     1) On enrichit les sociétés déjà présentes dans `companies` (par nom).
+     2) On crée des sociétés VIRTUELLES (id 'pc:…') pour celles présentes
+        uniquement dans `project_contacts`, et on les lie au bon chantier.
+     → Plus aucun contact extrait des CR ne se perd dans l'annuaire. */
   try {
-    var pc=await AxionAuth.sb.from('project_contacts').select('company,lot,role,full_name,email,phone');
+    var pc=await AxionAuth.sb.from('project_contacts').select('project_id,company,lot,role,full_name,email,phone');
     if(!pc.error && pc.data){
       var ROLE_TYPE={'MOA':'moa','MOE':'moe','Entreprise':'entreprise','Bureau de contrôle':'controle','AMO':'amo','SPS':'sps','BET':'bet','Bailleur social':'bailleur'};
+      var ROLE_TRADE={'MOA':'Maîtrise d’ouvrage','MOE':'Maîtrise d’œuvre','Bureau de contrôle':'Bureau de contrôle','AMO':'Assistance MOA','SPS':'Coordination SPS','BET':'Bureau d’études','Bailleur social':'Bailleur social'};
       var byName={};
       pc.data.forEach(function(r){
         var k=(r.company||'').trim().toLowerCase(); if(!k) return;
-        var cur=byName[k];
-        if(!cur || ((!cur.email&&r.email)||(!cur.phone&&r.phone)||(!cur.full_name&&r.full_name))) byName[k]=r;
+        if(!byName[k]) byName[k]={ ref:r, projects:{} };
+        var cur=byName[k].ref;
+        if((!cur.email&&r.email)||(!cur.phone&&r.phone)||(!cur.full_name&&r.full_name)) byName[k].ref=r;
+        if(r.project_id) byName[k].projects[r.project_id]=true;
       });
+
+      // 1) Enrichissement des sociétés existantes
+      var matched={};
       STATE.companies.forEach(function(c){
-        var m=byName[(c.name||'').trim().toLowerCase()]; if(!m) return;
+        var k=(c.name||'').trim().toLowerCase();
+        var entry=byName[k]; if(!entry) return;
+        matched[k]=true;
+        var m=entry.ref;
         if(!c.contact_name) c.contact_name=m.full_name;
         if(!c.email) c.email=m.email;
         if(!c.phone) c.phone=m.phone;
         if(!c.lot && m.lot) c.lot=m.lot;
         if(!c.type && m.role) c.type=ROLE_TYPE[m.role]||'entreprise';
+        // ajout des liens manquants depuis project_contacts
+        Object.keys(entry.projects).forEach(function(pid){
+          if(!STATE.links.some(function(l){return l.company_id===c.id && l.project_id===pid;})){
+            STATE.links.push({company_id:c.id, project_id:pid});
+          }
+        });
+      });
+
+      // 2) Création des sociétés virtuelles pour les noms non matchés
+      Object.keys(byName).forEach(function(k){
+        if(matched[k]) return;
+        var entry=byName[k], m=entry.ref;
+        var virtId='pc:'+k;
+        var role=m.role||null;
+        var type=role ? (ROLE_TYPE[role]||'entreprise') : null;
+        var trade=role ? (ROLE_TRADE[role]||null) : null;
+        STATE.companies.push({
+          id:virtId, name:m.company, trade:trade, type:type, lot:m.lot,
+          contact_name:m.full_name, email:m.email, phone:m.phone, _virtual:true
+        });
+        Object.keys(entry.projects).forEach(function(pid){
+          STATE.links.push({company_id:virtId, project_id:pid});
+        });
       });
     }
   }catch(e){ console.warn('project_contacts',e); }
