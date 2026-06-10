@@ -518,6 +518,12 @@
           <p class="sub" style="color:var(--text-faint);max-width:680px">Consultation libre de la volumétrie : rotation au doigt ou à la souris, zoom à la molette ou au pincement. Mode lecture seule — la maquette ne peut pas être modifiée.</p>
         </div>
         <div id="mvWrap" style="position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:radial-gradient(ellipse at 50% -10%, rgba(59,130,246,.20), rgba(56,189,248,.05) 45%, transparent 70%), #0A1628">
+          <!-- Filigrane Cadence : emblème en grand derrière la maquette (model-viewer a un fond transparent) -->
+          <img src="assets/img/logo-cadence-emblem-white.png" alt="" aria-hidden="true"
+               style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(72%,640px);opacity:.09;pointer-events:none;user-select:none">
+          <!-- Logotype Cadence discret en haut à gauche -->
+          <img src="assets/img/logo-cadence-white.png" alt="Cadence Architectes Associés"
+               style="position:absolute;left:18px;top:16px;height:22px;width:auto;opacity:.55;pointer-events:none;user-select:none;z-index:2">
           <model-viewer id="mv3d"
             style="width:100%;height:min(68vh,640px);min-height:420px;display:block;background:transparent;--progress-bar-color:#C9A95C;--progress-bar-height:2px"
             camera-controls touch-action="pan-y"
