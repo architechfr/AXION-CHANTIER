@@ -426,6 +426,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 2 9 5-9 5-9-5 9-5z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/></svg>
         Plans &amp; EXE <span class="badge" id="badgePlans">0</span>
       </button>
+      <button class="tab" role="tab" data-tab="maquette" id="tabMaquette" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg>
+        Maquette 3D
+      </button>
       <button class="tab" role="tab" data-tab="notice">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         Notice notaire
@@ -503,6 +507,42 @@
             <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 2 9 5-9 5-9-5 9-5z"/></svg></div>
             <h3>Aucun document pour l'instant</h3>
             <p>Les plans, CCTP et pièces marché apparaîtront ici dès qu'ils seront ajoutés à la base.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Maquette 3D — visionneuse GLB en lecture seule (manipulation libre : orbite, zoom) -->
+      <section class="tab-pane" id="pane-maquette">
+        <div style="margin-bottom:14px">
+          <h3 style="margin:0 0 4px">Maquette 3D du projet</h3>
+          <p class="sub" style="color:var(--text-faint);max-width:680px">Consultation libre de la volumétrie : rotation au doigt ou à la souris, zoom à la molette ou au pincement. Mode lecture seule — la maquette ne peut pas être modifiée.</p>
+        </div>
+        <div id="mvWrap" style="position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:radial-gradient(ellipse at 50% -10%, rgba(59,130,246,.20), rgba(56,189,248,.05) 45%, transparent 70%), #0A1628">
+          <model-viewer id="mv3d"
+            style="width:100%;height:min(68vh,640px);min-height:420px;display:block;background:transparent;--progress-bar-color:#C9A95C;--progress-bar-height:2px"
+            camera-controls touch-action="pan-y"
+            exposure="0.9" shadow-intensity="1" shadow-softness="0.8"
+            environment-image="neutral"
+            interaction-prompt="when-focused"
+            camera-orbit="35deg 70deg auto" max-camera-orbit="auto 100deg auto"
+            alt="Maquette 3D du chantier">
+          </model-viewer>
+          <div id="mvToolbar" style="position:absolute;right:14px;bottom:14px;display:flex;gap:8px;z-index:2">
+            <button type="button" class="btn btn-glass btn-sm" id="mvReset" title="Recentrer la vue">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Recentrer
+            </button>
+            <button type="button" class="btn btn-glass btn-sm" id="mvSpin" title="Rotation automatique">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>
+              <span id="mvSpinLbl">Rotation auto</span>
+            </button>
+            <button type="button" class="btn btn-glass btn-sm" id="mvFull" title="Plein écran">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+              Plein écran
+            </button>
+          </div>
+          <div id="mvHint" style="position:absolute;left:14px;bottom:14px;z-index:2;padding:6px 12px;border-radius:8px;background:rgba(13,19,32,.72);border:1px solid rgba(255,255,255,.10);backdrop-filter:blur(10px);font-size:12px;color:var(--text-faint)">
+            Glisser pour pivoter · molette / pincer pour zoomer
           </div>
         </div>
       </section>
@@ -597,6 +637,15 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Visionneuse 3D (web component <model-viewer>, lecture seule).
+     Le GLB est compressé EXT_meshopt_compression → décodeur Meshopt requis
+     (build CLASSIQUE meshopt_decoder.js, PAS le .module.js : model-viewer
+     attend le global MeshoptDecoder). -->
+<script type="module">
+  import 'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
+  customElements.get('model-viewer').meshoptDecoderLocation =
+    'https://cdn.jsdelivr.net/npm/meshoptimizer@0.20.0/meshopt_decoder.js';
+</script>
 <script src="assets/js/supabase-config.js"></script>
 <script src="assets/js/axion-auth.js"></script>
 <script src="assets/js/axion-analyse.js"></script>
@@ -761,6 +810,9 @@
                        '&type=' + _type;
   }
 
+  // Maquette 3D : onglet visible si une maquette existe pour ce chantier
+  initMaquette(project);
+
   // Actions de la cover : retour aux chantiers (tous) + gérer les accès (admin)
   var actions = document.getElementById('coverActions');
   var actionsHtml =
@@ -841,6 +893,63 @@
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('appShell').style.visibility = 'visible';
 })();
+
+// ─── Maquette 3D ────────────────────────────────────────────────────
+// Visionneuse lecture seule (<model-viewer>) du GLB optimisé web, servi par
+// Vercel depuis assets/3d/. Mapping par slug en attendant une éventuelle
+// colonne projects.model3d_url (lue en priorité si elle existe un jour).
+// Le fichier n'est chargé QU'À la première ouverture de l'onglet (1,5 Mo).
+var MODELS_3D = {
+  'jardins-de-lisa': 'assets/3d/maquette-jardins-de-lisa.glb',
+};
+
+function initMaquette(project) {
+  var src = project.model3d_url || MODELS_3D[project.slug || ''];
+  if (!src) return;
+  var tab = document.getElementById('tabMaquette');
+  if (tab) tab.style.display = '';
+
+  var mv = document.getElementById('mv3d');
+  var loaded = false;
+  document.getElementById('tabsNav').addEventListener('click', function (e) {
+    var btn = e.target.closest('.tab');
+    if (!btn || btn.dataset.tab !== 'maquette' || loaded || !mv) return;
+    loaded = true;
+    mv.src = src;
+  });
+
+  // Recentrer : revient au cadrage initial
+  var resetBtn = document.getElementById('mvReset');
+  if (resetBtn) resetBtn.addEventListener('click', function () {
+    if (!mv) return;
+    mv.cameraOrbit = '35deg 70deg auto';
+    mv.cameraTarget = 'auto';
+    mv.fieldOfView = 'auto';
+    if (mv.jumpCameraToGoal) mv.jumpCameraToGoal();
+  });
+
+  // Rotation automatique (toggle)
+  var spinBtn = document.getElementById('mvSpin');
+  var spinLbl = document.getElementById('mvSpinLbl');
+  if (spinBtn) spinBtn.addEventListener('click', function () {
+    if (!mv) return;
+    mv.autoRotate = !mv.autoRotate;
+    if (spinLbl) spinLbl.textContent = mv.autoRotate ? 'Arrêter la rotation' : 'Rotation auto';
+  });
+
+  // Plein écran sur le conteneur (la toolbar reste visible)
+  var fullBtn = document.getElementById('mvFull');
+  var wrap = document.getElementById('mvWrap');
+  if (fullBtn) fullBtn.addEventListener('click', function () {
+    if (!wrap) return;
+    if (document.fullscreenElement) { document.exitFullscreen(); return; }
+    if (wrap.requestFullscreen) wrap.requestFullscreen();
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (!mv) return;
+    mv.style.height = document.fullscreenElement === wrap ? '100vh' : 'min(68vh,640px)';
+  });
+}
 
 // ─── Documents ─────────────────────────────────────────────────────
 // Mapping catégorie BDD → onglet de destination.
