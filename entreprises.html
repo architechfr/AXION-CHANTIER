@@ -271,6 +271,32 @@ function tradeColor(trade){
 var STATE={ companies:[], links:[], projects:{}, projList:[], role:null, canEdit:false, demo:false, q:'', proj:'', type:'' };
 function chantiersOf(cid){ return STATE.links.filter(function(l){return l.company_id===cid;}).map(function(l){return STATE.projects[l.project_id];}).filter(Boolean); }
 
+function cardHtml(c){
+  var col=tradeColor(c.trade); var chs=chantiersOf(c.id);
+  var chips = chs.length ? chs.map(function(n){return '<span class="chip">'+escapeHtml(n)+'</span>';}).join('') : '<span class="text-[11px] text-slate2-500">Non affectée</span>';
+  var lotBadge = c.lot ? '<span class="chip font-mono" style="color:'+col+';border-color:'+col+'55;background:'+col+'14">Lot '+escapeHtml(c.lot)+'</span>' : (c.type&&c.type!=='entreprise'?'<span class="chip" style="color:#5EEAD4;border-color:rgba(45,212,191,.35);background:rgba(45,212,191,.08)">'+escapeHtml(TYPE_LABEL[c.type]||c.type)+'</span>':'');
+  var contact='';
+  if(c.contact_name||c.email||c.phone){
+    contact='<div class="pt-3 mt-3 border-t border-white/5 space-y-1.5">'+
+      (c.contact_name?'<div class="flex items-center gap-2 text-[13px] text-slate2-300"><svg class="w-3.5 h-3.5 text-slate2-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke-linecap="round" stroke-linejoin="round"/></svg>'+escapeHtml(c.contact_name)+'</div>':'')+
+      (c.email?'<a href="mailto:'+escapeHtml(c.email)+'" class="flex items-center gap-2 text-[13px] text-azure-300 hover:text-azure-400 transition-colors truncate" style="text-decoration:none"><svg class="w-3.5 h-3.5 flex-none text-slate2-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7l9 6 9-6M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="truncate">'+escapeHtml(c.email)+'</span></a>':'')+
+      (c.phone?'<a href="tel:'+escapeHtml(c.phone.replace(/\s+/g,''))+'" class="flex items-center gap-2 text-[13px] text-slate2-300 hover:text-white transition-colors" style="text-decoration:none"><svg class="w-3.5 h-3.5 text-slate2-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.5 2.1L8 9.6a16 16 0 006 6l1.2-1.1a2 2 0 012.1-.5c.8.3 1.7.5 2.6.6a2 2 0 011.7 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>'+escapeHtml(c.phone)+'</a>':'')+
+    '</div>';
+  }
+  return '<div class="glass card-hover rounded-2xl p-5 flex flex-col">'+
+    '<div class="flex items-start gap-3 mb-3">'+
+      '<div class="w-11 h-11 flex-none rounded-xl grid place-items-center font-display font-600 text-sm" style="background:'+col+'1f;border:1px solid '+col+'55;color:'+col+'">'+escapeHtml(initials(c.name).toUpperCase())+'</div>'+
+      '<div class="min-w-0 flex-1"><div class="flex items-center gap-2 flex-wrap"><span class="font-display text-white text-base truncate">'+escapeHtml(c.name||'Société')+'</span>'+lotBadge+'</div>'+
+        (c.trade?'<div class="text-xs mt-0.5" style="color:'+col+'">'+escapeHtml(c.trade)+'</div>':'<div class="text-xs text-slate2-500 mt-0.5">Corps d\'état non précisé</div>')+'</div>'+
+    '</div>'+
+    contact+
+    '<div class="pt-3 mt-3 border-t border-white/5">'+
+      '<p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500 mb-2">Chantiers</p>'+
+      '<div class="flex items-center gap-1.5 flex-wrap">'+chips+'</div>'+
+    '</div>'+
+  '</div>';
+}
+
 function render(){
   var rows=STATE.companies.filter(function(c){
     if(STATE.proj && !STATE.links.some(function(l){return l.company_id===c.id&&l.project_id===STATE.proj;})) return false;
@@ -295,31 +321,63 @@ function render(){
       '<p class="text-sm text-slate2-500 mt-1">'+(STATE.canEdit?'Ajoutez une société avec le bouton « Ajouter une entreprise ».':'Les entreprises affectées apparaîtront ici.')+'</p></div>';
     return;
   }
-  list.className='grid sm:grid-cols-2 lg:grid-cols-3 gap-4';
-  list.innerHTML=rows.map(function(c){
-    var col=tradeColor(c.trade); var chs=chantiersOf(c.id);
-    var chips = chs.length ? chs.map(function(n){return '<span class="chip">'+escapeHtml(n)+'</span>';}).join('') : '<span class="text-[11px] text-slate2-500">Non affectée</span>';
-    var lotBadge = c.lot ? '<span class="chip font-mono" style="color:'+col+';border-color:'+col+'55;background:'+col+'14">Lot '+escapeHtml(c.lot)+'</span>' : (c.type&&c.type!=='entreprise'?'<span class="chip" style="color:#5EEAD4;border-color:rgba(45,212,191,.35);background:rgba(45,212,191,.08)">'+escapeHtml(TYPE_LABEL[c.type]||c.type)+'</span>':'');
-    var contact='';
-    if(c.contact_name||c.email||c.phone){
-      contact='<div class="pt-3 mt-3 border-t border-white/5 space-y-1.5">'+
-        (c.contact_name?'<div class="flex items-center gap-2 text-[13px] text-slate2-300"><svg class="w-3.5 h-3.5 text-slate2-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke-linecap="round" stroke-linejoin="round"/></svg>'+escapeHtml(c.contact_name)+'</div>':'')+
-        (c.email?'<a href="mailto:'+escapeHtml(c.email)+'" class="flex items-center gap-2 text-[13px] text-azure-300 hover:text-azure-400 transition-colors truncate" style="text-decoration:none"><svg class="w-3.5 h-3.5 flex-none text-slate2-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7l9 6 9-6M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="truncate">'+escapeHtml(c.email)+'</span></a>':'')+
-        (c.phone?'<a href="tel:'+escapeHtml(c.phone.replace(/\s+/g,''))+'" class="flex items-center gap-2 text-[13px] text-slate2-300 hover:text-white transition-colors" style="text-decoration:none"><svg class="w-3.5 h-3.5 text-slate2-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.5 2.1L8 9.6a16 16 0 006 6l1.2-1.1a2 2 0 012.1-.5c.8.3 1.7.5 2.6.6a2 2 0 011.7 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>'+escapeHtml(c.phone)+'</a>':'')+
-      '</div>';
-    }
-    return '<div class="glass card-hover rounded-2xl p-5 flex flex-col">'+
-      '<div class="flex items-start gap-3 mb-3">'+
-        '<div class="w-11 h-11 flex-none rounded-xl grid place-items-center font-display font-600 text-sm" style="background:'+col+'1f;border:1px solid '+col+'55;color:'+col+'">'+escapeHtml(initials(c.name).toUpperCase())+'</div>'+
-        '<div class="min-w-0 flex-1"><div class="flex items-center gap-2 flex-wrap"><span class="font-display text-white text-base truncate">'+escapeHtml(c.name||'Société')+'</span>'+lotBadge+'</div>'+
-          (c.trade?'<div class="text-xs mt-0.5" style="color:'+col+'">'+escapeHtml(c.trade)+'</div>':'<div class="text-xs text-slate2-500 mt-0.5">Corps d\'état non précisé</div>')+'</div>'+
-      '</div>'+
-      contact+
-      '<div class="pt-3 mt-3 border-t border-white/5">'+
-        '<p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate2-500 mb-2">Chantiers</p>'+
-        '<div class="flex items-center gap-1.5 flex-wrap">'+chips+'</div>'+
-      '</div>'+
-    '</div>';
+
+  /* ── Mode "Grouper par corps d'état" : actif si filtre type=entreprise ── */
+  var groupByTrade = (STATE.type === 'entreprise');
+  if(!groupByTrade){
+    list.className='grid sm:grid-cols-2 lg:grid-cols-3 gap-4';
+    list.innerHTML=rows.map(cardHtml).join('');
+    return;
+  }
+
+  // Grouper par corps d'état, trier par numéro de lot puis alpha
+  var groups = {};
+  rows.forEach(function(c){
+    var key = (c.trade||'').trim() || 'Corps d\'état non précisé';
+    (groups[key] = groups[key] || []).push(c);
+  });
+  var entries = Object.keys(groups).map(function(k){
+    var minLot = null;
+    groups[k].forEach(function(c){
+      if(c.lot != null && c.lot !== ''){
+        var n = parseInt(String(c.lot).replace(/[^0-9]/g,''), 10);
+        if(!isNaN(n) && (minLot===null || n<minLot)) minLot = n;
+      }
+    });
+    // Tri interne : par lot puis nom
+    groups[k].sort(function(a,b){
+      var la = parseInt(String(a.lot||'').replace(/[^0-9]/g,''),10);
+      var lb = parseInt(String(b.lot||'').replace(/[^0-9]/g,''),10);
+      if(!isNaN(la) && !isNaN(lb) && la!==lb) return la-lb;
+      if(!isNaN(la) && isNaN(lb)) return -1;
+      if(isNaN(la) && !isNaN(lb)) return 1;
+      return (a.name||'').localeCompare(b.name||'','fr');
+    });
+    return { trade:k, items:groups[k], minLot:minLot };
+  });
+  entries.sort(function(a,b){
+    if(a.minLot!=null && b.minLot!=null) return a.minLot - b.minLot;
+    if(a.minLot!=null) return -1;
+    if(b.minLot!=null) return 1;
+    return a.trade.localeCompare(b.trade,'fr');
+  });
+
+  list.className = '';
+  list.innerHTML = entries.map(function(g){
+    var col = tradeColor(g.trade);
+    var lotChip = g.minLot != null
+      ? '<span class="font-mono text-[10px] tracking-[0.25em] uppercase" style="color:'+col+';opacity:.85">Lot '+(g.minLot<10?'0':'')+g.minLot+'</span>'
+      : '';
+    var count = g.items.length;
+    return '<section class="mb-8">'+
+      '<header class="flex items-center gap-3 mb-3 pb-2.5" style="border-bottom:1px solid '+col+'33">'+
+        '<span class="w-2.5 h-2.5 rounded-full" style="background:'+col+';box-shadow:0 0 12px '+col+'aa"></span>'+
+        '<h3 class="font-display text-base font-700 text-white">'+escapeHtml(g.trade)+'</h3>'+
+        lotChip+
+        '<span class="font-mono text-[10px] text-slate2-500 ml-auto">'+count+' entreprise'+(count>1?'s':'')+'</span>'+
+      '</header>'+
+      '<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">'+g.items.map(cardHtml).join('')+'</div>'+
+    '</section>';
   }).join('');
 }
 
