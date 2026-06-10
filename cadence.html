@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadence Architectes — Qui sommes-nous ? · AXION</title>
+<meta name="description" content="Cadence Architectes Associés, Paris 12e : 5 associés et une équipe pluridisciplinaire — architectes, maîtres d'œuvre, économistes de la construction. Depuis 1985." />
+<meta name="theme-color" content="#0A1628">
+
+<link rel="icon" type="image/png" href="assets/img/logo-axion-icon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui'],
+          sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        },
+        colors: {
+          ink:    { 900:'#070A12', 800:'#0A0E1A', 700:'#0D1320', 600:'#111827', 500:'#1A2233' },
+          azure:  { 300:'#93C5FD', 400:'#60A5FA', 500:'#3B82F6', 600:'#2563EB' },
+          cyan:   { 400:'#38BDF8' },
+          slate2: { 300:'#CBD5E1', 400:'#94A3B8', 500:'#64748B' },
+          gold:   { 400:'#D4A946', 500:'#C9A95C' },
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  :root { color-scheme: dark; }
+  html, body { background: #0A1628; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; }
+  .font-display { font-family: 'Space Grotesk', sans-serif; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  .grid-faint { background-image: linear-gradient(rgba(148,163,184,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.05) 1px, transparent 1px); background-size: 46px 46px; }
+  .bg-stage { position: relative; }
+  .bg-stage::before { content:""; position:absolute; top:-18%; left:50%; transform:translateX(-50%);
+    width:1100px; height:700px; pointer-events:none;
+    background: radial-gradient(ellipse at center, rgba(59,130,246,.20), rgba(56,189,248,.07) 40%, transparent 70%);
+    filter: blur(20px); }
+
+  .glass { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  .glass-strong { background: rgba(13,19,32,.72); border: 1px solid rgba(255,255,255,.10); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  .card-hover { transition: transform .4s cubic-bezier(.2,.7,.1,1), border-color .4s, box-shadow .4s; }
+  .card-hover:hover { transform: translateY(-4px); border-color: rgba(96,165,250,.35); box-shadow: 0 24px 50px -24px rgba(59,130,246,.45); }
+
+  .btn-azure { background: linear-gradient(135deg,#3B82F6,#2563EB); color:#fff; box-shadow: 0 10px 30px -10px rgba(59,130,246,.6); transition: transform .25s, box-shadow .25s; }
+  .btn-azure:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -12px rgba(59,130,246,.7); }
+  .btn-outline { border:1px solid rgba(255,255,255,.18); color:#E2E8F0; transition: background .25s, border-color .25s; background:transparent; }
+  .btn-outline:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.32); }
+
+  .text-grad { background: linear-gradient(120deg,#60A5FA,#38BDF8); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .gold-line { height:1.5px; background: linear-gradient(90deg, transparent, #C9A95C, transparent); }
+
+  /* Portraits */
+  .portrait-frame { position:relative; aspect-ratio:4/5; overflow:hidden; border-radius:16px;
+    background: linear-gradient(135deg, #0F2447 0%, #1A2233 100%); border:1px solid rgba(255,255,255,.08); }
+  .portrait-frame img { width:100%; height:100%; object-fit:cover; transition: transform 1s cubic-bezier(.2,.7,.1,1); filter: saturate(.92); }
+  .portrait-frame:hover img { transform: scale(1.04); }
+  .portrait-round { position:relative; aspect-ratio:1/1; overflow:hidden; border-radius:50%;
+    background: linear-gradient(135deg, #0F2447 0%, #1A2233 100%); border:1px solid rgba(96,165,250,.22); }
+  .portrait-round img { width:100%; height:100%; object-fit:cover; filter: saturate(.92); }
+
+  .reveal { opacity:0; transform: translateY(24px); transition: opacity .9s cubic-bezier(.2,.7,.1,1), transform .9s cubic-bezier(.2,.7,.1,1); }
+  .reveal.is-visible { opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity:1; transform:none; transition:none; } }
+
+  a:focus-visible, button:focus-visible { outline:2px solid #60A5FA; outline-offset:3px; border-radius:4px; }
+  ::selection { background:#2563EB; color:#fff; }
+  ::-webkit-scrollbar { width:10px; } ::-webkit-scrollbar-thumb { background:#1A2233; border-radius:8px; }
+
+  @view-transition { navigation: auto; }
+</style>
+</head>
+
+<body class="grid-faint">
+
+<!-- ============================ HEADER ============================ -->
+<header class="fixed top-4 left-4 right-4 z-50">
+  <nav class="glass-strong rounded-2xl max-w-6xl mx-auto px-5 md:px-6 py-3 flex items-center justify-between">
+    <a href="app.html" class="flex items-center gap-2.5">
+      <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-9 h-9 rounded-xl" style="border:1px solid rgba(96,165,250,.2)" />
+      <span class="font-display text-lg font-700 tracking-[0.22em] text-white hidden sm:inline">AXION</span>
+    </a>
+    <ul class="hidden md:flex items-center gap-7 text-sm text-slate2-400">
+      <li><a href="#associes" class="hover:text-white transition-colors">Associés</a></li>
+      <li><a href="#equipe" class="hover:text-white transition-colors">Équipe</a></li>
+      <li><a href="#competences" class="hover:text-white transition-colors">Compétences</a></li>
+      <li><a href="metiers.html" class="hover:text-white transition-colors">Les métiers</a></li>
+    </ul>
+    <a href="app.html" class="btn-outline rounded-xl px-4 py-2 text-sm font-medium inline-flex items-center gap-2">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M11 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Tableau de bord
+    </a>
+  </nav>
+</header>
+
+<main class="bg-stage overflow-hidden">
+
+  <!-- ===== HERO ===== -->
+  <section class="relative pt-36 md:pt-44 pb-16 md:pb-20">
+    <div class="max-w-6xl mx-auto px-6">
+      <nav aria-label="Fil d'Ariane" class="reveal mb-8 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-slate2-500">
+        <a href="app.html" class="hover:text-white transition-colors">AXION</a>
+        <span class="text-slate2-500">/</span>
+        <span class="text-azure-300">L'agence</span>
+      </nav>
+
+      <div class="grid lg:grid-cols-12 gap-10 lg:gap-14 items-end">
+        <div class="lg:col-span-7 reveal">
+          <p class="font-mono text-[11px] tracking-[0.3em] uppercase text-azure-400 mb-4">Cadence Architectes Associés · Paris 12e · Depuis 1985</p>
+          <h1 class="font-display text-4xl md:text-6xl font-700 leading-[1.03] tracking-tight text-white">
+            Qui sommes-<span class="text-grad">nous&nbsp;?</span>
+          </h1>
+          <div class="gold-line w-36 my-6"></div>
+          <p class="max-w-xl text-base md:text-lg text-slate2-300 leading-relaxed">
+            Cadence rassemble architectes, maîtres d'œuvre, économistes de la construction, designers et collaborateurs.
+            Une approche complète, un seul interlocuteur — depuis quarante ans au service de la ville et de ses habitants.
+          </p>
+          <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-slate2-400">
+            <span class="inline-flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>Inscrits à l'Ordre des Architectes</span>
+            <span class="inline-flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>Assurance RCP MAF</span>
+            <span class="inline-flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>Quarante ans d'expérience</span>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 reveal" style="transition-delay:120ms">
+          <div class="grid grid-cols-2 gap-3 md:gap-4">
+            <div class="glass rounded-2xl p-5 md:p-6">
+              <p class="font-display text-3xl md:text-4xl text-white leading-none">1985</p>
+              <p class="font-mono text-[10px] uppercase tracking-[0.2em] text-slate2-500 mt-3 leading-tight">Année de<br/>fondation</p>
+            </div>
+            <div class="glass rounded-2xl p-5 md:p-6">
+              <p class="font-display text-3xl md:text-4xl text-white leading-none">5</p>
+              <p class="font-mono text-[10px] uppercase tracking-[0.2em] text-slate2-500 mt-3 leading-tight">Associés<br/>au capital</p>
+            </div>
+            <div class="glass rounded-2xl p-5 md:p-6">
+              <p class="font-display text-3xl md:text-4xl text-white leading-none">15</p>
+              <p class="font-mono text-[10px] uppercase tracking-[0.2em] text-slate2-500 mt-3 leading-tight">Personnes<br/>à l'agence</p>
+            </div>
+            <div class="glass rounded-2xl p-5 md:p-6">
+              <p class="font-display text-3xl md:text-4xl text-white leading-none">Pluri-</p>
+              <p class="font-mono text-[10px] uppercase tracking-[0.2em] text-slate2-500 mt-3 leading-tight">disciplinaire<br/>(archi · MOE · éco)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== LES ASSOCIÉS ===== -->
+  <section id="associes" class="relative py-16 md:py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12 reveal">
+        <div>
+          <p class="font-mono text-[11px] uppercase tracking-[0.3em] text-azure-400 mb-3">01 · Les associés</p>
+          <h2 class="font-display text-3xl md:text-5xl font-700 leading-[1.05] tracking-tight text-white">
+            Cinq visages,<br/><span class="text-grad">un même cap.</span>
+          </h2>
+        </div>
+        <p class="text-slate2-400 max-w-md text-base leading-relaxed">
+          Architectes, maîtres d'œuvre et économiste de la construction associés au capital. Une direction collégiale, une vision commune.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+
+        <article class="reveal glass rounded-2xl p-5 card-hover">
+          <div class="portrait-frame mb-5">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2019/03/Didier.jpg" alt="Portrait de Didier Clarisse" loading="lazy" />
+          </div>
+          <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-gold-500 mb-2">Architecte fondateur · Co-gérant</p>
+          <h3 class="font-display text-xl text-white leading-tight">Didier Clarisse</h3>
+          <p class="text-xs text-slate2-400 mt-2.5">Architecte DESA · Inscrit à l'Ordre des Architectes</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-5 card-hover" style="transition-delay:60ms">
+          <div class="portrait-frame mb-5">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2019/03/Florian.jpg" alt="Portrait de Florian Clarisse" loading="lazy" />
+          </div>
+          <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-gold-500 mb-2">Maître d'œuvre · Co-gérant</p>
+          <h3 class="font-display text-xl text-white leading-tight">Florian Clarisse</h3>
+          <p class="text-xs text-slate2-400 mt-2.5">Maître d'œuvre · Pilotage des opérations résidentielles</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-5 card-hover" style="transition-delay:120ms">
+          <div class="portrait-frame mb-5">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2019/03/Pierre.jpg" alt="Portrait de Pierre Depreux" loading="lazy" />
+          </div>
+          <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-gold-500 mb-2">Maître d'œuvre · Associé</p>
+          <h3 class="font-display text-xl text-white leading-tight">Pierre Depreux</h3>
+          <p class="text-xs text-slate2-400 mt-2.5">Architecte DESLT</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-5 card-hover" style="transition-delay:180ms">
+          <div class="portrait-frame mb-5">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2022/03/Justin-portrait-scaled.jpg" alt="Portrait de Justin Jaéglé" loading="lazy" />
+          </div>
+          <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-gold-500 mb-2">Économiste · Associé</p>
+          <h3 class="font-display text-xl text-white leading-tight">Justin Jaéglé</h3>
+          <p class="text-xs text-slate2-400 mt-2.5">Économiste de la construction · Licence MOE architecturale &amp; technique</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-5 card-hover" style="transition-delay:240ms">
+          <div class="portrait-frame mb-5">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2019/03/Fanny.jpg" alt="Portrait de Fanny Meret" loading="lazy" />
+          </div>
+          <p class="font-mono text-[10px] uppercase tracking-[0.22em] text-gold-500 mb-2">Architecte · Associée</p>
+          <h3 class="font-display text-xl text-white leading-tight">Fanny Meret</h3>
+          <p class="text-xs text-slate2-400 mt-2.5">Architecte DE HMONP · Inscrite à l'Ordre · Diplômée Business Management Paris-Dauphine</p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== L'ÉQUIPE ===== -->
+  <section id="equipe" class="relative py-16 md:py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12 reveal">
+        <div>
+          <p class="font-mono text-[11px] uppercase tracking-[0.3em] text-azure-400 mb-3">02 · L'équipe</p>
+          <h2 class="font-display text-3xl md:text-5xl font-700 leading-[1.05] tracking-tight text-white">
+            Dix collaborateurs,<br/><span class="text-grad">la richesse des parcours.</span>
+          </h2>
+        </div>
+        <p class="text-slate2-400 max-w-md text-base leading-relaxed">
+          Architectes, designers, économistes, juristes, alternants — chaque profil apporte une compétence spécifique aux projets de l'agence.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
+
+        <article class="reveal glass rounded-2xl p-4 md:p-5 card-hover text-center">
+          <div class="portrait-round mb-4 mx-auto" style="max-width:120px">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2019/03/Sylvie_carr%C3%A9-300x300.jpg" alt="Portrait de Sylvie Rigault" loading="lazy" />
+          </div>
+          <h3 class="font-display text-base text-white leading-tight">Sylvie Rigault</h3>
+          <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-azure-300 mt-2">Collaboratrice d'architecte</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-4 md:p-5 card-hover text-center" style="transition-delay:40ms">
+          <div class="portrait-round mb-4 mx-auto" style="max-width:120px">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2019/03/Seungsig_carr%C3%A9-300x300.jpg" alt="Portrait de SeungSig Choi" loading="lazy" />
+          </div>
+          <h3 class="font-display text-base text-white leading-tight">SeungSig Choi</h3>
+          <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-azure-300 mt-2">Collaborateur d'architecte</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-4 md:p-5 card-hover text-center" style="transition-delay:80ms">
+          <div class="portrait-round mb-4 mx-auto" style="max-width:120px">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2021/06/Cecile_carre-1-300x300.jpg" alt="Portrait de Cécile Rolland" loading="lazy" />
+          </div>
+          <h3 class="font-display text-base text-white leading-tight">Cécile Rolland</h3>
+          <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-azure-300 mt-2">Cheffe de projet · Architecte DPLG</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-4 md:p-5 card-hover text-center" style="transition-delay:120ms">
+          <div class="portrait-round mb-4 mx-auto" style="max-width:120px">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2019/03/Donny_carr%C3%A9-300x300.jpg" alt="Portrait de Donny De Olim" loading="lazy" />
+          </div>
+          <h3 class="font-display text-base text-white leading-tight">Donny De Olim</h3>
+          <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-azure-300 mt-2">Collaborateur d'architecte · Designer 3D</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-4 md:p-5 card-hover text-center" style="transition-delay:160ms">
+          <div class="portrait-round mb-4 mx-auto" style="max-width:120px">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2019/03/Rachida_carr%C3%A9-300x300.jpg" alt="Portrait de Rachida Belabbassi" loading="lazy" />
+          </div>
+          <h3 class="font-display text-base text-white leading-tight">Rachida Belabbassi</h3>
+          <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-azure-300 mt-2">Responsable administrative &amp; financière</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-4 md:p-5 card-hover text-center" style="transition-delay:200ms">
+          <div class="portrait-round mb-4 mx-auto" style="max-width:120px">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2024/10/Oscar_carre-300x300.jpg" alt="Portrait d'Oscar Penarette Bello" loading="lazy" />
+          </div>
+          <h3 class="font-display text-base text-white leading-tight">Oscar Penarette Bello</h3>
+          <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-azure-300 mt-2">Alternant MOE exécution · Architecte DE</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-4 md:p-5 card-hover text-center" style="transition-delay:240ms">
+          <div class="portrait-round mb-4 mx-auto" style="max-width:120px">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2024/10/Laura-Carpentier_carre-300x300.jpg" alt="Portrait de Laura Carpentier" loading="lazy" />
+          </div>
+          <h3 class="font-display text-base text-white leading-tight">Laura Carpentier</h3>
+          <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-azure-300 mt-2">Alternante en architecture</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-4 md:p-5 card-hover text-center" style="transition-delay:280ms">
+          <div class="portrait-round mb-4 mx-auto" style="max-width:120px">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2024/10/Marouane_carre-300x300.jpg" alt="Portrait de Marouane Fitouri" loading="lazy" />
+          </div>
+          <h3 class="font-display text-base text-white leading-tight">Marouane Fitouri</h3>
+          <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-azure-300 mt-2">Collaborateur d'architecte</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-4 md:p-5 card-hover text-center" style="transition-delay:320ms">
+          <div class="portrait-round mb-4 mx-auto" style="max-width:120px">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2024/10/Camille_carre-300x300.jpg" alt="Portrait de Camille Havet" loading="lazy" />
+          </div>
+          <h3 class="font-display text-base text-white leading-tight">Camille Havet</h3>
+          <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-azure-300 mt-2">Alternante en économie de la construction</p>
+        </article>
+
+        <article class="reveal glass rounded-2xl p-4 md:p-5 card-hover text-center" style="transition-delay:360ms">
+          <div class="portrait-round mb-4 mx-auto" style="max-width:120px">
+            <img src="https://www.cadence-architectes.fr/wp-content/uploads/2024/01/Norchene-carre-300x300.jpg" alt="Portrait de Norchene Ben Abdallah" loading="lazy" />
+          </div>
+          <h3 class="font-display text-base text-white leading-tight">Norchene Ben Abdallah</h3>
+          <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-azure-300 mt-2">Collaboratrice d'architecte</p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== COMPÉTENCES TRANSVERSES ===== -->
+  <section id="competences" class="relative py-16 md:py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="reveal max-w-3xl mb-12">
+        <p class="font-mono text-[11px] uppercase tracking-[0.3em] text-azure-400 mb-3">03 · Nos compétences transverses</p>
+        <h2 class="font-display text-3xl md:text-5xl font-700 leading-[1.05] tracking-tight text-white">
+          Quarante ans d'expertise,<br/><span class="text-grad">au service de tous les programmes.</span>
+        </h2>
+        <p class="mt-5 text-slate2-400 max-w-2xl text-base leading-relaxed">
+          La diversité des profils et des parcours nous permet d'aborder une grande variété de programmes — du logement collectif aux équipements, de la construction neuve à la réhabilitation patrimoniale.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        <article class="reveal glass rounded-2xl p-6 card-hover">
+          <h3 class="font-display text-lg text-white mb-3">Logement &amp; résidentiel</h3>
+          <p class="text-sm text-slate2-400 leading-relaxed">Logements collectifs, logement social, opérations mixtes commerce, livraison VEFA.</p>
+        </article>
+        <article class="reveal glass rounded-2xl p-6 card-hover" style="transition-delay:60ms">
+          <h3 class="font-display text-lg text-white mb-3">Médico-social</h3>
+          <p class="text-sm text-slate2-400 leading-relaxed">EHPAD, maisons de santé, résidences spécialisées. Une expertise sur les programmes complexes au service de l'accueil.</p>
+        </article>
+        <article class="reveal glass rounded-2xl p-6 card-hover" style="transition-delay:120ms">
+          <h3 class="font-display text-lg text-white mb-3">Équipements &amp; ERP</h3>
+          <p class="text-sm text-slate2-400 leading-relaxed">Campus universitaire, centres d'affaires, restaurants, bâtiments industriels &amp; vinicoles.</p>
+        </article>
+        <article class="reveal glass rounded-2xl p-6 card-hover" style="transition-delay:180ms">
+          <h3 class="font-display text-lg text-white mb-3">Patrimoine &amp; MH</h3>
+          <p class="text-sm text-slate2-400 leading-relaxed">Restauration de Monuments Historiques, secteurs protégés, expertise ABF.</p>
+        </article>
+        <article class="reveal glass rounded-2xl p-6 card-hover" style="transition-delay:240ms">
+          <h3 class="font-display text-lg text-white mb-3">Réhabilitation</h3>
+          <p class="text-sm text-slate2-400 leading-relaxed">Restructuration lourde, réhabilitation de logements, transformation de locaux existants.</p>
+        </article>
+        <article class="reveal glass rounded-2xl p-6 card-hover" style="transition-delay:300ms">
+          <h3 class="font-display text-lg text-white mb-3">Architecture intérieure</h3>
+          <p class="text-sm text-slate2-400 leading-relaxed">Aménagement, design, agencement sur-mesure pour les espaces tertiaires et résidentiels.</p>
+        </article>
+        <article class="reveal glass rounded-2xl p-6 card-hover" style="transition-delay:360ms">
+          <h3 class="font-display text-lg text-white mb-3">Développement durable</h3>
+          <p class="text-sm text-slate2-400 leading-relaxed">RE2020, conception bioclimatique, matériaux biosourcés, économie circulaire.</p>
+        </article>
+        <article class="reveal glass rounded-2xl p-6 card-hover" style="transition-delay:420ms">
+          <h3 class="font-display text-lg text-white mb-3">Végétalisation urbaine</h3>
+          <p class="text-sm text-slate2-400 leading-relaxed">Toitures-terrasses, jardins partagés, intégration paysagère, biodiversité urbaine.</p>
+        </article>
+      </div>
+
+      <!-- CTA -->
+      <div class="reveal mt-14 glass-strong rounded-2xl p-7 md:p-9 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+          <p class="font-display text-xl md:text-2xl text-white">Un projet à nous confier&nbsp;?</p>
+          <p class="text-sm text-slate2-400 mt-2 max-w-xl">Promoteurs, opérateurs, particuliers, syndics — discutons-en autour d'un café à l'agence ou en visio.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 flex-shrink-0">
+          <a href="mailto:agence@cadence-architectes.fr" class="btn-azure rounded-xl px-6 py-3.5 text-sm font-medium inline-flex items-center gap-2">
+            Nous contacter
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="https://www.cadence-architectes.fr" target="_blank" rel="noopener" class="btn-outline rounded-xl px-5 py-3.5 text-sm font-medium">Site de l'agence</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================ FOOTER ============================ -->
+<footer class="border-t border-white/10 py-10 mt-4">
+  <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2.5">
+      <img src="assets/img/logo-axion-icon.png" alt="AXION" class="w-7 h-7 rounded-lg" />
+      <span class="font-display tracking-[0.22em] text-slate2-300">AXION</span>
+    </div>
+    <p class="text-xs text-slate2-500 text-center">Cadence Architectes Associés · 16-18 rue Dubrunfaut, 75012 Paris · <a href="mailto:agence@cadence-architectes.fr" class="hover:text-white transition-colors">agence@cadence-architectes.fr</a></p>
+    <a href="app.html" class="text-xs text-slate2-400 hover:text-white transition-colors">Retour au tableau de bord</a>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var els = document.querySelectorAll('.reveal');
+    if (reduce || !('IntersectionObserver' in window)) {
+      els.forEach(function (e) { e.classList.add('is-visible'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function (e) { io.observe(e); });
+  })();
+</script>
+
+</body>
+</html>

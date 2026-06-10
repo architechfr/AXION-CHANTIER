@@ -88,9 +88,9 @@
     background-size: cover; background-position: center 30%; }
   .hero-band.has-bg .hero-svg { display:none; } /* l'image contient déjà grue + Gantt + réseau */
   /* ── Roue des métiers ── */
-  #wheelNav { position:absolute;right:0;top:0;bottom:0;width:46%;display:none;align-items:center;justify-content:center;pointer-events:none; }
+  #wheelNav { position:absolute;right:0;top:0;bottom:0;width:50%;display:none;align-items:center;justify-content:center;pointer-events:none; }
   .hero-band.has-bg #wheelNav { display:flex; }
-  #wheelNav svg { height:88%; max-height:440px; aspect-ratio:1; width:auto; }
+  #wheelNav svg { height:96%; max-height:540px; aspect-ratio:1; width:auto; }
   .wnode { cursor:pointer;transition:all .2s; }
   .wnode circle.bg { transition:fill .2s,stroke .2s; }
   .wnode:hover circle.bg { fill:rgba(59,130,246,.45)!important;stroke:#93C5FD!important; }
@@ -263,79 +263,83 @@
             <line x1="220" y1="220" x2="57" y2="244"/><line x1="220" y1="220" x2="70" y2="151"/>
             <line x1="220" y1="220" x2="131" y2="81"/>
           </g>
-          <!-- centre AXION -->
-          <circle cx="220" cy="220" r="46" fill="rgba(10,14,26,.88)" stroke="#3B82F6" stroke-width="1.8" filter="url(#nf)"/>
-          <circle cx="220" cy="220" r="38" fill="rgba(59,130,246,.06)" stroke="rgba(96,165,250,.25)" stroke-width="1"/>
-          <polygon points="220,199 229,216 211,216" fill="#60A5FA" opacity=".9"/>
-          <text x="220" y="232" text-anchor="middle" fill="rgba(255,255,255,.65)" font-size="8.5" font-family="'JetBrains Mono',monospace" letter-spacing="2">AXION</text>
+          <!-- centre CADENCE → page Qui sommes-nous -->
+          <a href="cadence.html" style="pointer-events:all" aria-label="Cadence Architectes — qui sommes-nous ?"><g class="wnode">
+            <circle class="bg" cx="220" cy="220" r="58" fill="rgba(10,14,26,.9)" stroke="#3B82F6" stroke-width="1.8" filter="url(#nf)"/>
+            <circle cx="220" cy="220" r="49" fill="rgba(59,130,246,.06)" stroke="rgba(96,165,250,.25)" stroke-width="1"/>
+            <polygon points="220,190 231,210 209,210" fill="#60A5FA" opacity=".9"/>
+            <text x="220" y="227" text-anchor="middle" fill="#E2E8F0" font-size="11" font-weight="700" font-family="'JetBrains Mono',monospace" letter-spacing="2">CADENCE</text>
+            <line x1="200" y1="233" x2="240" y2="233" stroke="#C9A95C" stroke-width="1" opacity=".8"/>
+            <text x="220" y="245" text-anchor="middle" fill="rgba(255,255,255,.78)" font-size="7.2" font-family="sans-serif" letter-spacing=".5">QUI SOMMES-NOUS ?</text>
+          </g></a>
 
           <!-- NŒUDS CLIQUABLES -->
           <!-- 0 : MAÎTRE D'OUVRAGE (220,55) -->
           <a href="entreprises.html?type=moa" style="pointer-events:all"><g class="wnode">
-            <circle class="bg" cx="220" cy="55" r="24" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
-            <text x="220" y="51" text-anchor="middle" fill="#93C5FD" font-size="9.5" font-weight="700" font-family="sans-serif">MOA</text>
-            <text x="220" y="62" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">MAÎTRE</text>
-            <text x="220" y="70" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">D'OUVRAGE</text>
+            <circle class="bg" cx="220" cy="55" r="33" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="220" y="52" text-anchor="middle" fill="#BFDBFE" font-size="13" font-weight="700" font-family="sans-serif">MOA</text>
+            <text x="220" y="64" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="7.5" font-family="sans-serif">MAÎTRE</text>
+            <text x="220" y="73" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="7.5" font-family="sans-serif">D'OUVRAGE</text>
           </g></a>
           <!-- 1 : AMO (309,81) -->
           <a href="entreprises.html?type=amo" style="pointer-events:all"><g class="wnode">
-            <circle class="bg" cx="309" cy="81" r="22" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
-            <text x="309" y="77" text-anchor="middle" fill="#93C5FD" font-size="9.5" font-weight="700" font-family="sans-serif">AMO</text>
-            <text x="309" y="90" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">AMO</text>
+            <circle class="bg" cx="309" cy="81" r="31" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="309" y="78" text-anchor="middle" fill="#BFDBFE" font-size="13" font-weight="700" font-family="sans-serif">AMO</text>
+            <text x="309" y="93" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="8" font-family="sans-serif">ASSIST. MOA</text>
           </g></a>
           <!-- 2 : ARCHITECTE (370,151) — type moe -->
           <a href="entreprises.html?type=moe" style="pointer-events:all"><g class="wnode">
-            <circle class="bg" cx="370" cy="151" r="22" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
-            <text x="370" y="147" text-anchor="middle" fill="#93C5FD" font-size="9.5" font-weight="700" font-family="sans-serif">MOE</text>
-            <text x="370" y="160" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">ARCHITECTE</text>
+            <circle class="bg" cx="370" cy="151" r="31" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="370" y="148" text-anchor="middle" fill="#BFDBFE" font-size="13" font-weight="700" font-family="sans-serif">MOE</text>
+            <text x="370" y="163" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="8" font-family="sans-serif">ARCHITECTE</text>
           </g></a>
           <!-- 3 : SPS (383,244) -->
           <a href="entreprises.html?type=sps" style="pointer-events:all"><g class="wnode">
-            <circle class="bg" cx="383" cy="244" r="22" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
-            <text x="383" y="240" text-anchor="middle" fill="#93C5FD" font-size="9.5" font-weight="700" font-family="sans-serif">SPS</text>
-            <text x="383" y="253" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">COORDO. SPS</text>
+            <circle class="bg" cx="383" cy="244" r="31" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="383" y="241" text-anchor="middle" fill="#BFDBFE" font-size="13" font-weight="700" font-family="sans-serif">SPS</text>
+            <text x="383" y="256" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="8" font-family="sans-serif">COORDO. SPS</text>
           </g></a>
           <!-- 4 : BUREAU D'ÉTUDE (345,328) -->
           <a href="entreprises.html?type=bet" style="pointer-events:all"><g class="wnode">
-            <circle class="bg" cx="345" cy="328" r="22" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
-            <text x="345" y="324" text-anchor="middle" fill="#93C5FD" font-size="9.5" font-weight="700" font-family="sans-serif">BET</text>
-            <text x="345" y="337" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">BUR. D'ÉTUDE</text>
+            <circle class="bg" cx="345" cy="328" r="31" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="345" y="325" text-anchor="middle" fill="#BFDBFE" font-size="13" font-weight="700" font-family="sans-serif">BET</text>
+            <text x="345" y="340" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="8" font-family="sans-serif">BUR. D'ÉTUDE</text>
           </g></a>
           <!-- 5 : CONTRÔLE (267,378) -->
           <a href="entreprises.html?type=controle" style="pointer-events:all"><g class="wnode">
-            <circle class="bg" cx="267" cy="378" r="22" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
-            <text x="267" y="374" text-anchor="middle" fill="#93C5FD" font-size="9.5" font-weight="700" font-family="sans-serif">CTRL</text>
-            <text x="267" y="387" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">CONTRÔLE</text>
+            <circle class="bg" cx="267" cy="378" r="31" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="267" y="375" text-anchor="middle" fill="#BFDBFE" font-size="13" font-weight="700" font-family="sans-serif">CTRL</text>
+            <text x="267" y="390" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="8" font-family="sans-serif">CONTRÔLE</text>
           </g></a>
           <!-- 6 : CONCESSIONNAIRE (173,378) -->
           <a href="entreprises.html?q=concessionnaire" style="pointer-events:all"><g class="wnode">
-            <circle class="bg" cx="173" cy="378" r="22" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
-            <text x="173" y="374" text-anchor="middle" fill="#93C5FD" font-size="9.5" font-weight="700" font-family="sans-serif">CONC</text>
-            <text x="173" y="387" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">CONCESS.</text>
+            <circle class="bg" cx="173" cy="378" r="31" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="173" y="375" text-anchor="middle" fill="#BFDBFE" font-size="13" font-weight="700" font-family="sans-serif">CONC</text>
+            <text x="173" y="390" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="8" font-family="sans-serif">CONCESS.</text>
           </g></a>
           <!-- 7 : FOURNISSEURS (95,328) -->
           <a href="entreprises.html?q=fournisseur" style="pointer-events:all"><g class="wnode">
-            <circle class="bg" cx="95" cy="328" r="22" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
-            <text x="95" y="324" text-anchor="middle" fill="#93C5FD" font-size="9.5" font-weight="700" font-family="sans-serif">FOUR</text>
-            <text x="95" y="337" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">FOURNISS.</text>
+            <circle class="bg" cx="95" cy="328" r="31" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="95" y="325" text-anchor="middle" fill="#BFDBFE" font-size="13" font-weight="700" font-family="sans-serif">FOUR</text>
+            <text x="95" y="340" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="8" font-family="sans-serif">FOURNISS.</text>
           </g></a>
           <!-- 8 : ENTREPRENEUR (57,244) -->
           <a href="entreprises.html?type=entreprise" style="pointer-events:all"><g class="wnode">
-            <circle class="bg" cx="57" cy="244" r="22" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
-            <text x="57" y="240" text-anchor="middle" fill="#93C5FD" font-size="9.5" font-weight="700" font-family="sans-serif">ENT</text>
-            <text x="57" y="253" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">ENTREPREN.</text>
+            <circle class="bg" cx="57" cy="244" r="31" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="57" y="241" text-anchor="middle" fill="#BFDBFE" font-size="13" font-weight="700" font-family="sans-serif">ENT</text>
+            <text x="57" y="256" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="8" font-family="sans-serif">ENTREPRISES</text>
           </g></a>
           <!-- 9 : ÉCONOMISTE (70,151) -->
           <a href="entreprises.html?q=économiste" style="pointer-events:all"><g class="wnode">
-            <circle class="bg" cx="70" cy="151" r="22" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
-            <text x="70" y="147" text-anchor="middle" fill="#93C5FD" font-size="9.5" font-weight="700" font-family="sans-serif">ECO</text>
-            <text x="70" y="160" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">ÉCONOMISTE</text>
+            <circle class="bg" cx="70" cy="151" r="31" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="70" y="148" text-anchor="middle" fill="#BFDBFE" font-size="13" font-weight="700" font-family="sans-serif">ECO</text>
+            <text x="70" y="163" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="8" font-family="sans-serif">ÉCONOMISTE</text>
           </g></a>
           <!-- 10 : MOEX (131,81) -->
           <a href="entreprises.html?q=moex" style="pointer-events:all"><g class="wnode">
-            <circle class="bg" cx="131" cy="81" r="22" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
-            <text x="131" y="77" text-anchor="middle" fill="#93C5FD" font-size="9.5" font-weight="700" font-family="sans-serif">MOEX</text>
-            <text x="131" y="90" text-anchor="middle" fill="rgba(255,255,255,.6)" font-size="6.5" font-family="sans-serif">MOE EXÉC.</text>
+            <circle class="bg" cx="131" cy="81" r="31" fill="rgba(10,14,26,.82)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="131" y="78" text-anchor="middle" fill="#BFDBFE" font-size="13" font-weight="700" font-family="sans-serif">MOEX</text>
+            <text x="131" y="93" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="8" font-family="sans-serif">MOE EXÉC.</text>
           </g></a>
         </svg>
       </div>
