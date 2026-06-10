@@ -3,7 +3,7 @@
 > **Source de vérité du projet.** Lire ce document AVANT toute action sur AXION.
 > À mettre à jour à chaque décision structurante.
 
-**Dernière mise à jour** : 9 juin 2026 · Florian Clarisse
+**Dernière mise à jour** : 10 juin 2026 · Florian Clarisse
 
 ---
 
@@ -142,6 +142,7 @@ documents
 ```
 AXION-CHANTIER/
 ├── axion.html              ← landing publique (sans login)
+├── metiers.html            ← roue des métiers publique (11 métiers → annuaire filtré)
 ├── login.html              ← page de connexion (split visuel)
 ├── reset.html              ← page de reset mot de passe (Module 1)
 ├── compte.html             ← page « Mon compte » (changer mdp)
@@ -186,6 +187,7 @@ AXION-CHANTIER/
 - **Dashboard — comptage docs/CR corrigé** (09/06) : les catégories « Dossier … » (boutons « Ouvrir le dossier OneDrive ») ne sont plus comptées comme documents/CR (ex. Iris affichait 3 CR → 2).
 - **Espace LABEL** (`chantier.html`, onglet « Espace LABEL » + onglet Membres — Phase 1, 09/06) : cloud par entreprise via **liens OneDrive** (table `label_spaces`, `supabase/label-spaces.sql`). Trois types : `lecture` (dossier parent, AMO/MOE), `entreprise` (édition d'un sous-dossier, la société), `moe` (édition complète du dossier parent — **affiché MOE/admin uniquement**, un lien d'édition global ne doit jamais fuiter vers une entreprise). **Lisa** : les liens parent `lecture` + `moe` sont en place (sous-dossiers entreprise à créer). **Formulaire MOE autonome** (coller un lien, choisir société/lot) ; bouton « Espace LABEL » par société dans Membres (matché par nom). RLS : lecture membres du chantier, **écriture MOE/admin**. ⚠️ **AXION ne gère jamais les droits de partage** (faits dans OneDrive par la MOE) — il ne fait que stocker/présenter l'URL. Testé sur Lisa (données nettoyées). **Phase 2** (`partner`) : chaque entreprise ne verra que sa carte.
 
+- **Roue des métiers** (`metiers.html`, page publique — 10/06) : roue interactive des 11 métiers d'un projet (MOA, AMO, Architecte, Économiste, MOEX, SPS, BET, Entreprises, Fournisseurs, Concessionnaire, Administratif), drawer fiche métier (rôle, missions, phase) → lien vers l'annuaire **filtré** (`entreprises.html?type=…` ou `?q=…`, chip de filtre déjà géré côté annuaire). Données dans `assets/js/metiers-data.js`, logique `assets/js/roue.js`. Lien « Les métiers » ajouté à la nav d'`axion.html`. **Complète l'annuaire, ne le remplace pas** (l'annuaire reste la donnée Supabase + gestion). ⚠️ Textes des fiches métiers = placeholder à valider Cadence. ⚠️ Les filtres `moex` / `q=économiste|fournisseur|concessionnaire|administratif` renverront « aucune entreprise » tant que ces types/mots-clés n'existent pas en base.
 - **Atelier MOE — Cohérence planning** (`moe-coherence.html`) : lit le snapshot live ChantierFlow, dérives par phase, jalons. **+ Pointage interactif (04/06)** : le MOE peut marquer une tâche « terminée » depuis AXION (table `task_progress`, override par `task_uid`) sans toucher au planning. Bouton sur chaque dérive, garde-fou dépendances (confirm si un prédécesseur n'est pas fini), section « Pointages AXION » avec annulation, audit `updated_by`/`updated_at`. Statut effectif = override sinon `task.sts`. ⚠️ **Activation** : exécuter `supabase/task_progress.sql` dans le SQL Editor.
 
 ### ⏳ En cours / prochaine étape immédiate
