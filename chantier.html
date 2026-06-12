@@ -110,6 +110,10 @@
   .btn-glass { background: var(--glass); border-color: var(--border-2); color: var(--text); backdrop-filter: blur(10px); }
   .btn-glass:hover { background: var(--glass-2); transform: translateY(-2px); }
   .btn-sm { height: 36px; padding: 0 13px; font-size: 13px; }
+  /* Sélecteur de maquettes 3D (chantiers à plusieurs modèles) */
+  .mv-chip { display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:999px; font-family:"Space Grotesk"; font-size:12.5px; font-weight:600; background:var(--glass); border:1px solid var(--border-2); color:var(--text-dim); cursor:pointer; transition:background .15s, border-color .15s, color .15s; }
+  .mv-chip:hover { background:var(--glass-2); color:var(--text); }
+  .mv-chip.on { background:rgba(59,130,246,.16); border-color:rgba(96,165,250,.45); color:#BFDBFE; }
 
   .cover-meta { display: flex; align-items: center; gap: 26px; margin-top: 18px; flex-wrap: wrap; }
   .facts { display: flex; gap: 26px; flex-wrap: wrap; }
@@ -511,49 +515,6 @@
         </div>
       </section>
 
-      <!-- Maquette 3D — visionneuse GLB en lecture seule (manipulation libre : orbite, zoom) -->
-      <section class="tab-pane" id="pane-maquette">
-        <div style="margin-bottom:14px">
-          <h3 style="margin:0 0 4px">Maquette 3D du projet</h3>
-          <p class="sub" style="color:var(--text-faint);max-width:680px">Consultation libre de la volumétrie : rotation au doigt ou à la souris, zoom à la molette ou au pincement. Mode lecture seule — la maquette ne peut pas être modifiée.</p>
-        </div>
-        <div id="mvWrap" style="position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:radial-gradient(ellipse at 50% -10%, rgba(59,130,246,.20), rgba(56,189,248,.05) 45%, transparent 70%), #0A1628">
-          <!-- Filigrane Cadence : emblème en grand derrière la maquette (model-viewer a un fond transparent) -->
-          <img src="assets/img/logo-cadence-emblem-white.png" alt="" aria-hidden="true"
-               style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(72%,640px);opacity:.09;pointer-events:none;user-select:none">
-          <!-- Logotype Cadence discret en haut à gauche -->
-          <img src="assets/img/logo-cadence-white.png" alt="Cadence Architectes Associés"
-               style="position:absolute;left:22px;top:20px;height:clamp(34px,5.5vh,56px);width:auto;opacity:.8;pointer-events:none;user-select:none;z-index:2">
-          <model-viewer id="mv3d"
-            style="width:100%;height:min(68vh,640px);min-height:420px;display:block;background:transparent;--progress-bar-color:#C9A95C;--progress-bar-height:2px"
-            camera-controls touch-action="pan-y"
-            exposure="0.9" shadow-intensity="1" shadow-softness="0.8"
-            environment-image="neutral"
-            interaction-prompt="when-focused"
-            camera-orbit="35deg 70deg auto" max-camera-orbit="auto 100deg auto"
-            min-camera-orbit="auto auto 1m" min-field-of-view="10deg"
-            alt="Maquette 3D du chantier">
-          </model-viewer>
-          <div id="mvToolbar" style="position:absolute;right:14px;bottom:14px;display:flex;gap:8px;z-index:2">
-            <button type="button" class="btn btn-glass btn-sm" id="mvReset" title="Recentrer la vue">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Recentrer
-            </button>
-            <button type="button" class="btn btn-glass btn-sm" id="mvSpin" title="Rotation automatique">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>
-              <span id="mvSpinLbl">Rotation auto</span>
-            </button>
-            <button type="button" class="btn btn-glass btn-sm" id="mvFull" title="Plein écran">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-              Plein écran
-            </button>
-          </div>
-          <div id="mvHint" style="position:absolute;left:14px;bottom:14px;z-index:2;padding:6px 12px;border-radius:8px;background:rgba(13,19,32,.72);border:1px solid rgba(255,255,255,.10);backdrop-filter:blur(10px);font-size:12px;color:var(--text-faint)">
-            Glisser pour pivoter · molette / pincer pour zoomer
-          </div>
-        </div>
-      </section>
-
       <!-- Notice notaire -->
       <section class="tab-pane" id="pane-notice">
         <div class="doc-filters" id="noticeFilters"></div>
@@ -642,6 +603,55 @@
   </div>
 
 </div>
+
+<!-- Panneau Maquette 3D — défini dans un <template> HORS de <main> pour survivre
+     au mode études (AxionAnalysis.mount remplace tout le innerHTML de <main>).
+     Instancié par initMaquette() dans le main courant, quel que soit le mode. -->
+<template id="tplMaquette">
+      <!-- Maquette 3D — visionneuse GLB en lecture seule (manipulation libre : orbite, zoom) -->
+      <section class="tab-pane" id="pane-maquette">
+        <div style="margin-bottom:14px">
+          <h3 style="margin:0 0 4px">Maquette 3D du projet</h3>
+          <p class="sub" style="color:var(--text-faint);max-width:680px">Consultation libre de la volumétrie : rotation au doigt ou à la souris, zoom à la molette ou au pincement. Mode lecture seule — la maquette ne peut pas être modifiée.</p>
+        </div>
+        <div id="mvPicker" style="display:none;margin-bottom:12px;flex-wrap:wrap;gap:8px"></div>
+        <div id="mvWrap" style="position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:radial-gradient(ellipse at 50% -10%, rgba(59,130,246,.20), rgba(56,189,248,.05) 45%, transparent 70%), #0A1628">
+          <!-- Filigrane Cadence : emblème en grand derrière la maquette (model-viewer a un fond transparent) -->
+          <img src="assets/img/logo-cadence-emblem-white.png" alt="" aria-hidden="true"
+               style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(72%,640px);opacity:.09;pointer-events:none;user-select:none">
+          <!-- Logotype Cadence discret en haut à gauche -->
+          <img src="assets/img/logo-cadence-white.png" alt="Cadence Architectes Associés"
+               style="position:absolute;left:22px;top:20px;height:clamp(34px,5.5vh,56px);width:auto;opacity:.8;pointer-events:none;user-select:none;z-index:2">
+          <model-viewer id="mv3d"
+            style="width:100%;height:min(68vh,640px);min-height:420px;display:block;background:transparent;--progress-bar-color:#C9A95C;--progress-bar-height:2px"
+            camera-controls touch-action="pan-y"
+            exposure="0.9" shadow-intensity="1" shadow-softness="0.8"
+            environment-image="neutral"
+            interaction-prompt="when-focused"
+            camera-orbit="35deg 70deg auto" max-camera-orbit="auto 100deg auto"
+            min-camera-orbit="auto auto 1m" min-field-of-view="10deg"
+            alt="Maquette 3D du chantier">
+          </model-viewer>
+          <div id="mvToolbar" style="position:absolute;right:14px;bottom:14px;display:flex;gap:8px;z-index:2">
+            <button type="button" class="btn btn-glass btn-sm" id="mvReset" title="Recentrer la vue">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Recentrer
+            </button>
+            <button type="button" class="btn btn-glass btn-sm" id="mvSpin" title="Rotation automatique">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>
+              <span id="mvSpinLbl">Rotation auto</span>
+            </button>
+            <button type="button" class="btn btn-glass btn-sm" id="mvFull" title="Plein écran">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+              Plein écran
+            </button>
+          </div>
+          <div id="mvHint" style="position:absolute;left:14px;bottom:14px;z-index:2;padding:6px 12px;border-radius:8px;background:rgba(13,19,32,.72);border:1px solid rgba(255,255,255,.10);backdrop-filter:blur(10px);font-size:12px;color:var(--text-faint)">
+            Glisser pour pivoter · molette / pincer pour zoomer
+          </div>
+        </div>
+      </section>
+</template>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Visionneuse 3D (web component <model-viewer>, lecture seule).
@@ -817,9 +827,6 @@
                        '&type=' + _type;
   }
 
-  // Maquette 3D : onglet visible si une maquette existe pour ce chantier
-  initMaquette(project);
-
   // Actions de la cover : retour aux chantiers (tous) + gérer les accès (admin)
   var actions = document.getElementById('coverActions');
   var actionsHtml =
@@ -880,6 +887,12 @@
     await loadAnnuaire(projectId);
   }
 
+  // Maquette 3D : onglet visible si une ou plusieurs maquettes existent pour
+  // ce chantier. Appelé APRÈS le montage de la vue : en mode études,
+  // AxionAnalysis.mount() vient de remplacer onglets et panneaux, initMaquette
+  // recrée alors l'onglet et instancie le panneau depuis #tplMaquette.
+  initMaquette(project);
+
   // 8) Activité récente (timeline combinée : docs + connexions + entreprises)
   await loadIntervenants(projectId);
   await loadActivity(projectId);
@@ -902,29 +915,80 @@
 })();
 
 // ─── Maquette 3D ────────────────────────────────────────────────────
-// Visionneuse lecture seule (<model-viewer>) du GLB optimisé web, servi par
-// Vercel depuis assets/3d/. Mapping par slug en attendant une éventuelle
-// colonne projects.model3d_url (lue en priorité si elle existe un jour).
-// Le fichier n'est chargé QU'À la première ouverture de l'onglet (1,5 Mo).
+// Visionneuse lecture seule (<model-viewer>) des GLB optimisés web, servis par
+// Vercel depuis assets/3d/. Mapping par slug : une LISTE de maquettes par
+// chantier (un sélecteur apparaît s'il y en a plusieurs). Compressions gérées :
+// EXT_meshopt_compression (décodeur configuré en tête de page) et
+// KHR_draco_mesh_compression (décodeur par défaut de model-viewer).
+// Le fichier n'est chargé QU'À la première ouverture de l'onglet.
 var MODELS_3D = {
-  'jardins-de-lisa':   'assets/3d/maquette-jardins-de-lisa.glb',
-  'jardins-iris':      'assets/3d/maquette-jardins-iris.glb',
-  'villages-or-noisy': 'assets/3d/maquette-villages-or-noisy.glb',
+  'jardins-de-lisa':   [{ label: 'Maquette du projet', src: 'assets/3d/maquette-jardins-de-lisa.glb' }],
+  'jardins-iris':      [{ label: 'Maquette du projet', src: 'assets/3d/maquette-jardins-iris.glb' }],
+  'villages-or-noisy': [{ label: 'Maquette du projet', src: 'assets/3d/maquette-villages-or-noisy.glb' }],
+  'gueules-cassees':   [{ label: 'Le Château (modélisation en cours)', src: 'assets/3d/maquette-gueules-cassees-chateau.glb' }],
 };
 
 function initMaquette(project) {
-  var src = project.model3d_url || MODELS_3D[project.slug || ''];
-  if (!src) return;
+  var models = project.model3d_url
+    ? [{ label: 'Maquette du projet', src: project.model3d_url }]
+    : (MODELS_3D[project.slug || ''] || []);
+  if (!models.length) return;
+
+  var nav = document.getElementById('tabsNav');
+  var main = document.querySelector('.layout > main') || document.querySelector('main');
+  if (!nav || !main) return;
+
+  // Onglet : réutiliser le bouton statique s'il a survécu, sinon le recréer
+  // (AxionAnalysis.mount remplace nav.innerHTML pour les chantiers en études).
   var tab = document.getElementById('tabMaquette');
-  if (tab) tab.style.display = '';
+  if (!tab || !nav.contains(tab)) {
+    tab = document.createElement('button');
+    tab.className = 'tab'; tab.id = 'tabMaquette';
+    tab.setAttribute('role', 'tab'); tab.dataset.tab = 'maquette';
+    tab.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg> Maquette 3D';
+    nav.appendChild(tab);
+  }
+  tab.style.display = '';
+
+  // Panneau : instancier le template dans le <main> courant s'il n'y est plus
+  // (le mode études vide <main> ; en mode travaux il n'y est pas non plus,
+  // le panneau vivant désormais dans le <template> pour les deux modes).
+  var pane = document.getElementById('pane-maquette');
+  if (!pane || !main.contains(pane)) {
+    var tpl = document.getElementById('tplMaquette');
+    main.insertAdjacentHTML('beforeend', tpl.innerHTML);
+    pane = document.getElementById('pane-maquette');
+  }
 
   var mv = document.getElementById('mv3d');
+  var picker = document.getElementById('mvPicker');
   var loaded = false;
-  document.getElementById('tabsNav').addEventListener('click', function (e) {
+
+  function setModel(i) {
+    loaded = true;
+    mv.src = models[i].src;
+    if (picker) picker.querySelectorAll('.mv-chip').forEach(function (c, j) {
+      c.classList.toggle('on', j === i);
+    });
+  }
+
+  // Sélecteur : visible seulement si plusieurs maquettes pour ce chantier
+  if (picker && models.length > 1) {
+    picker.style.display = 'flex';
+    picker.innerHTML = models.map(function (m, i) {
+      return '<button type="button" class="mv-chip" data-i="' + i + '">' + escapeHtml(m.label) + '</button>';
+    }).join('');
+    picker.addEventListener('click', function (e) {
+      var b = e.target.closest('.mv-chip'); if (!b) return;
+      setModel(parseInt(b.dataset.i, 10));
+    });
+  }
+
+  // Chargement différé : le 1er modèle n'est téléchargé qu'à l'ouverture de l'onglet
+  nav.addEventListener('click', function (e) {
     var btn = e.target.closest('.tab');
     if (!btn || btn.dataset.tab !== 'maquette' || loaded || !mv) return;
-    loaded = true;
-    mv.src = src;
+    setModel(0);
   });
 
   // Recentrer : revient au cadrage initial
