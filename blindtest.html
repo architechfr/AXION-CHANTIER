@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0014" />
+  <title>🎵 Blind Test — Soirée entre amis</title>
+  <meta name="description" content="Blind Test musical multijoueur en temps réel : buzz, votes et leaderboard live." />
+
+  <!-- Tailwind (CDN, comme le reste d'AXION) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { display: ['"Baloo 2"', 'system-ui', 'sans-serif'] },
+          colors: {
+            night: '#0b0014',
+            grape: '#1a0b2e',
+            neon: { pink: '#ff2e9a', violet: '#8b5cf6', cyan: '#22d3ee', lime: '#a3e635', gold: '#fbbf24' }
+          },
+          keyframes: {
+            pop: { '0%': { transform: 'scale(1)' }, '50%': { transform: 'scale(0.92)' }, '100%': { transform: 'scale(1)' } },
+            float: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
+            ring: { '0%': { boxShadow: '0 0 0 0 rgba(255,46,154,.7)' }, '100%': { boxShadow: '0 0 0 40px rgba(255,46,154,0)' } },
+            slidein: { '0%': { transform: 'translateY(20px)', opacity: 0 }, '100%': { transform: 'translateY(0)', opacity: 1 } }
+          },
+          animation: {
+            pop: 'pop .25s ease',
+            float: 'float 3s ease-in-out infinite',
+            ring: 'ring 1.2s ease-out infinite',
+            slidein: 'slidein .35s ease both'
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet" />
+
+  <!-- SDK temps réel + utilitaires (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    html, body { height: 100%; }
+    body {
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #3b0764 0%, transparent 55%),
+        radial-gradient(1000px 500px at 100% 0%, #831843 0%, transparent 50%),
+        linear-gradient(160deg, #0b0014 0%, #1a0b2e 100%);
+      background-attachment: fixed;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+    .glass { background: rgba(255,255,255,.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.08); }
+    .text-glow { text-shadow: 0 0 24px rgba(255,46,154,.55); }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 8px; }
+    input { font-size: 16px; } /* évite le zoom auto iOS */
+  </style>
+</head>
+<body class="text-white font-display antialiased">
+  <main id="app" class="min-h-screen w-full flex flex-col"></main>
+
+  <!-- Toasts -->
+  <div id="toasts" class="fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4 pointer-events-none"></div>
+
+  <script src="assets/js/blindtest.js"></script>
+</body>
+</html>
